@@ -63,5 +63,5 @@ const styles = StyleSheet.create({
     minWidth: 120,
   },
   input: { flex: 1, color: colors.text, fontSize: 20, fontWeight: '700', paddingVertical: 10, textAlign: 'right' },
-  unit: { color: colors.muted, fontSize: 14, fontWeight: '600', marginLeft: 6, width: 26 },
+  unit: { color: colors.muted, fontSize: 14, fontWeight: '600', marginLeft: 6, minWidth: 26 },
 });

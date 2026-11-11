@@ -22,49 +22,40 @@ export async function saveProfile(db: SQLiteDatabase, p: Profile) {
   );
 }
 
-interface Row {
-  date: ISODate;
-  weight: number;
-  waist: number | null;
-  neck: number | null;
-  hip: number | null;
-  arm: number | null;
-  chest: number | null;
-  body_fat: number | null;
-}
-
-const toEntry = (r: Row): BodyEntry => ({
-  date: r.date,
-  weight: r.weight,
-  waist: r.waist,
-  neck: r.neck,
-  hip: r.hip,
-  arm: r.arm,
-  chest: r.chest,
-  bodyFat: r.body_fat,
-});
+/** Campo de la medición → columna de la tabla body_log (además de date y weight). */
+const COLUMNS: Record<Exclude<keyof BodyEntry, 'date' | 'weight'>, string> = {
+  waist: 'waist',
+  neck: 'neck',
+  hip: 'hip',
+  arm: 'arm',
+  chest: 'chest',
+  bodyFat: 'body_fat',
+  fatFreeMass: 'fat_free_mass',
+  skeletalMuscle: 'skeletal_muscle',
+  water: 'water',
+  protein: 'protein',
+  boneMass: 'bone_mass',
+  visceralFat: 'visceral_fat',
+  scaleBmr: 'scale_bmr',
+  bodyAge: 'body_age',
+  bodyScore: 'body_score',
+};
+const FIELDS = Object.keys(COLUMNS) as (keyof typeof COLUMNS)[];
 
 /** Mediciones en orden cronológico. */
 export async function getBodyLog(db: SQLiteDatabase): Promise<BodyEntry[]> {
-  const rows = await db.getAllAsync<Row>(
-    'SELECT date, weight, waist, neck, hip, arm, chest, body_fat FROM body_log ORDER BY date',
-  );
-  return rows.map(toEntry);
+  const cols = FIELDS.map((k) => `${COLUMNS[k]} AS ${k}`).join(', ');
+  return db.getAllAsync<BodyEntry>(`SELECT date, weight, ${cols} FROM body_log ORDER BY date`);
 }
 
 export async function saveBodyEntry(db: SQLiteDatabase, e: BodyEntry) {
+  const cols = FIELDS.map((k) => COLUMNS[k]);
   await db.runAsync(
-    `INSERT INTO body_log (date, weight, waist, neck, hip, arm, chest, body_fat) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(date) DO UPDATE SET weight = excluded.weight, waist = excluded.waist, neck = excluded.neck,
-       hip = excluded.hip, arm = excluded.arm, chest = excluded.chest, body_fat = excluded.body_fat`,
+    `INSERT INTO body_log (date, weight, ${cols.join(', ')}) VALUES (${['?', '?', ...cols.map(() => '?')].join(', ')})
+     ON CONFLICT(date) DO UPDATE SET weight = excluded.weight, ${cols.map((c) => `${c} = excluded.${c}`).join(', ')}`,
     e.date,
     e.weight,
-    e.waist ?? null,
-    e.neck ?? null,
-    e.hip ?? null,
-    e.arm ?? null,
-    e.chest ?? null,
-    e.bodyFat ?? null,
+    ...FIELDS.map((k) => e[k] ?? null),
   );
 }
 

@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 5;
+const LATEST = 6;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -113,6 +113,22 @@ export async function migrate(db: SQLiteDatabase) {
       );
     `);
     version = 5;
+  }
+
+  if (version === 5) {
+    // Valores que da la báscula Huawei Scale 3, copiados a mano desde Huawei Salud.
+    await db.execAsync(`
+      ALTER TABLE body_log ADD COLUMN fat_free_mass REAL;
+      ALTER TABLE body_log ADD COLUMN skeletal_muscle REAL;
+      ALTER TABLE body_log ADD COLUMN water REAL;
+      ALTER TABLE body_log ADD COLUMN protein REAL;
+      ALTER TABLE body_log ADD COLUMN bone_mass REAL;
+      ALTER TABLE body_log ADD COLUMN visceral_fat REAL;
+      ALTER TABLE body_log ADD COLUMN scale_bmr REAL;
+      ALTER TABLE body_log ADD COLUMN body_age REAL;
+      ALTER TABLE body_log ADD COLUMN body_score REAL;
+    `);
+    version = 6;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);

@@ -124,36 +124,53 @@ export default function BodyScreen() {
 
       {profile && last && (
         <>
-          <SectionTitle>Indicadores</SectionTitle>
-          <View style={{ gap: space.sm }}>
-            {INDICATORS.map((def) => {
-              const series = seriesFor(def, entries, profile);
-              const current = series.length && series[series.length - 1].date === last.date ? series[series.length - 1] : null;
-              const range = current ? rangeFor(def, profile, current.value) : null;
-              return (
-                <Pressable
-                  key={def.id}
-                  onPress={() => router.push({ pathname: '/indicador/[id]', params: { id: def.id } })}
-                  style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
-                  <Card style={styles.indicator}>
-                    <View style={{ flex: 1, gap: 4 }}>
-                      <Text style={type.caption}>{def.name}</Text>
-                      {current ? (
-                        <Text style={styles.indValue}>{formatValue(def, current.value)}</Text>
-                      ) : (
-                        <Text style={type.caption}>Falta: {def.needs}</Text>
-                      )}
-                      {range && <Pill label={range.label} color={TONE_COLOR[range.tone]} bg={colors.cardHigh} />}
-                    </View>
-                    <View style={{ width: 90 }}>
-                      {series.length > 1 && <LineChart points={series} height={44} compact ranges={def.ranges?.(profile)} />}
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color={colors.faint} />
-                  </Card>
-                </Pressable>
-              );
-            })}
-          </View>
+          {(
+            [
+              ['Indicadores calculados', INDICATORS.filter((d) => !d.group)],
+              ['De la báscula', INDICATORS.filter((d) => d.group === 'bascula')],
+            ] as const
+          ).map(([title, defs]) => {
+            const rows = defs
+              .map((def) => ({ def, series: seriesFor(def, entries, profile) }))
+              // Los de la báscula solo aparecen si alguna vez se han apuntado.
+              .filter((r) => !r.def.group || r.series.length > 0);
+            if (rows.length === 0) return null;
+            return (
+              <View key={title}>
+                <SectionTitle>{title}</SectionTitle>
+                <View style={{ gap: space.sm }}>
+                  {rows.map(({ def, series }) => {
+                    const current = series.length && series[series.length - 1].date === last.date ? series[series.length - 1] : null;
+                    const range = current ? rangeFor(def, profile, current.value) : null;
+                    return (
+                      <Pressable
+                        key={def.id}
+                        onPress={() => router.push({ pathname: '/indicador/[id]', params: { id: def.id } })}
+                        style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+                        <Card style={styles.indicator}>
+                          <View style={{ flex: 1, gap: 4 }}>
+                            <Text style={type.caption}>{def.name}</Text>
+                            {current ? (
+                              <Text style={styles.indValue}>{formatValue(def, current.value)}</Text>
+                            ) : (
+                              <Text style={type.caption}>
+                                {def.group ? 'Sin dato en la última medición' : `Falta: ${def.needs}`}
+                              </Text>
+                            )}
+                            {range && <Pill label={range.label} color={TONE_COLOR[range.tone]} bg={colors.cardHigh} />}
+                          </View>
+                          <View style={{ width: 90 }}>
+                            {series.length > 1 && <LineChart points={series} height={44} compact ranges={def.ranges?.(profile)} />}
+                          </View>
+                          <Ionicons name="chevron-forward" size={18} color={colors.faint} />
+                        </Card>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            );
+          })}
         </>
       )}
     </ScrollView>

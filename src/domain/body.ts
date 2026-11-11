@@ -20,6 +20,16 @@ export interface BodyEntry {
   chest?: number | null;
   /** % de grasa medido por una báscula de bioimpedancia, si lo hay. */
   bodyFat?: number | null;
+  // Valores de la báscula Huawei Scale 3, copiados desde Huawei Salud.
+  fatFreeMass?: number | null;
+  skeletalMuscle?: number | null;
+  water?: number | null;
+  protein?: number | null;
+  boneMass?: number | null;
+  visceralFat?: number | null;
+  scaleBmr?: number | null;
+  bodyAge?: number | null;
+  bodyScore?: number | null;
 }
 
 export const ACTIVITY_LEVELS = [
@@ -40,6 +50,8 @@ export interface Range {
 
 export interface IndicatorDef {
   id: string;
+  /** 'bascula' = lo da la báscula; si no, lo calcula la app. */
+  group?: 'bascula';
   name: string;
   unit: string;
   decimals: number;
@@ -84,6 +96,7 @@ export function bodyFatOf(e: BodyEntry, p: Profile): { value: number; source: 'b
 }
 
 export function leanMass(e: BodyEntry, p: Profile): number | null {
+  if (e.fatFreeMass != null) return e.fatFreeMass;
   const bf = bodyFatOf(e, p);
   return bf ? e.weight * (1 - bf.value / 100) : null;
 }
@@ -105,6 +118,8 @@ export function weeklyChangePct(e: BodyEntry, history: BodyEntry[]): number | nu
   if (!prev) return null;
   return ((e.weight - prev.h.weight) / prev.h.weight) * 100 * (7 / prev.days);
 }
+
+const SCALE_NOTE = 'Las básculas de bioimpedancia tienen bastante error: fíjate en la tendencia, siempre en las mismas condiciones.';
 
 export const INDICATORS: IndicatorDef[] = [
   {
@@ -174,7 +189,7 @@ export const INDICATORS: IndicatorDef[] = [
     unit: ' kg',
     decimals: 1,
     what: 'Todo lo que no es grasa: músculo, hueso, agua y órganos. Si baja el peso y esto se mantiene, estás perdiendo grasa.',
-    formula: 'peso × (1 − % grasa ÷ 100)',
+    formula: 'La masa libre de grasa de la báscula si la apuntas; si no, peso × (1 − % grasa ÷ 100).',
     needs: 'cintura y cuello',
     compute: (e, p) => leanMass(e, p),
   },
@@ -246,6 +261,124 @@ export const INDICATORS: IndicatorDef[] = [
     formula: 'metabolismo basal × factor de actividad',
     needs: 'peso, altura y fecha de nacimiento',
     compute: (e, p) => bmrMifflin(e.weight, p.heightCm, ageOn(p.birthDate, e.date), p.sex) * p.activity,
+  },
+  // ---- Valores de la báscula (bioimpedancia). Útiles por su tendencia, no por el número exacto. ----
+  {
+    id: 'musculo',
+    group: 'bascula',
+    name: 'Músculo esquelético',
+    unit: ' kg',
+    decimals: 1,
+    what: 'El músculo que mueves al entrenar. Mientras pierdes grasa, lo ideal es que se mantenga o suba.',
+    formula: 'Lo estima la báscula por bioimpedancia.',
+    note: SCALE_NOTE,
+    needs: 'el dato de la báscula',
+    compute: (e) => e.skeletalMuscle ?? null,
+  },
+  {
+    id: 'visceral',
+    group: 'bascula',
+    name: 'Grasa visceral',
+    unit: '',
+    decimals: 0,
+    what: 'Grasa alrededor de los órganos del abdomen, la más relacionada con riesgo cardiovascular. Es un nivel, no un porcentaje.',
+    formula: 'Nivel que estima la báscula por bioimpedancia.',
+    note: `${SCALE_NOTE} Rangos orientativos habituales en básculas de bioimpedancia.`,
+    needs: 'el dato de la báscula',
+    ranges: () => [
+      { max: 10, label: 'Saludable', tone: 'good' },
+      { max: 15, label: 'Alta', tone: 'warn' },
+      { max: Infinity, label: 'Muy alta', tone: 'bad' },
+    ],
+    compute: (e) => e.visceralFat ?? null,
+  },
+  {
+    id: 'agua',
+    group: 'bascula',
+    name: '% de agua',
+    unit: '%',
+    decimals: 1,
+    what: 'Porcentaje de tu peso que es agua. Cambia con lo que bebes y comes: compáralo siempre a la misma hora.',
+    formula: 'Lo estima la báscula por bioimpedancia.',
+    note: `${SCALE_NOTE} Rangos orientativos.`,
+    needs: 'el dato de la báscula',
+    ranges: (p) =>
+      p.sex === 'H'
+        ? [
+            { max: 50, label: 'Bajo', tone: 'low' },
+            { max: 65, label: 'Normal', tone: 'good' },
+            { max: Infinity, label: 'Alto', tone: 'warn' },
+          ]
+        : [
+            { max: 45, label: 'Bajo', tone: 'low' },
+            { max: 60, label: 'Normal', tone: 'good' },
+            { max: Infinity, label: 'Alto', tone: 'warn' },
+          ],
+    compute: (e) => e.water ?? null,
+  },
+  {
+    id: 'proteina',
+    group: 'bascula',
+    name: '% de proteína',
+    unit: '%',
+    decimals: 1,
+    what: 'Proporción de proteína del cuerpo; va de la mano de la masa muscular.',
+    formula: 'Lo estima la báscula por bioimpedancia.',
+    note: `${SCALE_NOTE} Rangos orientativos.`,
+    needs: 'el dato de la báscula',
+    ranges: () => [
+      { max: 16, label: 'Bajo', tone: 'low' },
+      { max: 20, label: 'Normal', tone: 'good' },
+      { max: Infinity, label: 'Alto', tone: 'good' },
+    ],
+    compute: (e) => e.protein ?? null,
+  },
+  {
+    id: 'osea',
+    group: 'bascula',
+    name: 'Masa ósea',
+    unit: ' kg',
+    decimals: 1,
+    what: 'Peso estimado del mineral de los huesos. Cambia muy poco: sirve para comprobar que la báscula mide estable.',
+    formula: 'Lo estima la báscula por bioimpedancia.',
+    note: SCALE_NOTE,
+    needs: 'el dato de la báscula',
+    compute: (e) => e.boneMass ?? null,
+  },
+  {
+    id: 'basal_bascula',
+    group: 'bascula',
+    name: 'Metabolismo basal (báscula)',
+    unit: ' kcal',
+    decimals: 0,
+    what: 'El metabolismo basal según la báscula, que tiene en cuenta tu masa muscular. Compáralo con el calculado por fórmula.',
+    formula: 'Lo estima la báscula a partir de la composición corporal.',
+    note: SCALE_NOTE,
+    needs: 'el dato de la báscula',
+    compute: (e) => e.scaleBmr ?? null,
+  },
+  {
+    id: 'edad',
+    group: 'bascula',
+    name: 'Edad corporal',
+    unit: ' años',
+    decimals: 0,
+    what: 'Edad que le «corresponde» a tu composición corporal. Si es menor que tu edad real, vas bien.',
+    formula: 'Lo calcula Huawei a partir de la composición corporal.',
+    note: SCALE_NOTE,
+    needs: 'el dato de la báscula',
+    compute: (e) => e.bodyAge ?? null,
+  },
+  {
+    id: 'puntuacion',
+    group: 'bascula',
+    name: 'Puntuación corporal',
+    unit: '',
+    decimals: 0,
+    what: 'Nota global que da Huawei Salud a tu composición corporal.',
+    formula: 'Fórmula propia de Huawei (no publicada).',
+    needs: 'el dato de la báscula',
+    compute: (e) => e.bodyScore ?? null,
   },
 ];
 

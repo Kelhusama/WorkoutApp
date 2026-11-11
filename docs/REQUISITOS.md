@@ -159,7 +159,9 @@ Cada ejercicio incluye:
 
 **Perfil**: altura, fecha de nacimiento, sexo y nivel de actividad.
 
-**Medición** (semanal, por la mañana en ayunas): peso, cintura, cuello, cadera (mujeres), brazo, pecho y, opcionalmente, % de grasa de una báscula.
+**Medición** (semanal, por la mañana en ayunas): peso; medidas con cinta (cintura, cuello, cadera en mujeres, brazo, pecho); y, opcionalmente, los valores de la **Huawei Scale 3** copiados de Huawei Salud: % de grasa, músculo esquelético, masa libre de grasa, % de agua, % de proteína, masa ósea, grasa visceral, metabolismo basal, edad corporal y puntuación. ✅
+
+Los valores de la báscula tienen su propio apartado de indicadores, con historial. Si se apuntan el % de grasa y la masa libre de grasa de la báscula, se usan en lugar de las fórmulas.
 
 **Indicadores**, cada uno con su fórmula, rangos de referencia e historial con gráfica:
 
@@ -183,9 +185,9 @@ Aviso en **Hoy** si han pasado más de 7 días sin pesarse.
 
 - **Bluetooth directo (vía openScale):** openScale lee la Scale 3 ([wiki](https://github.com/oliexdev/openScale/wiki/Supported-scales-in-openScale)), pero solo tras un *handshake* "Hagrid" con tres claves (CAK, C1, C2). openScale no las incluye ni explica cómo obtenerlas ([issue #1539](https://github.com/oliexdev/openScale/issues/1539)). Tampoco está claro si son iguales para todas las básculas. → **Descartado de momento**: sacar las claves supondría hacer ingeniería inversa de la app de Huawei. Además, su código es GPLv3.
 - **Health Connect directo:** Huawei Salud no escribe en Health Connect de forma nativa (según fuentes de terceros, sin confirmación oficial).
-- **Puente con una app de terceros (opción recomendada, sin verificar):** una app puente como *Health Sync* pasaría los datos de Huawei Salud a Health Connect, y Forja los leería con `react-native-health-connect`. Esto requiere *development build*. Falta confirmar si pasa el % de grasa además del peso.
-- **Huawei Health Kit (API de Huawei):** necesita cuenta de desarrollador y la aprobación de Huawei para datos de salud. Es difícil para una app personal.
-- **Mientras tanto:** registro manual, que ya incluye el % de grasa de la báscula.
+- **Puente con una app de terceros — descartado:** *Health Sync* es de pago (prueba de una semana) y no queremos pagar. Funcionaría así: una app puente como *Health Sync* pasaría los datos de Huawei Salud a Health Connect, y Forja los leería con `react-native-health-connect`. Esto requiere *development build*. Falta confirmar si pasa el % de grasa además del peso.
+- **Huawei Health Kit (API de Huawei) — descartado:** Huawei solo da acceso al peso y a los datos de salud a **empresas**; las cuentas individuales solo pueden leer actividad ([ejemplo de solicitud rechazada](https://github.com/ucsky/ha-huawei-health-kit)).
+- **Decisión:** **registro manual** de todos los valores de la báscula ✅. Pendiente opcional: importar una vez la exportación de datos de la cuenta Huawei para cargar el historial.
 
 ---
 
@@ -215,7 +217,7 @@ Requisito externo: proyecto en Google Cloud Console con un cliente OAuth Android
 4. **Fichas**: dibujos animados ✅, técnica ✅.
 5. **Recordatorios** ✅.
 6. **Google**: inicio de sesión y copia en Drive.
-7. **Báscula Huawei** (Scale 3, DBY-B19): vía Health Connect con app puente; pendiente de probar.
+7. **Báscula Huawei** (Scale 3, DBY-B19): registro manual de todos sus valores ✅; integración automática descartada (de pago o solo para empresas).
 
 ---
 
