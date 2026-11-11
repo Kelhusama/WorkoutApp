@@ -17,9 +17,11 @@ Requisitos completos en [docs/REQUISITOS.md](docs/REQUISITOS.md).
 **Fase 2 (parcial)** ✅
 - Calendario con vista de semana y de mes
 - Avisos de sesión en casa a las 9:00, 10:00 y 12:00 (ajustables)
+- Semana tipo configurable y cambio de días sueltos
+- Valores de la báscula Huawei Scale 3 (registro manual) con indicadores e historial
 - Sección Cuerpo: perfil, peso y medidas, e indicadores (IMC, cintura/altura, % grasa, masa magra, FFMI, ritmo semanal, metabolismo basal, gasto diario) con rangos e historial
 
-Siguiente: modo viaje · gráficas de ejercicios, récords y fotos · Google Drive · báscula Huawei.
+Siguientes pasos y tareas pendientes: ver «Debes» y «Pendientes de desarrollo» en [docs/REQUISITOS.md](docs/REQUISITOS.md).
 
 ## Desarrollo
 

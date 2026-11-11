@@ -2,7 +2,7 @@
 
 App Android personal para seguir el rendimiento, ganar músculo (bíceps y pecho sobre todo), perder grasa y llegar a 10 dominadas. Combina 2 días de gimnasio con sesiones cortas en casa.
 
-> Estado: en desarrollo · actualizado 11/11/2026
+> Estado: en desarrollo · actualizado 12/11/2026
 
 ---
 
@@ -241,6 +241,28 @@ Revisadas: wger, Liftosaur, LiftLog (Expo/React Native), Flexify, FitoTrack, MyF
 | 12 | Registro sencillo de calorías y proteína frente al objetivo | wger | Bajo (solo totales) / Alto (con base de alimentos) |
 | 13 | Exportar e importar CSV/JSON | wger, Flexify | Bajo |
 | 14 | Programas predefinidos («Camino a 10 dominadas», «50 flexiones») | Liftosaur | Medio |
+
+## Debes (lo que tiene que hacer el usuario)
+
+- [ ] **Capturas de Huawei Salud**: 1–2 capturas en español del detalle de una pesada, con todos los valores visibles. Si hace falta desplazarse, varias. Son necesarias para la lectura automática de capturas.
+- [ ] **Cuenta gratuita de Expo** (expo.dev), para compilar el APK en la nube.
+- [ ] **Nombre definitivo** de la app («Forja» es provisional).
+- [ ] Confirmar si es viable hacer **press de banca 3×5 al final del gimnasio** cuando no toque.
+- [ ] (Opcional) Pedir la **copia de datos de la cuenta Huawei** para importar el historial de peso.
+
+## Pendientes de desarrollo (orden propuesto)
+
+1. **Generar el APK** con EAS Build (development build). Es necesario para la lectura de capturas, los avisos puntuales al minuto y cualquier función nativa que no está en Expo Go.
+2. **Leer captura de Huawei Salud**: botón «Leer captura» en *Registrar medición*. Eliges la imagen de la galería, el móvil lee el texto con ML Kit de Google (gratis, sin internet, la imagen no sale del teléfono) y se rellenan los campos de la báscula buscando cada valor por su nombre. El usuario revisa antes de guardar. Requiere el APK y capturas reales.
+3. **Rediseñar los dibujos de los ejercicios con Fable**: sustituir las figuras de palitos por ilustraciones más vistosas, manteniendo la animación de inicio a fin y que el brazo que trabaja vaya resaltado. Usar el modelo Claude Fable 5.2 para el diseño.
+4. **Modo viaje** (sección 5).
+5. **Seguimiento de ejercicios**: gráficas por ejercicio, récords, racha y fotos de progreso.
+6. **Copia en Google Drive** con inicio de sesión de Google (sección 9).
+7. **Icono y pantalla de inicio** propios (ahora son los de la plantilla de Expo).
+8. **Ideas de apps libres** (tabla anterior), empezando por el temporizador de descanso y el RIR por serie.
+9. (Opcional) **Importar la exportación de Huawei** para cargar el historial de peso.
+
+Restricción: **no usar servicios ni apps de pago**.
 
 ## Pendiente de confirmar
 - Nombre definitivo de la app ("Forja" es provisional).
