@@ -9,6 +9,7 @@ import { ACTIVITY_LEVELS, ageOn, type Sex } from '@/domain/body';
 import { today } from '@/domain/dates';
 import { Button, Card, SectionTitle } from '@/ui/components';
 import { NumberField, numberToText, parseNumber } from '@/ui/NumberField';
+import { RemindersSettings } from '@/ui/RemindersSettings';
 import { colors, radius, space, type } from '@/ui/theme';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -52,6 +53,9 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: space.xxl }}>
+      <RemindersSettings />
+
+      <SectionTitle>Datos personales</SectionTitle>
       <Card style={{ gap: space.lg }}>
         <NumberField label="Altura" unit="cm" value={height} onChange={setHeight} placeholder="175" decimal={false} />
         <View style={{ gap: space.sm }}>

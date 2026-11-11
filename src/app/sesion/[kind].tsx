@@ -13,6 +13,7 @@ import type { Feeling, Prescription } from '@/domain/progression';
 import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
 import { TEMPLATES, exerciseFor } from '@/domain/templates';
 import { Button, Card, FeelingPicker, SectionTitle } from '@/ui/components';
+import { syncReminders } from '@/notifications/reminders';
 import { ExerciseCard } from '@/ui/ExerciseCard';
 import { colors, space, type } from '@/ui/theme';
 
@@ -60,6 +61,7 @@ export default function SessionScreen() {
       );
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setChanges(result);
+      syncReminders(db);
     } finally {
       setSaving(false);
     }

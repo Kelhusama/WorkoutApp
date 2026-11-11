@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { weekStart, type ISODate } from '@/domain/dates';
+import { addDays, today as getToday, weekStart, type ISODate } from '@/domain/dates';
 import {
   isCompleted,
   progress,
@@ -9,7 +9,15 @@ import {
   type Prescription,
   type Tempo,
 } from '@/domain/progression';
-import { DEFAULT_SECOND_GYM, type SecondGymDay, type SessionKind } from '@/domain/schedule';
+import {
+  DEFAULT_SECOND_GYM,
+  dayStatus,
+  dayTypeFor,
+  type DayStatus,
+  type DayType,
+  type SecondGymDay,
+  type SessionKind,
+} from '@/domain/schedule';
 import { estimate1RM } from '@/domain/strength';
 import { TEMPLATES, initialPrescription } from '@/domain/templates';
 
@@ -53,6 +61,27 @@ export async function setSecondGym(db: SQLiteDatabase, date: ISODate, day: Secon
     weekStart(date),
     day,
   );
+}
+
+export interface PlannedDay {
+  date: ISODate;
+  type: DayType;
+  status: DayStatus;
+  log?: SessionLog;
+}
+
+/** Plan de cada día entre dos fechas (incluidas) con su estado según los registros. */
+export async function loadDays(db: SQLiteDatabase, from: ISODate, to: ISODate) {
+  const configs = await getWeekConfigs(db, from, to);
+  const logs = await getLogsBetween(db, from, to);
+  const todayDate = getToday();
+  const days: PlannedDay[] = [];
+  for (let d = from; d <= to; d = addDays(d, 1)) {
+    const type = dayTypeFor(d, configs.get(weekStart(d)) ?? DEFAULT_SECOND_GYM);
+    const log = type === 'rest' ? undefined : logs.find((l) => l.date === d && l.kind === type);
+    days.push({ date: d, type, log, status: dayStatus(type, d, todayDate, log?.status) });
+  }
+  return { days, configs };
 }
 
 // ---------- Prescripciones ----------

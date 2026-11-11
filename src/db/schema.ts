@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 2;
+const LATEST = 3;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -77,6 +77,16 @@ export async function migrate(db: SQLiteDatabase) {
       );
     `);
     version = 2;
+  }
+
+  if (version === 2) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL
+      );
+    `);
+    version = 3;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);

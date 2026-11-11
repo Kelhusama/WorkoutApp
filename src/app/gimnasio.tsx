@@ -7,6 +7,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getLastBench, getSessionLog, saveGymSession } from '@/db/repo';
+import { syncReminders } from '@/notifications/reminders';
 import { formatLong, formatShort, today as getToday } from '@/domain/dates';
 import type { Feeling } from '@/domain/progression';
 import { estimate1RM } from '@/domain/strength';
@@ -51,6 +52,7 @@ export default function GymScreen() {
     if (!feeling) return;
     await saveGymSession(db, date, feeling, didBench ? { weight, reps } : null);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    syncReminders(db);
     router.back();
   };
 

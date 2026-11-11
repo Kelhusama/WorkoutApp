@@ -16,9 +16,10 @@ Requisitos completos en [docs/REQUISITOS.md](docs/REQUISITOS.md).
 
 **Fase 2 (parcial)** ✅
 - Calendario con vista de semana y de mes
+- Avisos de sesión en casa a las 9:00, 10:00 y 12:00 (ajustables)
 - Sección Cuerpo: perfil, peso y medidas, e indicadores (IMC, cintura/altura, % grasa, masa magra, FFMI, ritmo semanal, metabolismo basal, gasto diario) con rangos e historial
 
-Siguiente: modo viaje · gráficas de ejercicios, récords y fotos · recordatorios · Google Drive · báscula Huawei.
+Siguiente: modo viaje · gráficas de ejercicios, récords y fotos · Google Drive · báscula Huawei.
 
 ## Desarrollo
 

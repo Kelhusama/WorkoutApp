@@ -147,7 +147,7 @@ El usuario tiene su rutina (halterofilia y ejercicios compuestos, sin trabajo ai
 
 - Vista calendario mensual: gimnasio, casa A/B/C, descanso, viaje, hecho/fallado.
 - Marcar el día de gimnasio de la semana con un toque.
-- **Recordatorios**: hasta **3 avisos** el día de sesión en casa. Se detienen al completar la sesión o al pulsar **"Hoy no"**, que la marca como fallada. Horas configurables.
+- **Recordatorios** ✅: hasta **3 avisos** el día de sesión en casa, por defecto a las **09:00, 10:00 y 12:00** (ajustables de media en media hora en Perfil y avisos). Se detienen al registrar la sesión o al pulsar **"Hoy no"**. Se programan los próximos 14 días y se recalculan al abrir la app.
 
 ---
 
@@ -216,7 +216,7 @@ Requisito externo: proyecto en Google Cloud Console con un cliente OAuth Android
 2. **Calendario**: vista semana/mes ✅, día de gimnasio ✅, fallos ✅ y modo viaje.
 3. **Seguimiento**: peso, medidas e indicadores ✅; gráficas de ejercicios, récords, racha, fotos.
 4. **Fichas**: dibujos animados ✅, técnica ✅.
-5. **Recordatorios**.
+5. **Recordatorios** ✅.
 6. **Google**: inicio de sesión y copia en Drive.
 7. **Báscula Huawei** por Bluetooth (pendiente de investigar).
 
@@ -225,5 +225,4 @@ Requisito externo: proyecto en Google Cloud Console con un cliente OAuth Android
 ## Pendiente de confirmar
 - Nombre definitivo de la app ("Forja" es provisional).
 - Modelo exacto de la báscula Huawei.
-- Hora de los recordatorios.
 - Si es viable hacer press de banca 3×5 al final del gimnasio cuando no toque.

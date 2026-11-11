@@ -2,12 +2,13 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 import { getBodyLog } from '@/db/body';
 import { deleteLog, getPrescriptions, markMissed } from '@/db/repo';
+import { syncReminders } from '@/notifications/reminders';
 import { addDays, formatLong, today as getToday, weekdayIndex } from '@/domain/dates';
 import { FEELING_LABEL, TEMPO_LABEL, type Prescription } from '@/domain/progression';
 import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
@@ -51,6 +52,7 @@ export default function TodayScreen() {
         onPress: async () => {
           await markMissed(db, todayDate, day.type as SessionKind | 'gym');
           reload();
+          syncReminders(db);
         },
       },
     ]);
@@ -60,6 +62,7 @@ export default function TodayScreen() {
     if (!day || day.type === 'rest') return;
     await deleteLog(db, todayDate, day.type as SessionKind | 'gym');
     reload();
+    syncReminders(db);
   };
 
   // Miércoles con el gimnasio puesto el jueves: atajo para cambiarlo.
@@ -69,8 +72,15 @@ export default function TodayScreen() {
     <ScrollView
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={{ padding: space.lg, paddingTop: insets.top + space.lg, paddingBottom: space.xxl }}>
-      <Text style={type.overline}>Hoy</Text>
-      <Text style={[type.hero, { marginTop: 2 }]}>{formatLong(todayDate)}</Text>
+      <View style={styles.headerRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={type.overline}>Hoy</Text>
+          <Text style={[type.hero, { marginTop: 2 }]}>{formatLong(todayDate)}</Text>
+        </View>
+        <Pressable accessibilityLabel="Perfil y avisos" onPress={() => router.push('/perfil')} style={styles.bell} hitSlop={8}>
+          <Ionicons name="notifications-outline" size={22} color={colors.text} />
+        </Pressable>
+      </View>
 
       <Card style={{ marginTop: space.lg }}>
         <WeekStrip days={days} />
@@ -170,6 +180,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  bell: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   exRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   exPresc: { fontSize: 15, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },
 });
