@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { addDays, today as getToday, weekStart, type ISODate } from '@/domain/dates';
+import { addDays, today as getToday, weekdayIndex, weekStart, type ISODate } from '@/domain/dates';
 import {
   isCompleted,
   progress,
@@ -10,13 +10,15 @@ import {
   type Tempo,
 } from '@/domain/progression';
 import {
-  DEFAULT_SECOND_GYM,
+  DEFAULT_TEMPLATE,
+  assignKinds,
   dayStatus,
-  dayTypeFor,
+  parseTemplate,
   type DayStatus,
   type DayType,
-  type SecondGymDay,
+  type Role,
   type SessionKind,
+  type WeekTemplate,
 } from '@/domain/schedule';
 import { estimate1RM } from '@/domain/strength';
 import { TEMPLATES, initialPrescription } from '@/domain/templates';
@@ -37,30 +39,63 @@ const now = () => new Date().toISOString();
 
 // ---------- Semana ----------
 
-export async function getSecondGym(db: SQLiteDatabase, date: ISODate): Promise<SecondGymDay> {
-  const row = await db.getFirstAsync<{ second_gym: SecondGymDay }>(
-    'SELECT second_gym FROM week_config WHERE week_start = ?',
-    weekStart(date),
-  );
-  return row?.second_gym ?? DEFAULT_SECOND_GYM;
+interface TemplateVersion {
+  from: ISODate;
+  roles: WeekTemplate;
 }
 
-/** Configuración de segundo gimnasio de todas las semanas que empiezan en el rango. */
-export async function getWeekConfigs(db: SQLiteDatabase, from: ISODate, to: ISODate) {
-  const rows = await db.getAllAsync<{ week_start: ISODate; second_gym: SecondGymDay }>(
-    'SELECT week_start, second_gym FROM week_config WHERE week_start BETWEEN ? AND ?',
-    weekStart(from),
+async function getTemplateVersions(db: SQLiteDatabase): Promise<TemplateVersion[]> {
+  const rows = await db.getAllAsync<{ from_date: ISODate; roles: string }>(
+    'SELECT from_date, roles FROM week_template ORDER BY from_date',
+  );
+  return rows.map((r) => ({ from: r.from_date, roles: parseTemplate(r.roles) }));
+}
+
+/** Semana tipo vigente para la semana que empieza en `monday`. */
+function templateFor(versions: TemplateVersion[], monday: ISODate): WeekTemplate {
+  let t: WeekTemplate = DEFAULT_TEMPLATE;
+  for (const v of versions) if (v.from <= monday) t = v.roles;
+  return t;
+}
+
+export async function getTemplate(db: SQLiteDatabase): Promise<WeekTemplate> {
+  return templateFor(await getTemplateVersions(db), weekStart(getToday()));
+}
+
+/** Guarda la semana tipo a partir de la semana actual; las semanas anteriores no cambian. */
+export async function saveTemplate(db: SQLiteDatabase, t: WeekTemplate) {
+  await db.runAsync(
+    'INSERT INTO week_template (from_date, roles) VALUES (?, ?) ON CONFLICT(from_date) DO UPDATE SET roles = excluded.roles',
+    weekStart(getToday()),
+    t.join(','),
+  );
+}
+
+export async function getOverrides(db: SQLiteDatabase, from: ISODate, to: ISODate): Promise<Map<ISODate, Role>> {
+  const rows = await db.getAllAsync<{ date: ISODate; role: Role }>(
+    'SELECT date, role FROM day_override WHERE date BETWEEN ? AND ?',
+    from,
     to,
   );
-  return new Map(rows.map((r) => [r.week_start, r.second_gym]));
+  return new Map(rows.map((r) => [r.date, r.role]));
 }
 
-export async function setSecondGym(db: SQLiteDatabase, date: ISODate, day: SecondGymDay) {
-  await db.runAsync(
-    'INSERT INTO week_config (week_start, second_gym) VALUES (?, ?) ON CONFLICT(week_start) DO UPDATE SET second_gym = excluded.second_gym',
-    weekStart(date),
-    day,
-  );
+/** Cambia lo que se hace un día concreto; `null` lo devuelve a la semana tipo. */
+export async function setOverride(db: SQLiteDatabase, date: ISODate, role: Role | null) {
+  if (role === null) {
+    await db.runAsync('DELETE FROM day_override WHERE date = ?', date);
+  } else {
+    await db.runAsync(
+      'INSERT INTO day_override (date, role) VALUES (?, ?) ON CONFLICT(date) DO UPDATE SET role = excluded.role',
+      date,
+      role,
+    );
+  }
+}
+
+export async function clearWeekOverrides(db: SQLiteDatabase, anyDate: ISODate) {
+  const monday = weekStart(anyDate);
+  await db.runAsync('DELETE FROM day_override WHERE date BETWEEN ? AND ?', monday, addDays(monday, 6));
 }
 
 export interface PlannedDay {
@@ -68,20 +103,46 @@ export interface PlannedDay {
   type: DayType;
   status: DayStatus;
   log?: SessionLog;
+  /** El día se ha cambiado respecto a la semana tipo. */
+  overridden: boolean;
 }
+
+const HOME_KINDS: readonly LogKind[] = ['A', 'B', 'C'];
 
 /** Plan de cada día entre dos fechas (incluidas) con su estado según los registros. */
 export async function loadDays(db: SQLiteDatabase, from: ISODate, to: ISODate) {
-  const configs = await getWeekConfigs(db, from, to);
-  const logs = await getLogsBetween(db, from, to);
+  const versions = await getTemplateVersions(db);
+  const firstMonday = weekStart(from);
+  const lastSunday = addDays(weekStart(to), 6);
+  const overrides = await getOverrides(db, addDays(firstMonday, -1), lastSunday);
+  const logs = await getLogsBetween(db, firstMonday, lastSunday);
   const todayDate = getToday();
+  // Un día ya registrado conserva lo que se hizo, cambie lo que cambie la semana tipo.
+  const loggedRole = (d: ISODate): Role | null => {
+    const l = logs.filter((x) => x.date === d);
+    if (l.some((x) => x.kind === 'gym')) return 'gym';
+    if (l.some((x) => HOME_KINDS.includes(x.kind))) return 'casa';
+    return null;
+  };
+  const roleOn = (d: ISODate): Role =>
+    loggedRole(d) ?? overrides.get(d) ?? templateFor(versions, weekStart(d))[weekdayIndex(d)];
+
   const days: PlannedDay[] = [];
-  for (let d = from; d <= to; d = addDays(d, 1)) {
-    const type = dayTypeFor(d, configs.get(weekStart(d)) ?? DEFAULT_SECOND_GYM);
-    const log = type === 'rest' ? undefined : logs.find((l) => l.date === d && l.kind === type);
-    days.push({ date: d, type, log, status: dayStatus(type, d, todayDate, log?.status) });
+  for (let monday = firstMonday; monday <= to; monday = addDays(monday, 7)) {
+    const dates = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+    const roles = dates.map(roleOn);
+    const pinned = dates.map((d, i) =>
+      roles[i] === 'casa' ? ((logs.find((l) => l.date === d && HOME_KINDS.includes(l.kind))?.kind as SessionKind) ?? null) : null,
+    );
+    const kinds = assignKinds(roles, roleOn(addDays(monday, -1)), pinned);
+    dates.forEach((d, i) => {
+      if (d < from || d > to) return;
+      const type = kinds[i];
+      const log = type === 'rest' ? undefined : logs.find((l) => l.date === d && l.kind === type);
+      days.push({ date: d, type, log, status: dayStatus(type, d, todayDate, log?.status), overridden: overrides.has(d) });
+    });
   }
-  return { days, configs };
+  return { days, template: templateFor(versions, weekStart(getToday())) };
 }
 
 // ---------- Prescripciones ----------

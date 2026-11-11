@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 3;
+const LATEST = 5;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -87,6 +87,32 @@ export async function migrate(db: SQLiteDatabase) {
       );
     `);
     version = 3;
+  }
+
+  if (version === 3) {
+    // Cambios puntuales por día. Las semanas que tenían el gimnasio el miércoles se convierten en cambios.
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS day_override (
+        date TEXT PRIMARY KEY NOT NULL,
+        role TEXT NOT NULL CHECK (role IN ('gym','casa','rest'))
+      );
+      INSERT OR REPLACE INTO day_override (date, role)
+        SELECT date(week_start, '+2 days'), 'gym' FROM week_config WHERE second_gym = 'X';
+      INSERT OR REPLACE INTO day_override (date, role)
+        SELECT date(week_start, '+3 days'), 'casa' FROM week_config WHERE second_gym = 'X';
+    `);
+    version = 4;
+  }
+
+  if (version === 4) {
+    // Semana tipo con fecha de inicio: cambiarla no reescribe las semanas pasadas.
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS week_template (
+        from_date TEXT PRIMARY KEY NOT NULL,
+        roles TEXT NOT NULL
+      );
+    `);
+    version = 5;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);

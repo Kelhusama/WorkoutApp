@@ -1,8 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { router } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { clearWeekOverrides } from '@/db/repo';
 import {
   addDays,
   addMonths,
@@ -15,9 +18,9 @@ import {
   weekStart,
   type ISODate,
 } from '@/domain/dates';
-import type { SecondGymDay } from '@/domain/schedule';
-import { useDays } from '@/hooks/useWeek';
-import { Card } from '@/ui/components';
+import { useDays, type PlannedDay } from '@/hooks/useWeek';
+import { syncReminders } from '@/notifications/reminders';
+import { Button, Card } from '@/ui/components';
 import { Legend, MonthGrid } from '@/ui/MonthGrid';
 import { openDay } from '@/ui/navigation';
 import { colors, radius, space, type } from '@/ui/theme';
@@ -54,7 +57,23 @@ export default function CalendarScreen() {
 
   const from = mode === 'semana' ? weekStart(anchor) : weekStart(monthStart(anchor));
   const to = mode === 'semana' ? addDays(from, 6) : addDays(weekStart(monthEnd(anchor)), 6);
-  const { days, changeSecondGym, secondGymOf } = useDays(from, to);
+  const { days, reload } = useDays(from, to);
+  const db = useSQLiteContext();
+  const changeDay = (d: PlannedDay) =>
+    d.log ? undefined : () => router.push({ pathname: '/dia', params: { date: d.date } });
+  const weekHasChanges = mode === 'semana' && days.some((d) => d.overridden);
+  const resetWeek = () =>
+    Alert.alert('¿Volver a la semana tipo?', 'Se quitan los cambios de esta semana.', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Restablecer',
+        onPress: async () => {
+          await clearWeekOverrides(db, from);
+          await reload();
+          syncReminders(db);
+        },
+      },
+    ]);
 
   const shift = (n: number) => setAnchor(mode === 'semana' ? addDays(anchor, 7 * n) : addMonths(anchor, n));
   const title =
@@ -65,7 +84,6 @@ export default function CalendarScreen() {
   const planned = inRange.filter((d) => d.type !== 'rest' && d.date <= todayDate).length;
 
   const selectedDay = days.find((d) => d.date === selected);
-  const gymWeek = mode === 'semana' ? from : selected ? weekStart(selected) : null;
 
   return (
     <ScrollView
@@ -107,6 +125,7 @@ export default function CalendarScreen() {
               key={d.date}
               day={d}
               onPress={d.type !== 'rest' && d.date <= todayDate ? () => openDay(d.type, d.date) : undefined}
+              onChange={changeDay(d)}
             />
           ))}
         </View>
@@ -122,35 +141,35 @@ export default function CalendarScreen() {
                 ? () => openDay(selectedDay.type, selectedDay.date)
                 : undefined
             }
+            onChange={changeDay(selectedDay)}
           />
         </View>
       )}
 
-      {gymWeek && (
-        <Card style={{ gap: space.md }}>
-          <Text style={type.subtitle}>
-            Segundo gimnasio · semana del {formatShort(gymWeek)}
-          </Text>
-          <Segmented<SecondGymDay>
-            options={[
-              { id: 'X', label: 'Miércoles' },
-              { id: 'J', label: 'Jueves' },
-            ]}
-            value={secondGymOf(gymWeek)}
-            onChange={(d) => changeSecondGym(gymWeek, d)}
-          />
-          <Text style={type.caption}>Las sesiones de casa se reordenan para no hacer tirón el día después del gimnasio.</Text>
-        </Card>
+      {weekHasChanges && (
+        <Button label="Volver a la semana tipo" variant="secondary" icon="refresh" onPress={resetWeek} />
       )}
 
+      <Pressable onPress={() => router.push('/semana-tipo')} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+        <Card style={styles.templateCard}>
+          <Ionicons name="options-outline" size={22} color={colors.accent} />
+          <View style={{ flex: 1 }}>
+            <Text style={type.subtitle}>Semana tipo</Text>
+            <Text style={type.caption}>Elige qué días vas al gimnasio, a casa o descansas</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.faint} />
+        </Card>
+      </Pressable>
+
       <Text style={[type.caption, { textAlign: 'center' }]}>
-        {mode === 'mes' ? 'Toca un día para ver el detalle. ' : ''}Los días pasados se pueden registrar o corregir.
+        {mode === 'mes' ? 'Toca un día para ver el detalle. ' : ''}Con ⇄ cambias un día solo para esa semana.
       </Text>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  templateCard: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   segment: { flexDirection: 'row', backgroundColor: colors.cardHigh, borderRadius: radius.md, padding: 4 },
   segmentItem: { flex: 1, paddingVertical: 10, borderRadius: radius.sm, alignItems: 'center' },

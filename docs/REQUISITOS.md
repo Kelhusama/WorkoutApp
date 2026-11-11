@@ -36,9 +36,10 @@ Los hitos se muestran como progreso y celebran al alcanzarse.
 ## 2. Planificación semanal
 
 ### Estructura
-- **2 días de gimnasio**: lunes fijo + miércoles **o** jueves (el usuario lo marca cada semana).
-- **3 sesiones en casa** de ~15–18 min.
-- **2 días de descanso** (sábado y domingo por defecto).
+- **Semana tipo configurable** ✅ en la app: cada día es gimnasio, casa o descanso (de 1 a 4 días de gimnasio). Por defecto: gimnasio lunes y jueves, casa martes, miércoles y viernes, descanso fin de semana.
+- Las sesiones de casa A/B/C se reparten solas. Si hay más de 3 días de casa, se repite el ciclo.
+- **Cambiar un día concreto** ✅ solo para esa semana (⇄ en el calendario o «Cambiar lo que hago hoy»), y volver a la semana tipo.
+- Cambiar la semana tipo se aplica desde la semana actual; las semanas pasadas no cambian y los días ya registrados conservan lo que se hizo.
 
 ### Reglas
 - **R1** — Nunca una sesión de tirón fuerte (A) el día siguiente al gimnasio.
@@ -46,12 +47,6 @@ Los hitos se muestran como progreso y celebran al alcanzarse.
 - **R3** — Los días marcados como **viaje** usan alternativas sin material y no cuentan como fallo si no se entrena.
 - **R4** — Si pasan más de 10 días sin registrar press de banca, se recuerda hacerlo al final del gimnasio (3×5).
 
-### Semanas tipo
-
-| Gimnasio | L | M | X | J | V | S | D |
-|---|---|---|---|---|---|---|---|
-| L + J | 🏋️ Gym | B | A | 🏋️ Gym | C | 😴 | 😴 |
-| L + X | 🏋️ Gym | B | 🏋️ Gym | C | A | 😴 | 😴 |
 
 ---
 
@@ -186,8 +181,13 @@ Aviso en **Hoy** si han pasado más de 7 días sin pesarse.
 ### Pendiente: báscula Huawei por Bluetooth
 Leer automáticamente peso y % de grasa de la báscula Huawei del usuario.
 - Huawei no publica el protocolo Bluetooth de sus básculas; los datos van a la app Huawei Salud.
-- Vías a investigar: (1) Health Connect de Android, si Huawei Salud exporta ahí el peso; (2) Huawei Health Kit (requiere servicios HMS y registro como desarrollador); (3) protocolo BLE por ingeniería inversa (proyectos como openScale), según el modelo exacto.
-- Necesario: modelo exacto de la báscula. Requiere *development build* (Bluetooth no funciona en Expo Go).
+- **openScale** (app libre, GPLv3) ya lee varias básculas Huawei por BLE GATT ([wiki](https://github.com/oliexdev/openScale/wiki/Supported-scales-in-openScale), verificado 11/11/2026):
+  - Honor Smart Scale CH100S: peso en vivo y composición corporal.
+  - Huawei AH100 / CH100: peso en vivo; la composición corporal está sin descifrar.
+  - HUAWEI Scale 2 Pro / Scale 3 / Scale 3 Pro: peso, composición e historial, pero solo responden tras un *handshake* "Hagrid" que necesita tres claves (CAK, C1, C2) de la báscula. Cómo obtenerlas: sin verificar.
+- Alternativas: Health Connect de Android (si Huawei Salud exporta el peso) o Huawei Health Kit (HMS).
+- Si se reutiliza código de openScale, su licencia GPLv3 obliga a publicar este proyecto con la misma licencia.
+- Necesario: modelo exacto de la báscula. Requiere *development build* con `react-native-ble-plx` (Bluetooth no funciona en Expo Go).
 - La base de datos ya guarda el origen de cada medición (`source`) y el % de grasa de báscula.
 
 ---
@@ -221,6 +221,27 @@ Requisito externo: proyecto en Google Cloud Console con un cliente OAuth Android
 7. **Báscula Huawei** por Bluetooth (pendiente de investigar).
 
 ---
+
+## Ideas pendientes (de apps libres en GitHub)
+
+Revisadas: wger, Liftosaur, LiftLog (Expo/React Native), Flexify, FitoTrack, MyFit y openScale. Ordenadas por prioridad:
+
+| # | Idea | Inspirada en | Esfuerzo |
+|---|---|---|---|
+| 1 | Temporizador de descanso entre series con vibración | Flexify, Liftosaur | Bajo |
+| 2 | Repeticiones en reserva (RIR) por serie para afinar la progresión | MyFit | Bajo-medio |
+| 3 | Récords por ejercicio (más reps, mejor 1RM, más volumen) con aviso | Flexify, Liftosaur | Medio |
+| 4 | Volumen semanal por músculo (series de pecho y bíceps) frente a un objetivo de hipertrofia | Liftosaur | Medio |
+| 5 | Series de calentamiento automáticas para la banca (% del peso de trabajo) | Liftosaur | Bajo |
+| 6 | Calculadora de discos para la barra | Liftosaur | Bajo |
+| 7 | Semana de descarga automática si se acumulan sesiones «dura» o se estanca la banca | Liftosaur | Medio |
+| 8 | Sustituir un ejercicio por otro del mismo músculo (útil en viajes) | Liftosaur | Medio |
+| 9 | Fotos de progreso con comparación antes/después | wger | Medio |
+| 10 | Gráfica de rendimiento junto al peso corporal (p. ej. dominadas frente a kg) | Liftosaur | Medio |
+| 11 | Registro rápido de cardio o pasos | FitoTrack, Flexify | Medio |
+| 12 | Registro sencillo de calorías y proteína frente al objetivo | wger | Bajo (solo totales) / Alto (con base de alimentos) |
+| 13 | Exportar e importar CSV/JSON | wger, Flexify | Bajo |
+| 14 | Programas predefinidos («Camino a 10 dominadas», «50 flexiones») | Liftosaur | Medio |
 
 ## Pendiente de confirmar
 - Nombre definitivo de la app ("Forja" es provisional).

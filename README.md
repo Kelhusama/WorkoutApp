@@ -7,7 +7,7 @@ Requisitos completos en [docs/REQUISITOS.md](docs/REQUISITOS.md).
 ## Estado
 
 **Fase 1 — núcleo** ✅
-- Plan semanal (gimnasio L + X/J, sesiones A/B/C en casa, 2 descansos)
+- Semana tipo configurable (1–4 días de gimnasio) y cambios de días sueltos; sesiones A/B/C repartidas solas
 - Registro de sesiones al final, con sensación (fácil/normal/dura)
 - Progresión automática: reps → tempo lento → pausa → series → variante
 - Registro rápido de gimnasio con press de banca y 1RM estimado
@@ -28,7 +28,7 @@ Requiere Node.js 20 o superior.
 ```bash
 npm install
 npm start          # abre Metro; escanea el QR con Expo Go en Android
-npm test           # tests de la lógica (plan, progresión, objetivos)
+npm test           # tests de la lógica y de la base de datos (SQLite de Node)
 npm run typecheck
 ```
 

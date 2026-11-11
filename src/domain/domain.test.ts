@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { addDays, formatLong, weekStart, weekdayIndex } from './dates';
 import { EXERCISES } from './exercises';
 import { isCompleted, progress, type Prescription, type SlotRules } from './progression';
-import { WEEK_PATTERNS, dayStatus, dayTypeFor, weekPlan } from './schedule';
+import { DEFAULT_TEMPLATE, assignKinds, dayStatus, isValidTemplate, parseTemplate, type Role } from './schedule';
 import { estimate1RM, goalProgress, GOALS, nextMilestone } from './strength';
 import { TEMPLATES } from './templates';
 
@@ -19,30 +19,54 @@ test('fechas: lunes de la semana y día de la semana', () => {
   assert.equal(formatLong('2026-11-11'), 'Miércoles 11 de noviembre');
 });
 
-test('R1: nunca tirón (A) el día después del gimnasio', () => {
-  for (const pattern of Object.values(WEEK_PATTERNS)) {
-    pattern.forEach((t, i) => {
-      if (t === 'gym') assert.notEqual(pattern[(i + 1) % 7], 'A');
-    });
+test('semana por defecto: lunes y jueves de gimnasio', () => {
+  assert.deepEqual(assignKinds(DEFAULT_TEMPLATE), ['gym', 'B', 'A', 'gym', 'C', 'rest', 'rest']);
+});
+
+test('gimnasio lunes y miércoles reparte igual que antes', () => {
+  const t: Role[] = ['gym', 'casa', 'gym', 'casa', 'casa', 'rest', 'rest'];
+  assert.deepEqual(assignKinds(t), ['gym', 'B', 'gym', 'C', 'A', 'rest', 'rest']);
+});
+
+test('R1 en cualquier semana: nunca tirón (A) el día después del gimnasio', () => {
+  const roles: Role[] = ['gym', 'casa', 'rest'];
+  // Todas las combinaciones posibles de 7 días
+  for (let n = 0; n < 3 ** 7; n++) {
+    const t: Role[] = [];
+    for (let i = 0, x = n; i < 7; i++, x = Math.floor(x / 3)) t.push(roles[x % 3]);
+    for (const prev of roles) {
+      const k = assignKinds(t, prev);
+      k.forEach((type, i) => {
+        const before = i === 0 ? prev : t[i - 1];
+        if (before === 'gym') assert.notEqual(type, 'A', `${t.join(',')} prev=${prev}`);
+      });
+    }
   }
 });
 
-test('cada semana tiene 2 gimnasios, A/B/C una vez y 2 descansos', () => {
-  for (const pattern of Object.values(WEEK_PATTERNS)) {
-    const count = (t: string) => pattern.filter((x) => x === t).length;
-    assert.equal(count('gym'), 2);
-    assert.equal(count('rest'), 2);
-    for (const k of ['A', 'B', 'C']) assert.equal(count(k), 1);
-    assert.equal(pattern[0], 'gym');
-  }
+test('con 3 días de casa salen A, B y C una vez', () => {
+  const k = assignKinds(['casa', 'rest', 'casa', 'rest', 'casa', 'rest', 'rest']);
+  assert.deepEqual([...k.filter((x) => x !== 'rest')].sort(), ['A', 'B', 'C']);
 });
 
-test('plan semanal según segundo día de gimnasio', () => {
-  assert.equal(dayTypeFor('2026-11-11', 'X'), 'gym');
-  assert.equal(dayTypeFor('2026-11-11', 'J'), 'A');
-  const plan = weekPlan('2026-11-09', 'J');
-  assert.equal(plan.length, 7);
-  assert.deepEqual(plan[3], { date: '2026-11-12', type: 'gym' });
+test('domingo de gimnasio: el lunes no es tirón', () => {
+  const k = assignKinds(['casa', 'casa', 'rest', 'casa', 'rest', 'rest', 'gym'], 'gym');
+  assert.notEqual(k[0], 'A');
+});
+
+test('los días ya registrados mantienen su sesión', () => {
+  // El martes se hizo A; aunque ahora el lunes sea gimnasio, el martes sigue siendo A y el resto se reparte sin repetir
+  const k = assignKinds(['gym', 'casa', 'casa', 'gym', 'casa', 'rest', 'rest'], 'rest', [null, 'A', null, null, null, null, null]);
+  assert.equal(k[1], 'A');
+  assert.deepEqual([k[2], k[4]].sort(), ['B', 'C']);
+});
+
+test('semana tipo: validación y lectura', () => {
+  assert.equal(isValidTemplate(DEFAULT_TEMPLATE), true);
+  assert.equal(isValidTemplate(['rest', 'rest', 'rest', 'rest', 'rest', 'rest', 'rest']), false);
+  assert.equal(isValidTemplate(['gym', 'gym', 'gym', 'gym', 'gym', 'rest', 'rest']), false);
+  assert.deepEqual(parseTemplate('gym,casa,gym,casa,casa,rest,rest')[2], 'gym');
+  assert.deepEqual(parseTemplate('basura'), DEFAULT_TEMPLATE);
 });
 
 test('R2: día pasado sin registro = fallado; descanso nunca falla', () => {

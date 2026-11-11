@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getBodyLog } from '@/db/body';
 import { deleteLog, getPrescriptions, markMissed } from '@/db/repo';
 import { syncReminders } from '@/notifications/reminders';
-import { addDays, formatLong, today as getToday, weekdayIndex } from '@/domain/dates';
+import { addDays, formatLong, today as getToday } from '@/domain/dates';
 import { FEELING_LABEL, TEMPO_LABEL, type Prescription } from '@/domain/progression';
 import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
 import { prescriptionShort } from '@/domain/format';
@@ -25,7 +25,7 @@ export default function TodayScreen() {
   const db = useSQLiteContext();
   const insets = useSafeAreaInsets();
   const todayDate = getToday();
-  const { days, secondGym, reload, changeSecondGym } = useWeek(todayDate);
+  const { days, reload } = useWeek(todayDate);
   const day = days.find((d) => d.date === todayDate);
   const [prescriptions, setPrescriptions] = useState<Record<string, Prescription> | null>(null);
 
@@ -64,9 +64,6 @@ export default function TodayScreen() {
     reload();
     syncReminders(db);
   };
-
-  // Miércoles con el gimnasio puesto el jueves: atajo para cambiarlo.
-  const canSwitchGymToToday = weekdayIndex(todayDate) === 2 && secondGym === 'J' && day?.status !== 'done';
 
   return (
     <ScrollView
@@ -143,14 +140,14 @@ export default function TodayScreen() {
             <Button label="Editar registro" variant="secondary" icon="create-outline" onPress={() => openDay(day.type, todayDate)} />
           )}
           {day.status === 'missed' && <Button label="Deshacer fallo" variant="secondary" icon="arrow-undo" onPress={undoMissed} />}
-        </Card>
-      )}
-
-      {canSwitchGymToToday && (
-        <Card style={{ marginTop: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
-          <Ionicons name="barbell-outline" size={22} color={colors.muted} />
-          <Text style={[type.caption, { flex: 1 }]}>¿Esta semana vas al gimnasio hoy en vez del jueves?</Text>
-          <Button label="Sí" variant="secondary" onPress={() => changeSecondGym('X')} />
+          {!day.log && (
+            <Pressable onPress={() => router.push({ pathname: '/dia', params: { date: todayDate } })} style={styles.changeDay}>
+              <Ionicons name="swap-horizontal" size={16} color={colors.muted} />
+              <Text style={type.caption}>
+                {day.overridden ? 'Día cambiado · cambiar otra vez' : 'Cambiar lo que hago hoy'}
+              </Text>
+            </Pressable>
+          )}
         </Card>
       )}
 
@@ -180,6 +177,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  changeDay: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 4 },
   bell: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   exRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   exPresc: { fontSize: 15, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },

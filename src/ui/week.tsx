@@ -55,7 +55,7 @@ export function WeekStrip({ days }: { days: PlannedDay[] }) {
 }
 
 /** Fila de un día para la pantalla Semana. */
-export function DayRow({ day, onPress }: { day: PlannedDay; onPress?: () => void }) {
+export function DayRow({ day, onPress, onChange }: { day: PlannedDay; onPress?: () => void; onChange?: () => void }) {
   const info = SESSION_INFO[day.type];
   const s = STATUS_STYLE[day.status];
   const isToday = day.date === today();
@@ -76,12 +76,20 @@ export function DayRow({ day, onPress }: { day: PlannedDay; onPress?: () => void
         <Ionicons name={info.icon as IconName} size={20} color={day.type === 'rest' ? colors.faint : colors.accent} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={type.subtitle}>{info.title}</Text>
+        <Text style={type.subtitle}>
+          {info.title}
+          {day.overridden ? <Text style={[type.caption, { color: colors.info }]}>  · cambiado</Text> : null}
+        </Text>
         <Text style={type.caption} numberOfLines={1}>
           {detail}
         </Text>
       </View>
       {day.type !== 'rest' && <Pill label={s.label} color={s.color} bg={s.bg} />}
+      {onChange && (
+        <Pressable accessibilityLabel="Cambiar este día" onPress={onChange} hitSlop={10} style={styles.swap}>
+          <Ionicons name="swap-horizontal" size={18} color={colors.muted} />
+        </Pressable>
+      )}
     </Pressable>
   );
 }
@@ -100,6 +108,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: colors.card,
   },
+  swap: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.cardHigh, alignItems: 'center', justifyContent: 'center' },
   rowToday: { borderWidth: 1.5, borderColor: colors.accent },
   rowDate: { width: 34, alignItems: 'center' },
   rowDay: { fontSize: 18, fontWeight: '800', color: colors.text },
