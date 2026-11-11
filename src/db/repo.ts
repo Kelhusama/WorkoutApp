@@ -37,6 +37,16 @@ export async function getSecondGym(db: SQLiteDatabase, date: ISODate): Promise<S
   return row?.second_gym ?? DEFAULT_SECOND_GYM;
 }
 
+/** Configuración de segundo gimnasio de todas las semanas que empiezan en el rango. */
+export async function getWeekConfigs(db: SQLiteDatabase, from: ISODate, to: ISODate) {
+  const rows = await db.getAllAsync<{ week_start: ISODate; second_gym: SecondGymDay }>(
+    'SELECT week_start, second_gym FROM week_config WHERE week_start BETWEEN ? AND ?',
+    weekStart(from),
+    to,
+  );
+  return new Map(rows.map((r) => [r.week_start, r.second_gym]));
+}
+
 export async function setSecondGym(db: SQLiteDatabase, date: ISODate, day: SecondGymDay) {
   await db.runAsync(
     'INSERT INTO week_config (week_start, second_gym) VALUES (?, ?) ON CONFLICT(week_start) DO UPDATE SET second_gym = excluded.second_gym',

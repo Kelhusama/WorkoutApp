@@ -75,18 +75,3 @@ export function progress(
   }
   return { next: current, change: 'variante' };
 }
-
-export function describeChange(change: ChangeKind, next: Prescription, unit: string): string {
-  switch (change) {
-    case 'reps':
-      return `Próxima vez: ${next.sets} × ${next.reps}${unit}`;
-    case 'tempo':
-      return `Nuevo reto: ${TEMPO_LABEL[next.tempo]} (${next.sets} × ${next.reps}${unit})`;
-    case 'sets':
-      return `Una serie más: ${next.sets} × ${next.reps}${unit}`;
-    case 'variante':
-      return 'Tope alcanzado: listo para una variante más difícil';
-    case 'none':
-      return 'Se mantiene igual';
-  }
-}

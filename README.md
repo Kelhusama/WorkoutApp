@@ -12,9 +12,13 @@ Requisitos completos en [docs/REQUISITOS.md](docs/REQUISITOS.md).
 - Progresión automática: reps → tempo lento → pausa → series → variante
 - Registro rápido de gimnasio con press de banca y 1RM estimado
 - Objetivos con hitos y tests de máximo
-- Fichas básicas: claves de técnica, errores típicos y enlace a vídeo
+- Dibujos animados propios de cada ejercicio, con claves de técnica y errores típicos
 
-Siguientes fases: calendario y modo viaje · gráficas, peso, medidas y fotos · ilustraciones · recordatorios · Google Drive.
+**Fase 2 (parcial)** ✅
+- Calendario con vista de semana y de mes
+- Sección Cuerpo: perfil, peso y medidas, e indicadores (IMC, cintura/altura, % grasa, masa magra, FFMI, ritmo semanal, metabolismo basal, gasto diario) con rangos e historial
+
+Siguiente: modo viaje · gráficas de ejercicios, récords y fotos · recordatorios · Google Drive · báscula Huawei.
 
 ## Desarrollo
 
@@ -32,7 +36,8 @@ npm run typecheck
 ```
 src/
   app/        pantallas (Expo Router)
-  domain/     lógica pura: fechas, plan, ejercicios, progresión, objetivos
+  domain/     lógica pura: fechas, plan, ejercicios, progresión, objetivos, indicadores corporales
+  illustrations/  dibujos animados de los ejercicios (figura con cinemática inversa)
   db/         SQLite: esquema y consultas
   hooks/      useWeek
   ui/         tema y componentes

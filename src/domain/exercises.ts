@@ -10,8 +10,6 @@ export interface Exercise {
   muscles: string[];
   cues: string[];
   mistakes: string[];
-  /** Texto para la búsqueda de vídeo en YouTube. */
-  videoQuery: string;
 }
 
 export const EXERCISES: Record<string, Exercise> = {
@@ -29,7 +27,6 @@ export const EXERCISES: Record<string, Exercise> = {
       'Baja controlado hasta estirar los brazos',
     ],
     mistakes: ['Medias repeticiones', 'Balancear las piernas', 'Dejarse caer de golpe'],
-    videoQuery: 'dominada supina chin up técnica correcta',
   },
   dominada_neutra: {
     id: 'dominada_neutra',
@@ -45,7 +42,6 @@ export const EXERCISES: Record<string, Exercise> = {
       'Sin llegar al fallo: deja 1–2 en reserva',
     ],
     mistakes: ['Encoger los hombros hacia las orejas', 'Patear para subir'],
-    videoQuery: 'dominada agarre neutro técnica',
   },
   negativa_dominada: {
     id: 'negativa_dominada',
@@ -60,7 +56,6 @@ export const EXERCISES: Record<string, Exercise> = {
       'Controla hasta tener los brazos estirados',
     ],
     mistakes: ['Caer rápido en la última parte', 'Hacer demasiadas: fatigan mucho'],
-    videoQuery: 'dominadas negativas excéntricas técnica',
   },
   colgarse: {
     id: 'colgarse',
@@ -71,7 +66,6 @@ export const EXERCISES: Record<string, Exercise> = {
     muscles: ['Antebrazo', 'Agarre'],
     cues: ['Agarre firme, brazos estirados', 'Hombros ligeramente activos, no totalmente sueltos', 'Respira con calma'],
     mistakes: ['Soltar antes por mala posición del pulgar'],
-    videoQuery: 'dead hang colgarse barra agarre',
   },
   remo_mancuerna: {
     id: 'remo_mancuerna',
@@ -87,7 +81,6 @@ export const EXERCISES: Record<string, Exercise> = {
       'Baja estirando bien el brazo',
     ],
     mistakes: ['Girar el tronco para subir', 'Tirar solo con el bíceps'],
-    videoQuery: 'remo con mancuerna a una mano técnica',
   },
   curl_concentrado: {
     id: 'curl_concentrado',
@@ -103,7 +96,6 @@ export const EXERCISES: Record<string, Exercise> = {
       'Baja hasta casi estirar del todo',
     ],
     mistakes: ['Mover el codo', 'Ayudarse con el hombro'],
-    videoQuery: 'curl concentrado bíceps técnica',
   },
   curl_martillo: {
     id: 'curl_martillo',
@@ -114,7 +106,6 @@ export const EXERCISES: Record<string, Exercise> = {
     muscles: ['Braquial', 'Bíceps', 'Antebrazo'],
     cues: ['Agarre neutro (pulgar arriba)', 'Codo pegado al cuerpo', 'Sube sin balanceo y baja lento'],
     mistakes: ['Balancear el cuerpo', 'Separar el codo'],
-    videoQuery: 'curl martillo mancuerna técnica',
   },
   curl_muneca: {
     id: 'curl_muneca',
@@ -125,7 +116,6 @@ export const EXERCISES: Record<string, Exercise> = {
     muscles: ['Antebrazo (flexores)'],
     cues: ['Antebrazo apoyado en el muslo, palma arriba', 'Solo se mueve la muñeca', 'Recorrido completo: abajo y arriba'],
     mistakes: ['Levantar el antebrazo del apoyo'],
-    videoQuery: 'curl de muñeca mancuerna antebrazo',
   },
   curl_muneca_inverso: {
     id: 'curl_muneca_inverso',
@@ -136,7 +126,6 @@ export const EXERCISES: Record<string, Exercise> = {
     muscles: ['Antebrazo (extensores)'],
     cues: ['Antebrazo apoyado, palma hacia abajo', 'Sube el dorso de la mano', 'Movimiento lento y corto'],
     mistakes: ['Usar impulso'],
-    videoQuery: 'curl de muñeca inverso antebrazo',
   },
   flexion_estricta: {
     id: 'flexion_estricta',
@@ -152,7 +141,6 @@ export const EXERCISES: Record<string, Exercise> = {
       'Brazos estirados del todo arriba',
     ],
     mistakes: ['Cadera caída o en pico', 'Codos abiertos a 90°', 'Medio recorrido'],
-    videoQuery: 'flexiones técnica correcta push up',
   },
   flexion_inclinada: {
     id: 'flexion_inclinada',
@@ -163,7 +151,6 @@ export const EXERCISES: Record<string, Exercise> = {
     muscles: ['Pecho', 'Tríceps'],
     cues: ['Manos en una silla estable o banco', 'Misma técnica que la estricta', 'Pecho hasta tocar el borde'],
     mistakes: ['Silla que se mueve', 'Cadera caída'],
-    videoQuery: 'flexiones inclinadas técnica',
   },
   flexion_pica: {
     id: 'flexion_pica',
@@ -179,7 +166,6 @@ export const EXERCISES: Record<string, Exercise> = {
       'Empuja hasta estirar los brazos',
     ],
     mistakes: ['Bajar el pecho en vez de la cabeza', 'Cadera demasiado baja'],
-    videoQuery: 'pike push up flexión en pica técnica',
   },
   press_militar_una_mano: {
     id: 'press_militar_una_mano',
@@ -190,7 +176,6 @@ export const EXERCISES: Record<string, Exercise> = {
     muscles: ['Hombro', 'Tríceps'],
     cues: ['De pie o sentado, abdomen firme', 'Mancuerna a la altura del hombro', 'Empuja vertical hasta estirar', 'No arquees la espalda'],
     mistakes: ['Inclinarse hacia un lado', 'Arquear la zona lumbar'],
-    videoQuery: 'press militar mancuerna una mano técnica',
   },
   pajaros: {
     id: 'pajaros',
@@ -201,10 +186,6 @@ export const EXERCISES: Record<string, Exercise> = {
     muscles: ['Hombro posterior', 'Romboides'],
     cues: ['Inclinado con la espalda recta', 'Brazo casi estirado', 'Abre hacia el lado hasta la altura del hombro', 'Si 10 kg es mucho, usa la goma'],
     mistakes: ['Usar impulso', 'Subir por encima del hombro'],
-    videoQuery: 'pájaros hombro posterior mancuerna técnica',
   },
 };
 
-export function youtubeSearchUrl(ex: Exercise): string {
-  return `https://www.youtube.com/results?search_query=${encodeURIComponent(ex.videoQuery)}`;
-}

@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 1;
+const LATEST = 2;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -53,6 +53,30 @@ export async function migrate(db: SQLiteDatabase) {
       );
     `);
     version = 1;
+  }
+
+  if (version === 1) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS profile (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        height_cm REAL NOT NULL,
+        birth_date TEXT NOT NULL,
+        sex TEXT NOT NULL CHECK (sex IN ('H','M')),
+        activity REAL NOT NULL DEFAULT 1.55
+      );
+      CREATE TABLE IF NOT EXISTS body_log (
+        date TEXT PRIMARY KEY NOT NULL,
+        weight REAL NOT NULL,
+        waist REAL,
+        neck REAL,
+        hip REAL,
+        arm REAL,
+        chest REAL,
+        body_fat REAL,
+        source TEXT NOT NULL DEFAULT 'manual'
+      );
+    `);
+    version = 2;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);

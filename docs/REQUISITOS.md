@@ -2,7 +2,7 @@
 
 App Android personal para seguir el rendimiento, ganar músculo (bíceps y pecho sobre todo), perder grasa y llegar a 10 dominadas. Combina 2 días de gimnasio con sesiones cortas en casa.
 
-> Estado: borrador para revisión · 11/11/2026
+> Estado: en desarrollo · actualizado 11/11/2026
 
 ---
 
@@ -154,10 +154,41 @@ El usuario tiene su rutina (halterofilia y ejercicios compuestos, sin trabajo ai
 ## 8. Fichas de ejercicios
 
 Cada ejercicio incluye:
-- Ilustración propia de la posición inicial y final (sin imágenes de terceros)
+- **Dibujo animado propio** (figura que va de la posición inicial a la final en bucle). Sin vídeos de YouTube: no son fiables.
 - 3–4 claves de técnica
 - Errores típicos
-- Botón **"Ver vídeo"** → búsqueda en YouTube del ejercicio en español (opcionalmente, un vídeo fijado por el usuario)
+
+---
+
+## 8b. Cuerpo: peso, medidas e indicadores
+
+**Perfil**: altura, fecha de nacimiento, sexo y nivel de actividad.
+
+**Medición** (semanal, por la mañana en ayunas): peso, cintura, cuello, cadera (mujeres), brazo, pecho y, opcionalmente, % de grasa de una báscula.
+
+**Indicadores**, cada uno con su fórmula, rangos de referencia e historial con gráfica:
+
+| Indicador | Fórmula | Rangos |
+|---|---|---|
+| IMC | peso ÷ altura² | <18,5 bajo · 18,5–25 normal · 25–30 sobrepeso · ≥30 obesidad |
+| Cintura / altura | cintura ÷ altura | <0,4 muy bajo · 0,4–0,5 saludable · 0,5–0,6 riesgo aumentado · ≥0,6 alto |
+| % de grasa | Marina EE. UU. (cintura, cuello, altura; cadera en mujeres) o báscula | H: <6 esencial · 6–14 atlético · 14–18 en forma · 18–25 medio · ≥25 alto |
+| Masa magra | peso × (1 − % grasa) | — (tendencia) |
+| FFMI normalizado | masa magra ÷ altura² + 6,1 × (1,8 − altura) | H: <18 bajo · 18–20 medio · 20–22 bueno · 22–23 excelente · ≥23 superior |
+| Ritmo semanal | % de cambio de peso respecto a hace ~7 días | <−1 % demasiado rápido · −1 a −0,25 % ideal · ±0,25 % estable · >0,25 % subiendo |
+| Metabolismo basal | Mifflin-St Jeor | — |
+| Gasto diario | basal × factor de actividad | — |
+
+**Recomendaciones derivadas**: calorías (gasto diario − 300 a 500 kcal) y proteína (1,6–2,2 g/kg).
+
+Aviso en **Hoy** si han pasado más de 7 días sin pesarse.
+
+### Pendiente: báscula Huawei por Bluetooth
+Leer automáticamente peso y % de grasa de la báscula Huawei del usuario.
+- Huawei no publica el protocolo Bluetooth de sus básculas; los datos van a la app Huawei Salud.
+- Vías a investigar: (1) Health Connect de Android, si Huawei Salud exporta ahí el peso; (2) Huawei Health Kit (requiere servicios HMS y registro como desarrollador); (3) protocolo BLE por ingeniería inversa (proyectos como openScale), según el modelo exacto.
+- Necesario: modelo exacto de la báscula. Requiere *development build* (Bluetooth no funciona en Expo Go).
+- La base de datos ya guarda el origen de cada medición (`source`) y el % de grasa de báscula.
 
 ---
 
@@ -182,15 +213,17 @@ Requisito externo: proyecto en Google Cloud Console con un cliente OAuth Android
 ## 10. Fases de implementación
 
 1. **Núcleo**: datos, plan semanal, sesiones A/B/C, registro y sensación, progresión.
-2. **Calendario**: vista mensual, día de gimnasio, fallos y modo viaje.
-3. **Seguimiento**: gráficas, récords, racha, peso y medidas, fotos.
-4. **Fichas**: ilustraciones, técnica, vídeos.
+2. **Calendario**: vista semana/mes ✅, día de gimnasio ✅, fallos ✅ y modo viaje.
+3. **Seguimiento**: peso, medidas e indicadores ✅; gráficas de ejercicios, récords, racha, fotos.
+4. **Fichas**: dibujos animados ✅, técnica ✅.
 5. **Recordatorios**.
 6. **Google**: inicio de sesión y copia en Drive.
+7. **Báscula Huawei** por Bluetooth (pendiente de investigar).
 
 ---
 
 ## Pendiente de confirmar
-- Nombre definitivo de la app.
+- Nombre definitivo de la app ("Forja" es provisional).
+- Modelo exacto de la báscula Huawei.
 - Hora de los recordatorios.
 - Si es viable hacer press de banca 3×5 al final del gimnasio cuando no toque.

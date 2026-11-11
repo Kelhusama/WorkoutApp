@@ -1,12 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { youtubeSearchUrl } from '@/domain/exercises';
+import { amountText, prescriptionText } from '@/domain/format';
 import { TEMPO_LABEL, type Prescription } from '@/domain/progression';
-import { exerciseFor, unitFor, type Slot } from '@/domain/templates';
-import { Card, Pill, Stepper } from './components';
+import { exerciseFor, type Slot } from '@/domain/templates';
+import { ExerciseFigure } from '@/illustrations/ExerciseFigure';
+import { Card } from './components';
 import { colors, radius, space, type } from './theme';
 
 interface Props {
@@ -18,118 +19,96 @@ interface Props {
 
 export function ExerciseCard({ slot, target, values, onChange }: Props) {
   const ex = exerciseFor(slot);
-  const unit = unitFor(ex);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [showInfo, setShowInfo] = useState(false);
-  const allHit = values.length >= target.sets && values.slice(0, target.sets).every((v) => v >= target.reps);
+  const step = ex.measure === 'time' ? 5 : 1;
+  const [showHow, setShowHow] = useState(false);
 
-  const setValue = (i: number, v: number) => onChange(values.map((x, j) => (j === i ? v : x)));
+  const setValue = (i: number, v: number) => {
+    Haptics.selectionAsync();
+    onChange(values.map((x, j) => (j === i ? Math.max(0, v) : x)));
+  };
 
   return (
     <Card style={{ gap: space.md }}>
-      <View style={styles.header}>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text style={type.subtitle}>{ex.name}</Text>
-          <Text style={type.caption}>
-            {target.sets} × {target.reps}
-            {unit}
-            {ex.perArm ? ' por brazo' : ''} · {ex.muscles.join(', ')}
-          </Text>
-        </View>
-        <Pressable
-          accessibilityLabel="Cómo se hace"
-          onPress={() => setShowInfo((s) => !s)}
-          hitSlop={10}
-          style={[styles.infoBtn, showInfo && { backgroundColor: colors.accentSoft }]}>
-          <Ionicons name="information" size={18} color={showInfo ? colors.accent : colors.muted} />
-        </Pressable>
+      <View style={{ gap: 4 }}>
+        <Text style={type.title}>{ex.name}</Text>
+        <Text style={[type.body, { color: colors.accent, fontWeight: '700' }]}>{prescriptionText(target, ex)}</Text>
+        <Text style={type.caption}>{ex.muscles.join(' · ')}</Text>
       </View>
 
-      {(target.tempo > 0 || slot.note) && (
-        <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
-          {target.tempo > 0 && <Pill label={TEMPO_LABEL[target.tempo]!} color={colors.info} bg={colors.infoSoft} />}
-          {slot.note && <Text style={[type.caption, { flexShrink: 1 }]}>{slot.note}</Text>}
+      {target.tempo > 0 && (
+        <View style={styles.tempo}>
+          <Ionicons name="timer-outline" size={18} color={colors.info} />
+          <Text style={[type.caption, { color: colors.info, flex: 1 }]}>
+            {TEMPO_LABEL[target.tempo]}: haz cada repetición más despacio, es la forma de progresar con el mismo peso.
+          </Text>
         </View>
       )}
+      {slot.note && <Text style={type.caption}>{slot.note}</Text>}
 
-      {showInfo && (
-        <View style={styles.info}>
+      <Pressable onPress={() => setShowHow((s) => !s)} style={styles.howBtn} accessibilityRole="button">
+        <Ionicons name={showHow ? 'chevron-up' : 'body-outline'} size={18} color={colors.text} />
+        <Text style={[type.subtitle, { fontSize: 14 }]}>{showHow ? 'Ocultar' : 'Cómo se hace'}</Text>
+      </Pressable>
+
+      {showHow && (
+        <View style={styles.how}>
+          <ExerciseFigure exerciseId={ex.id} size={190} />
           {ex.cues.map((c) => (
             <View key={c} style={styles.bullet}>
-              <Ionicons name="checkmark" size={14} color={colors.success} style={{ marginTop: 2 }} />
+              <Ionicons name="checkmark-circle" size={16} color={colors.success} style={{ marginTop: 1 }} />
               <Text style={[type.body, { flex: 1, fontSize: 14 }]}>{c}</Text>
             </View>
           ))}
           {ex.mistakes.map((m) => (
             <View key={m} style={styles.bullet}>
-              <Ionicons name="close" size={14} color={colors.danger} style={{ marginTop: 2 }} />
-              <Text style={[type.caption, { flex: 1 }]}>{m}</Text>
+              <Ionicons name="close-circle" size={16} color={colors.danger} style={{ marginTop: 1 }} />
+              <Text style={[type.caption, { flex: 1 }]}>Evita: {m.toLowerCase()}</Text>
             </View>
           ))}
-          <Pressable onPress={() => Linking.openURL(youtubeSearchUrl(ex))} style={styles.video}>
-            <Ionicons name="logo-youtube" size={18} color={colors.danger} />
-            <Text style={[type.subtitle, { fontSize: 14 }]}>Ver vídeo</Text>
-          </Pressable>
         </View>
       )}
 
-      <View style={styles.chips}>
+      <View style={styles.table}>
+        <Text style={type.overline}>Lo que has hecho</Text>
         {values.map((v, i) => {
           const hit = v >= target.reps;
-          const active = selected === i;
+          const extra = i >= target.sets;
           return (
-            <Pressable
-              key={i}
-              accessibilityLabel={`Serie ${i + 1}: ${v}${unit}`}
-              onPress={() => {
-                Haptics.selectionAsync();
-                setSelected(active ? null : i);
-              }}
-              style={[
-                styles.chip,
-                { backgroundColor: hit ? colors.successSoft : colors.dangerSoft },
-                active && { borderColor: colors.accent },
-              ]}>
-              <Text style={styles.chipSet}>S{i + 1}</Text>
-              <Text style={[styles.chipValue, { color: hit ? colors.success : colors.danger }]}>
-                {v}
-                {unit}
+            <View key={i} style={styles.setRow}>
+              <Ionicons
+                name={hit ? 'checkmark-circle' : 'alert-circle'}
+                size={22}
+                color={hit ? colors.success : colors.danger}
+              />
+              <Text style={styles.setLabel}>
+                Serie {i + 1}
+                {extra ? ' (extra)' : ''}
               </Text>
-            </Pressable>
+              <Pressable accessibilityLabel={`Restar en serie ${i + 1}`} onPress={() => setValue(i, v - step)} style={styles.stepBtn} hitSlop={6}>
+                <Ionicons name="remove" size={20} color={colors.text} />
+              </Pressable>
+              <Text style={[styles.setValue, { color: hit ? colors.text : colors.danger }]}>{amountText(v, ex, true)}</Text>
+              <Pressable accessibilityLabel={`Sumar en serie ${i + 1}`} onPress={() => setValue(i, v + step)} style={styles.stepBtn} hitSlop={6}>
+                <Ionicons name="add" size={20} color={colors.text} />
+              </Pressable>
+              {extra ? (
+                <Pressable accessibilityLabel="Quitar serie" onPress={() => onChange(values.filter((_, j) => j !== i))} hitSlop={8}>
+                  <Ionicons name="trash-outline" size={18} color={colors.faint} />
+                </Pressable>
+              ) : (
+                <View style={{ width: 18 }} />
+              )}
+            </View>
           );
         })}
-        <Pressable
-          accessibilityLabel="Añadir serie"
-          onPress={() => onChange([...values, target.reps])}
-          style={[styles.chip, styles.chipAdd]}>
-          <Ionicons name="add" size={20} color={colors.muted} />
+        <Pressable onPress={() => onChange([...values, target.reps])} style={styles.addSet}>
+          <Ionicons name="add-circle-outline" size={18} color={colors.muted} />
+          <Text style={type.caption}>Añadir una serie</Text>
         </Pressable>
       </View>
-
-      {selected !== null && selected < values.length && (
-        <View style={{ gap: space.sm }}>
-          <Text style={type.caption}>Serie {selected + 1}: ajusta lo que hiciste de verdad</Text>
-          <Stepper
-            value={values[selected]}
-            onChange={(v) => setValue(selected, v)}
-            step={ex.measure === 'time' ? 5 : 1}
-            suffix={ex.measure === 'time' ? ' s' : ' reps'}
-          />
-          {values.length > target.sets && selected >= target.sets && (
-            <Pressable
-              onPress={() => {
-                onChange(values.filter((_, j) => j !== selected));
-                setSelected(null);
-              }}>
-              <Text style={[type.caption, { color: colors.danger, textAlign: 'center' }]}>Quitar esta serie</Text>
-            </Pressable>
-          )}
-        </View>
-      )}
-
-      {selected === null && (
-        <Text style={[type.caption, { color: allHit ? colors.success : colors.muted }]}>
-          {allHit ? 'Objetivo cumplido' : 'Toca una serie para corregirla'}
+      {values.slice(0, target.sets).some((v) => v < target.reps) && (
+        <Text style={[type.caption, { color: colors.danger }]}>
+          Alguna serie se quedó corta: la próxima vez este ejercicio se mantiene igual.
         </Text>
       )}
     </Card>
@@ -137,29 +116,36 @@ export function ExerciseCard({ slot, target, values, onChange }: Props) {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
-  infoBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  tempo: {
+    flexDirection: 'row',
+    gap: space.sm,
+    padding: space.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.infoSoft,
+  },
+  howBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    alignSelf: 'flex-start',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: radius.pill,
+    backgroundColor: colors.cardHigh,
+  },
+  how: { gap: space.sm, padding: space.md, backgroundColor: colors.cardHigh, borderRadius: radius.md },
+  bullet: { flexDirection: 'row', gap: space.sm },
+  table: { gap: space.sm },
+  setRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  setLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: colors.text },
+  stepBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: radius.sm,
     backgroundColor: colors.cardHigh,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  info: { gap: space.sm, padding: space.md, backgroundColor: colors.cardHigh, borderRadius: radius.md },
-  bullet: { flexDirection: 'row', gap: space.sm },
-  video: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginTop: space.xs },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  chip: {
-    minWidth: 56,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  chipAdd: { backgroundColor: colors.cardHigh, justifyContent: 'center' },
-  chipSet: { fontSize: 11, fontWeight: '700', color: colors.muted },
-  chipValue: { fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  setValue: { width: 70, textAlign: 'center', fontSize: 17, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  addSet: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
 });

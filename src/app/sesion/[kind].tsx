@@ -8,9 +8,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getPrescriptions, getSessionLog, getSessionSets, saveHomeSession, type SlotChange } from '@/db/repo';
 import { formatLong, today as getToday } from '@/domain/dates';
-import { describeChange, type Feeling, type Prescription } from '@/domain/progression';
+import { describeChange } from '@/domain/format';
+import type { Feeling, Prescription } from '@/domain/progression';
 import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
-import { TEMPLATES, exerciseFor, unitFor } from '@/domain/templates';
+import { TEMPLATES, exerciseFor } from '@/domain/templates';
 import { Button, Card, FeelingPicker, SectionTitle } from '@/ui/components';
 import { ExerciseCard } from '@/ui/ExerciseCard';
 import { colors, space, type } from '@/ui/theme';
@@ -99,7 +100,7 @@ export default function SessionScreen() {
                     />
                     <View style={{ flex: 1 }}>
                       <Text style={type.subtitle}>{ex.name}</Text>
-                      <Text style={type.caption}>{describeChange(c.change, c.next, unitFor(ex))}</Text>
+                      <Text style={type.caption}>{describeChange(c.change, c.next, ex)}</Text>
                     </View>
                   </View>
                 );

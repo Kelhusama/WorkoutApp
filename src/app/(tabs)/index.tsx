@@ -1,15 +1,18 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+
+import { getBodyLog } from '@/db/body';
 import { deleteLog, getPrescriptions, markMissed } from '@/db/repo';
-import { formatLong, today as getToday, weekdayIndex } from '@/domain/dates';
+import { addDays, formatLong, today as getToday, weekdayIndex } from '@/domain/dates';
 import { FEELING_LABEL, TEMPO_LABEL, type Prescription } from '@/domain/progression';
 import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
-import { TEMPLATES, exerciseFor, unitFor } from '@/domain/templates';
+import { prescriptionShort } from '@/domain/format';
+import { TEMPLATES, exerciseFor } from '@/domain/templates';
 import { useWeek } from '@/hooks/useWeek';
 import { Button, Card, Pill, SectionTitle, type IconName } from '@/ui/components';
 import { GoalsSummary } from '@/ui/goals';
@@ -27,11 +30,16 @@ export default function TodayScreen() {
 
   const kind = day && day.type !== 'gym' && day.type !== 'rest' ? (day.type as SessionKind) : null;
 
+  const [lastWeighIn, setLastWeighIn] = useState<string | null | undefined>(undefined);
+
   useFocusEffect(
     useCallback(() => {
       if (kind) getPrescriptions(db, kind).then(setPrescriptions);
+      getBodyLog(db).then((log) => setLastWeighIn(log.length ? log[log.length - 1].date : null));
     }, [db, kind]),
   );
+
+  const needsWeighIn = lastWeighIn === null || (lastWeighIn != null && lastWeighIn <= addDays(todayDate, -7));
 
   const skipToday = () => {
     if (!day || day.type === 'rest') return;
@@ -94,11 +102,7 @@ export default function TodayScreen() {
                       {ex.name}
                     </Text>
                     {p.tempo > 0 && <Ionicons name="timer-outline" size={14} color={colors.info} accessibilityLabel={TEMPO_LABEL[p.tempo] ?? ''} />}
-                    <Text style={styles.exPresc}>
-                      {p.sets} × {p.reps}
-                      {unitFor(ex)}
-                      {ex.perArm ? ' /brazo' : ''}
-                    </Text>
+                    <Text style={styles.exPresc}>{prescriptionShort(p, ex)}</Text>
                   </View>
                 );
               })}
@@ -137,6 +141,16 @@ export default function TodayScreen() {
           <Ionicons name="barbell-outline" size={22} color={colors.muted} />
           <Text style={[type.caption, { flex: 1 }]}>¿Esta semana vas al gimnasio hoy en vez del jueves?</Text>
           <Button label="Sí" variant="secondary" onPress={() => changeSecondGym('X')} />
+        </Card>
+      )}
+
+      {needsWeighIn && (
+        <Card style={{ marginTop: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+          <Ionicons name="scale-outline" size={22} color={colors.accent} />
+          <Text style={[type.caption, { flex: 1 }]}>
+            {lastWeighIn ? 'Hace más de una semana que no te pesas.' : 'Registra tu peso y medidas para seguir la pérdida de grasa.'}
+          </Text>
+          <Button label="Pesarme" variant="secondary" onPress={() => router.push('/medicion')} />
         </Card>
       )}
 

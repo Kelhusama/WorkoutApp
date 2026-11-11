@@ -45,6 +45,26 @@ export function formatLong(s: ISODate): string {
   return `${DAY_LONG[weekdayIndex(s)]} ${d.getDate()} de ${MONTHS[d.getMonth()]}`;
 }
 
+export function monthStart(s: ISODate): ISODate {
+  return `${s.slice(0, 7)}-01`;
+}
+
+export function monthEnd(s: ISODate): ISODate {
+  const d = fromISODate(monthStart(s));
+  return toISODate(new Date(d.getFullYear(), d.getMonth() + 1, 0, 12));
+}
+
+export function addMonths(s: ISODate, n: number): ISODate {
+  const d = fromISODate(monthStart(s));
+  return toISODate(new Date(d.getFullYear(), d.getMonth() + n, 1, 12));
+}
+
+export function monthTitle(s: ISODate): string {
+  const d = fromISODate(s);
+  const m = MONTHS[d.getMonth()];
+  return `${m[0].toUpperCase()}${m.slice(1)} ${d.getFullYear()}`;
+}
+
 export function formatShort(s: ISODate): string {
   const d = fromISODate(s);
   return `${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`;

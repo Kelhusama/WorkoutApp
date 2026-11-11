@@ -22,10 +22,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="semana"
+        name="calendario"
         options={{
-          title: 'Semana',
+          title: 'Calendario',
           tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={size} color={color as string} />,
+        }}
+      />
+      <Tabs.Screen
+        name="cuerpo"
+        options={{
+          title: 'Cuerpo',
+          tabBarIcon: ({ color, size }) => <Ionicons name="body" size={size} color={color as string} />,
         }}
       />
       <Tabs.Screen
