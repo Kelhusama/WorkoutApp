@@ -178,17 +178,14 @@ Cada ejercicio incluye:
 
 Aviso en **Hoy** si han pasado más de 7 días sin pesarse.
 
-### Pendiente: báscula Huawei por Bluetooth
-Leer automáticamente peso y % de grasa de la báscula Huawei del usuario.
-- Huawei no publica el protocolo Bluetooth de sus básculas; los datos van a la app Huawei Salud.
-- **openScale** (app libre, GPLv3) ya lee varias básculas Huawei por BLE GATT ([wiki](https://github.com/oliexdev/openScale/wiki/Supported-scales-in-openScale), verificado 11/11/2026):
-  - Honor Smart Scale CH100S: peso en vivo y composición corporal.
-  - Huawei AH100 / CH100: peso en vivo; la composición corporal está sin descifrar.
-  - HUAWEI Scale 2 Pro / Scale 3 / Scale 3 Pro: peso, composición e historial, pero solo responden tras un *handshake* "Hagrid" que necesita tres claves (CAK, C1, C2) de la báscula. Cómo obtenerlas: sin verificar.
-- Alternativas: Health Connect de Android (si Huawei Salud exporta el peso) o Huawei Health Kit (HMS).
-- Si se reutiliza código de openScale, su licencia GPLv3 obliga a publicar este proyecto con la misma licencia.
-- Necesario: modelo exacto de la báscula. Requiere *development build* con `react-native-ble-plx` (Bluetooth no funciona en Expo Go).
-- La base de datos ya guarda el origen de cada medición (`source`) y el % de grasa de báscula.
+### Pendiente: báscula Huawei
+**Modelo del usuario: DBY-B19 = HUAWEI Scale 3 (Bluetooth).** Comprobado el 11/11/2026:
+
+- **Bluetooth directo (vía openScale):** openScale lee la Scale 3 ([wiki](https://github.com/oliexdev/openScale/wiki/Supported-scales-in-openScale)), pero solo tras un *handshake* "Hagrid" con tres claves (CAK, C1, C2). openScale no las incluye ni explica cómo obtenerlas ([issue #1539](https://github.com/oliexdev/openScale/issues/1539)). Tampoco está claro si son iguales para todas las básculas. → **Descartado de momento**: sacar las claves supondría hacer ingeniería inversa de la app de Huawei. Además, su código es GPLv3.
+- **Health Connect directo:** Huawei Salud no escribe en Health Connect de forma nativa (según fuentes de terceros, sin confirmación oficial).
+- **Puente con una app de terceros (opción recomendada, sin verificar):** una app puente como *Health Sync* pasaría los datos de Huawei Salud a Health Connect, y Forja los leería con `react-native-health-connect`. Esto requiere *development build*. Falta confirmar si pasa el % de grasa además del peso.
+- **Huawei Health Kit (API de Huawei):** necesita cuenta de desarrollador y la aprobación de Huawei para datos de salud. Es difícil para una app personal.
+- **Mientras tanto:** registro manual, que ya incluye el % de grasa de la báscula.
 
 ---
 
@@ -218,7 +215,7 @@ Requisito externo: proyecto en Google Cloud Console con un cliente OAuth Android
 4. **Fichas**: dibujos animados ✅, técnica ✅.
 5. **Recordatorios** ✅.
 6. **Google**: inicio de sesión y copia en Drive.
-7. **Báscula Huawei** por Bluetooth (pendiente de investigar).
+7. **Báscula Huawei** (Scale 3, DBY-B19): vía Health Connect con app puente; pendiente de probar.
 
 ---
 
@@ -245,5 +242,4 @@ Revisadas: wger, Liftosaur, LiftLog (Expo/React Native), Flexify, FitoTrack, MyF
 
 ## Pendiente de confirmar
 - Nombre definitivo de la app ("Forja" es provisional).
-- Modelo exacto de la báscula Huawei.
 - Si es viable hacer press de banca 3×5 al final del gimnasio cuando no toque.
