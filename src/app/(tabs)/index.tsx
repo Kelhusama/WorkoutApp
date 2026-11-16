@@ -7,6 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 import { getBodyLog } from '@/db/body';
+import { getRecentFeelings } from '@/db/stats';
+import { needsDeload } from '@/domain/gymTools';
 import { deleteLog, getPrescriptions, markMissed } from '@/db/repo';
 import { syncReminders } from '@/notifications/reminders';
 import { addDays, formatLong, formatShort, today as getToday } from '@/domain/dates';
@@ -42,11 +44,13 @@ export default function TodayScreen() {
   );
 
   const [lastWeighIn, setLastWeighIn] = useState<string | null | undefined>(undefined);
+  const [deload, setDeload] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       if (slots.length) getPrescriptions(db, slots).then(setPrescriptions);
       getBodyLog(db).then((log) => setLastWeighIn(log.length ? log[log.length - 1].date : null));
+      getRecentFeelings(db).then((f) => setDeload(needsDeload(f)));
     }, [db, slots]),
   );
 
@@ -188,6 +192,15 @@ export default function TodayScreen() {
               <Text style={type.caption}>Hoy estoy fuera</Text>
             </Pressable>
           )}
+        </Card>
+      )}
+
+      {deload && (
+        <Card style={{ marginTop: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+          <Ionicons name="battery-half-outline" size={22} color={colors.info} />
+          <Text style={[type.caption, { flex: 1 }]}>
+            Tres de tus últimas cuatro sesiones han sido duras. Esta semana baja una marcha: haz una serie menos por ejercicio y duerme bien.
+          </Text>
         </Card>
       )}
 

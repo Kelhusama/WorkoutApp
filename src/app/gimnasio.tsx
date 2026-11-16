@@ -10,6 +10,7 @@ import { getLastBench, getSessionLog, saveGymSession } from '@/db/repo';
 import { getBenchSeries } from '@/db/stats';
 import { syncReminders } from '@/notifications/reminders';
 import { formatLong, formatShort, today as getToday } from '@/domain/dates';
+import { BAR_KG, platesPerSide, warmupSets } from '@/domain/gymTools';
 import type { Feeling } from '@/domain/progression';
 import { estimate1RM } from '@/domain/strength';
 import { Button, Card, FeelingPicker, SectionTitle, Stepper } from '@/ui/components';
@@ -64,6 +65,7 @@ export default function GymScreen() {
   };
 
   const e1rm = estimate1RM(weight, reps);
+  const plates = platesPerSide(weight);
   const lastE1rm = last ? estimate1RM(last.w, last.r) : null;
 
   return (
@@ -105,6 +107,18 @@ export default function GymScreen() {
                 {e1rm > lastE1rm ? '  ·  ¡Mejoras!' : ''}
               </Text>
             )}
+            <View style={styles.tools}>
+              <Text style={type.subtitle}>Para montar {fmtKg(weight)} kg</Text>
+              <Text style={type.caption}>
+                Discos por lado (barra de {BAR_KG} kg):{' '}
+                <Text style={styles.toolValue}>{plates.plates.length ? plates.plates.map(fmtKg).join(' + ') : 'solo la barra'}</Text>
+                {plates.rest > 0 ? ` · sobran ${fmtKg(plates.rest)} kg que no se pueden montar` : ''}
+              </Text>
+              <Text style={type.caption}>
+                Calentamiento:{' '}
+                <Text style={styles.toolValue}>{warmupSets(weight).map((s) => `${fmtKg(s.weight)} × ${s.reps}`).join('  →  ')}</Text>
+              </Text>
+            </View>
           </>
         ) : (
           <Text style={type.caption}>
@@ -132,5 +146,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: colors.accentSoft,
   },
+  tools: { gap: 6, padding: space.md, borderRadius: radius.md, backgroundColor: colors.cardHigh },
+  toolValue: { color: colors.text, fontWeight: '700' },
   e1rmValue: { fontSize: 20, fontWeight: '800', color: colors.accent },
 });

@@ -9,6 +9,7 @@ import { ACTIVITY_LEVELS, ageOn, type Sex } from '@/domain/body';
 import { today } from '@/domain/dates';
 import { Button, Card, SectionTitle } from '@/ui/components';
 import { NumberField, numberToText, parseNumber } from '@/ui/NumberField';
+import { BackupCard } from '@/ui/BackupCard';
 import { RemindersSettings } from '@/ui/RemindersSettings';
 import { colors, radius, space, type } from '@/ui/theme';
 
@@ -104,6 +105,9 @@ export default function ProfileScreen() {
           );
         })}
       </View>
+
+      <SectionTitle>Tus datos</SectionTitle>
+      <BackupCard onRestored={() => router.back()} />
 
       <View style={{ marginTop: space.md }}>
         <Button label="Guardar perfil" icon="checkmark-circle" onPress={save} disabled={!valid} />

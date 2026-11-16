@@ -6,17 +6,19 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getRecentLogs, type SessionLog } from '@/db/repo';
-import { getBenchSeries, getExerciseSummaries, getPhotos, getTestSeries } from '@/db/stats';
+import { getBenchSeries, getExerciseSummaries, getPhotos, getSetCounts, getTestSeries } from '@/db/stats';
 import type { Point } from '@/domain/body';
-import { formatShort, type ISODate } from '@/domain/dates';
+import { addDays, formatShort, today, weekStart, type ISODate } from '@/domain/dates';
 import { EXERCISES } from '@/domain/exercises';
 import { FEELING_LABEL } from '@/domain/progression';
 import { SESSION_INFO } from '@/domain/schedule';
+import { weeklyVolume, type MuscleGroup } from '@/domain/volume';
 import { useStreak } from '@/hooks/useStreak';
 import { Card, Pill, SectionTitle } from '@/ui/components';
 import { GoalsSummary } from '@/ui/goals';
 import { LineChart } from '@/ui/LineChart';
 import { colors, space, type } from '@/ui/theme';
+import { VolumeBars } from '@/ui/VolumeBars';
 import { STATUS_STYLE } from '@/ui/week';
 
 interface Charts {
@@ -39,6 +41,7 @@ export default function ProgressScreen() {
   const [charts, setCharts] = useState<Charts>({ banca: [], dominadas: [], flexiones: [] });
   const [exercises, setExercises] = useState<{ exerciseId: string; sessions: number; lastDate: ISODate }[]>([]);
   const [photoCount, setPhotoCount] = useState(0);
+  const [volume, setVolume] = useState<Record<MuscleGroup, number> | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -51,6 +54,8 @@ export default function ProgressScreen() {
         });
         setExercises((await getExerciseSummaries(db)).filter((e) => EXERCISES[e.exerciseId]));
         setPhotoCount((await getPhotos(db)).length);
+        const monday = weekStart(today());
+        setVolume(weeklyVolume(await getSetCounts(db, monday, addDays(monday, 6))));
       })();
     }, [db]),
   );
@@ -100,6 +105,13 @@ export default function ProgressScreen() {
               </Card>
             ))}
           </View>
+        </>
+      )}
+
+      {volume && (
+        <>
+          <SectionTitle>Volumen semanal por músculo</SectionTitle>
+          <VolumeBars volume={volume} />
         </>
       )}
 

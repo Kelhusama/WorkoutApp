@@ -39,7 +39,8 @@
           "photosPermission": "Forja lee tus fotos para guardar las de progreso.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

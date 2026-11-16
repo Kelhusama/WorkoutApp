@@ -2,6 +2,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 
 import type { Point } from '@/domain/body';
 import type { ISODate } from '@/domain/dates';
+import type { Feeling } from '@/domain/progression';
 import type { Bests, SessionSets } from '@/domain/stats';
 import { estimate1RM } from '@/domain/strength';
 
@@ -63,6 +64,27 @@ export async function getTestSeries(db: SQLiteDatabase, test: 'dominadas' | 'fle
     'SELECT date, MAX(value) AS value FROM test_log WHERE test = ? GROUP BY date ORDER BY date',
     test,
   );
+}
+
+/** Series hechas de cada ejercicio entre dos fechas (incluidas). */
+export async function getSetCounts(db: SQLiteDatabase, from: ISODate, to: ISODate) {
+  return db.getAllAsync<{ exerciseId: string; sets: number }>(
+    `SELECT l.exercise_id AS exerciseId, COUNT(*) AS sets
+       FROM set_log l JOIN session_log s ON s.id = l.session_id
+      WHERE s.status = 'done' AND s.date BETWEEN ? AND ? AND l.value > 0
+      GROUP BY l.exercise_id`,
+    from,
+    to,
+  );
+}
+
+/** Sensación de las últimas sesiones hechas, en orden cronológico. */
+export async function getRecentFeelings(db: SQLiteDatabase, limit = 4): Promise<(Feeling | null)[]> {
+  const rows = await db.getAllAsync<{ feeling: Feeling | null }>(
+    "SELECT feeling FROM session_log WHERE status = 'done' ORDER BY date DESC, id DESC LIMIT ?",
+    limit,
+  );
+  return rows.map((r) => r.feeling).reverse();
 }
 
 // ---------- Fotos de progreso ----------

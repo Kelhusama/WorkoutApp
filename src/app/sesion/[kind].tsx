@@ -19,6 +19,7 @@ import { sessionSlots } from '@/domain/travel';
 import { Button, Card, FeelingPicker, SectionTitle } from '@/ui/components';
 import { syncReminders } from '@/notifications/reminders';
 import { ExerciseCard } from '@/ui/ExerciseCard';
+import { RestTimer } from '@/ui/RestTimer';
 import { colors, space, type } from '@/ui/theme';
 
 export default function SessionScreen() {
@@ -154,7 +155,8 @@ export default function SessionScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: insets.bottom + space.xl, gap: space.md }}>
+    <View style={{ flex: 1 }}>
+    <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: space.xl, gap: space.md }}>
       <Stack.Screen options={{ title: `${info.title}` }} />
       <View>
         <Text style={type.overline}>{formatLong(date)}</Text>
@@ -195,6 +197,8 @@ export default function SessionScreen() {
         />
       </View>
     </ScrollView>
+    <RestTimer bottomInset={insets.bottom} />
+    </View>
   );
 }
 

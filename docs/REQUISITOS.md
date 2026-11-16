@@ -232,19 +232,19 @@ Revisadas: wger, Liftosaur, LiftLog (Expo/React Native), Flexify, FitoTrack, MyF
 
 | # | Idea | Inspirada en | Esfuerzo |
 |---|---|---|---|
-| 1 | Temporizador de descanso entre series con vibración | Flexify, Liftosaur | Bajo |
+| 1 | ~~Temporizador de descanso entre series con vibración~~ ✅ (fijo al pie de la sesión; avisa también en segundo plano) | Flexify, Liftosaur | Hecho |
 | 2 | Repeticiones en reserva (RIR) por serie para afinar la progresión | MyFit | Bajo-medio |
 | 3 | ~~Récords por ejercicio con aviso~~ ✅ | Flexify, Liftosaur | Hecho |
-| 4 | Volumen semanal por músculo (series de pecho y bíceps) frente a un objetivo de hipertrofia | Liftosaur | Medio |
-| 5 | Series de calentamiento automáticas para la banca (% del peso de trabajo) | Liftosaur | Bajo |
-| 6 | Calculadora de discos para la barra | Liftosaur | Bajo |
-| 7 | Semana de descarga automática si se acumulan sesiones «dura» o se estanca la banca | Liftosaur | Medio |
+| 4 | ~~Volumen semanal por músculo frente a la zona de 10–20 series~~ ✅ (Progreso; solo sesiones de casa) | Liftosaur | Hecho |
+| 5 | ~~Series de calentamiento para la banca~~ ✅ (pantalla de gimnasio) | Liftosaur | Hecho |
+| 6 | ~~Calculadora de discos~~ ✅ (pantalla de gimnasio, barra de 20 kg) | Liftosaur | Hecho |
+| 7 | Semana de descarga: ✅ aviso en Hoy si 3 de las 4 últimas sesiones fueron duras. Pendiente: que ajuste el plan sola | Liftosaur | Parcial |
 | 8 | Sustituir un ejercicio por otro del mismo músculo fuera de los viajes (en viajes ya está) | Liftosaur | Medio |
 | 9 | ~~Fotos de progreso con comparación antes/después~~ ✅ | wger | Hecho |
 | 10 | Gráfica de rendimiento junto al peso corporal (p. ej. dominadas frente a kg) | Liftosaur | Medio |
 | 11 | Registro rápido de cardio o pasos | FitoTrack, Flexify | Medio |
 | 12 | Registro sencillo de calorías y proteína frente al objetivo | wger | Bajo (solo totales) / Alto (con base de alimentos) |
-| 13 | Exportar e importar CSV/JSON | wger, Flexify | Bajo |
+| 13 | ~~Copia de seguridad: exportar y restaurar en JSON~~ ✅ (Perfil y avisos; sin fotos) | wger, Flexify | Hecho |
 | 14 | Programas predefinidos («Camino a 10 dominadas», «50 flexiones») | Liftosaur | Medio |
 
 ## Debes (lo que tiene que hacer el usuario)
