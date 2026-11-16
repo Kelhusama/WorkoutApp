@@ -21,7 +21,8 @@ import {
   type WeekTemplate,
 } from '@/domain/schedule';
 import { estimate1RM } from '@/domain/strength';
-import { TEMPLATES, initialPrescription } from '@/domain/templates';
+import { initialPrescription, type Slot } from '@/domain/templates';
+import { tripOn, type TravelGear, type Trip } from '@/domain/travel';
 
 export type LogKind = SessionKind | 'gym';
 
@@ -98,11 +99,71 @@ export async function clearWeekOverrides(db: SQLiteDatabase, anyDate: ISODate) {
   await db.runAsync('DELETE FROM day_override WHERE date BETWEEN ? AND ?', monday, addDays(monday, 6));
 }
 
+// ---------- Viajes ----------
+
+interface TripRow {
+  id: number;
+  from_date: ISODate;
+  to_date: ISODate;
+  mochila: number;
+  mesa: number;
+  gimnasio: number;
+}
+
+const toTrip = (r: TripRow): Trip => ({
+  id: r.id,
+  from: r.from_date,
+  to: r.to_date,
+  gear: { mochila: !!r.mochila, mesa: !!r.mesa, gimnasio: !!r.gimnasio },
+});
+
+/** Viajes que tocan el rango de fechas (o todos si no se indica), por orden. */
+export async function getTrips(db: SQLiteDatabase, from: ISODate = '0000-01-01', to: ISODate = '9999-12-31'): Promise<Trip[]> {
+  const rows = await db.getAllAsync<TripRow>(
+    'SELECT id, from_date, to_date, mochila, mesa, gimnasio FROM trip WHERE to_date >= ? AND from_date <= ? ORDER BY from_date',
+    from,
+    to,
+  );
+  return rows.map(toTrip);
+}
+
+export async function getTripOn(db: SQLiteDatabase, date: ISODate): Promise<Trip | null> {
+  return tripOn(await getTrips(db, date, date), date) ?? null;
+}
+
+/** Guarda un viaje. Si se solapa con otros, los sustituye. Devuelve su id. */
+export async function saveTrip(
+  db: SQLiteDatabase,
+  trip: { id?: number; from: ISODate; to: ISODate; gear: TravelGear },
+): Promise<number> {
+  const [from, to] = trip.from <= trip.to ? [trip.from, trip.to] : [trip.to, trip.from];
+  let id = 0;
+  await db.withExclusiveTransactionAsync(async (tx) => {
+    await tx.runAsync('DELETE FROM trip WHERE (to_date >= ? AND from_date <= ?) OR id = ?', from, to, trip.id ?? -1);
+    const r = await tx.runAsync(
+      'INSERT INTO trip (from_date, to_date, mochila, mesa, gimnasio) VALUES (?, ?, ?, ?, ?)',
+      from,
+      to,
+      trip.gear.mochila ? 1 : 0,
+      trip.gear.mesa ? 1 : 0,
+      trip.gear.gimnasio ? 1 : 0,
+    );
+    id = r.lastInsertRowId;
+  });
+  return id;
+}
+
+export async function deleteTrip(db: SQLiteDatabase, id: number) {
+  await db.runAsync('DELETE FROM trip WHERE id = ?', id);
+}
+
 export interface PlannedDay {
   date: ISODate;
   type: DayType;
   status: DayStatus;
   log?: SessionLog;
+  /** Viaje activo ese día, si lo hay. */
+  trip?: Trip;
   /** El día se ha cambiado respecto a la semana tipo. */
   overridden: boolean;
 }
@@ -116,6 +177,7 @@ export async function loadDays(db: SQLiteDatabase, from: ISODate, to: ISODate) {
   const lastSunday = addDays(weekStart(to), 6);
   const overrides = await getOverrides(db, addDays(firstMonday, -1), lastSunday);
   const logs = await getLogsBetween(db, firstMonday, lastSunday);
+  const trips = await getTrips(db, addDays(firstMonday, -1), lastSunday);
   const todayDate = getToday();
   // Un día ya registrado conserva lo que se hizo, cambie lo que cambie la semana tipo.
   const loggedRole = (d: ISODate): Role | null => {
@@ -124,8 +186,13 @@ export async function loadDays(db: SQLiteDatabase, from: ISODate, to: ISODate) {
     if (l.some((x) => HOME_KINDS.includes(x.kind))) return 'casa';
     return null;
   };
-  const roleOn = (d: ISODate): Role =>
-    loggedRole(d) ?? overrides.get(d) ?? templateFor(versions, weekStart(d))[weekdayIndex(d)];
+  // De viaje sin gimnasio de hotel, el día de gimnasio pasa a ser una sesión de casa adaptada.
+  const plannedRole = (d: ISODate): Role => {
+    const role = overrides.get(d) ?? templateFor(versions, weekStart(d))[weekdayIndex(d)];
+    const trip = tripOn(trips, d);
+    return role === 'gym' && trip && !trip.gear.gimnasio ? 'casa' : role;
+  };
+  const roleOn = (d: ISODate): Role => loggedRole(d) ?? plannedRole(d);
 
   const days: PlannedDay[] = [];
   for (let monday = firstMonday; monday <= to; monday = addDays(monday, 7)) {
@@ -139,7 +206,15 @@ export async function loadDays(db: SQLiteDatabase, from: ISODate, to: ISODate) {
       if (d < from || d > to) return;
       const type = kinds[i];
       const log = type === 'rest' ? undefined : logs.find((l) => l.date === d && l.kind === type);
-      days.push({ date: d, type, log, status: dayStatus(type, d, todayDate, log?.status), overridden: overrides.has(d) });
+      const trip = tripOn(trips, d);
+      days.push({
+        date: d,
+        type,
+        log,
+        trip,
+        status: dayStatus(type, d, todayDate, log?.status, !!trip),
+        overridden: overrides.has(d),
+      });
     });
   }
   return { days, template: templateFor(versions, weekStart(getToday())) };
@@ -147,11 +222,8 @@ export async function loadDays(db: SQLiteDatabase, from: ISODate, to: ISODate) {
 
 // ---------- Prescripciones ----------
 
-export async function getPrescriptions(
-  db: SQLiteDatabase,
-  kind: SessionKind,
-): Promise<Record<string, Prescription>> {
-  const slots = TEMPLATES[kind];
+/** Series y repeticiones vigentes de cada ejercicio de la sesión. */
+export async function getPrescriptions(db: SQLiteDatabase, slots: readonly Slot[]): Promise<Record<string, Prescription>> {
   const rows = await db.getAllAsync<{ slot_key: string; sets: number; reps: number; tempo: number }>(
     `SELECT slot_key, sets, reps, tempo FROM prescription WHERE slot_key IN (${slots.map(() => '?').join(',')})`,
     ...slots.map((s) => s.key),
@@ -238,9 +310,10 @@ export async function saveHomeSession(
   kind: SessionKind,
   feeling: Feeling,
   results: SlotResult[],
+  sessionSlots: readonly Slot[],
 ): Promise<SlotChange[]> {
-  const prescriptions = await getPrescriptions(db, kind);
-  const slots = new Map(TEMPLATES[kind].map((s) => [s.key, s]));
+  const prescriptions = await getPrescriptions(db, sessionSlots);
+  const slots = new Map(sessionSlots.map((s) => [s.key, s]));
   const changes: SlotChange[] = [];
 
   await db.withExclusiveTransactionAsync(async (tx) => {

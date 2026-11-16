@@ -131,6 +131,41 @@ export function FeelingPicker({ value, onChange }: { value: Feeling | null; onCh
   );
 }
 
+/** Fila con título, descripción e interruptor. */
+export function ToggleRow({
+  title,
+  detail,
+  value,
+  onChange,
+  icon,
+}: {
+  title: string;
+  detail?: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+  icon?: IconName;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
+      onPress={() => {
+        Haptics.selectionAsync();
+        onChange(!value);
+      }}
+      style={styles.toggleRow}>
+      {icon && <Ionicons name={icon} size={22} color={value ? colors.accent : colors.muted} />}
+      <View style={{ flex: 1 }}>
+        <Text style={type.subtitle}>{title}</Text>
+        {detail && <Text style={type.caption}>{detail}</Text>}
+      </View>
+      <View style={[styles.toggle, value && { backgroundColor: colors.accent }]}>
+        <View style={[styles.knob, value && { alignSelf: 'flex-end' }]} />
+      </View>
+    </Pressable>
+  );
+}
+
 export function SectionTitle({ children }: { children: ReactNode }) {
   return <Text style={[type.overline, { marginTop: space.xl, marginBottom: space.sm }]}>{children}</Text>;
 }
@@ -175,6 +210,9 @@ const styles = StyleSheet.create({
   },
   stepValue: { fontSize: 26, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
   stepSuffix: { fontSize: 15, fontWeight: '600', color: colors.muted },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  toggle: { width: 50, height: 30, borderRadius: 15, backgroundColor: colors.cardHigh, padding: 3 },
+  knob: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#fff' },
   feelings: { flexDirection: 'row', gap: space.sm },
   feeling: {
     flex: 1,

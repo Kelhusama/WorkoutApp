@@ -15,11 +15,13 @@ export function MonthGrid({
   month,
   selected,
   onSelect,
+  onLongPress,
 }: {
   days: PlannedDay[];
   month: ISODate;
   selected: ISODate | null;
   onSelect: (d: ISODate) => void;
+  onLongPress?: (d: ISODate) => void;
 }) {
   const todayDate = today();
   const weeks: PlannedDay[][] = [];
@@ -46,6 +48,7 @@ export function MonthGrid({
               <Pressable
                 key={d.date}
                 onPress={() => onSelect(d.date)}
+                onLongPress={onLongPress ? () => onLongPress(d.date) : undefined}
                 accessibilityLabel={`${d.date}: ${s.label}`}
                 style={[
                   styles.cell,
@@ -58,9 +61,12 @@ export function MonthGrid({
                   <Ionicons name="checkmark" size={14} color={colors.success} />
                 ) : d.status === 'missed' ? (
                   <Ionicons name="close" size={14} color={colors.danger} />
+                ) : d.status === 'excused' ? (
+                  <Ionicons name="airplane" size={13} color={colors.info} />
                 ) : (
                   <Text style={[styles.type, { color: s.color }]}>{TYPE_LABEL[d.type]}</Text>
                 )}
+                {d.trip && <View style={styles.trip} />}
               </Pressable>
             );
           })}
@@ -85,12 +91,14 @@ const styles = StyleSheet.create({
   },
   num: { fontSize: 14, fontWeight: '700', color: colors.text },
   type: { fontSize: 10, fontWeight: '800', minHeight: 14 },
+  trip: { position: 'absolute', bottom: 3, width: 14, height: 3, borderRadius: 2, backgroundColor: colors.info },
 });
 
 export const MONTH_LEGEND = [
   { label: 'Hecho', color: colors.success },
   { label: 'Fallado', color: colors.danger },
   { label: 'Pendiente', color: colors.muted },
+  { label: 'Viaje', color: colors.info },
 ];
 
 export function Legend() {

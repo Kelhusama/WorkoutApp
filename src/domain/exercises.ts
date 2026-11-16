@@ -1,4 +1,4 @@
-export type Equipment = 'barra' | 'mancuerna' | 'goma' | 'ninguno';
+export type Equipment = 'barra' | 'mancuerna' | 'goma' | 'ninguno' | 'mesa' | 'mochila' | 'toalla';
 
 export interface Exercise {
   id: string;
@@ -187,5 +187,96 @@ export const EXERCISES: Record<string, Exercise> = {
     cues: ['Inclinado con la espalda recta', 'Brazo casi estirado', 'Abre hacia el lado hasta la altura del hombro', 'Si 10 kg es mucho, usa la goma'],
     mistakes: ['Usar impulso', 'Subir por encima del hombro'],
   },
-};
 
+  // ---------- Alternativas de viaje ----------
+  remo_invertido: {
+    id: 'remo_invertido',
+    name: 'Remo invertido bajo mesa',
+    measure: 'reps',
+    perArm: false,
+    equipment: 'mesa',
+    muscles: ['Dorsal', 'Romboides', 'Bíceps'],
+    cues: [
+      'Comprueba antes que la mesa es robusta y no vuelca',
+      'Túmbate debajo y agarra el borde con las dos manos',
+      'Cuerpo recto de talones a hombros',
+      'Lleva el pecho al borde y baja controlado',
+    ],
+    mistakes: ['Dejar caer la cadera', 'Usar una mesa ligera o de cristal'],
+  },
+  remo_toalla: {
+    id: 'remo_toalla',
+    name: 'Remo con toalla en la puerta',
+    measure: 'reps',
+    perArm: false,
+    equipment: 'toalla',
+    muscles: ['Dorsal', 'Bíceps', 'Antebrazo'],
+    cues: [
+      'Pasa la toalla por el pomo y cierra la puerta hacia ti',
+      'Pies cerca de la puerta e inclínate hacia atrás con los brazos estirados',
+      'Tira del pecho hacia la puerta con los codos pegados',
+      'Cuanto más cerca los pies de la puerta, más difícil',
+    ],
+    mistakes: ['Puerta que abre hacia ti sin cerrar bien', 'Doblar la cadera en vez de ir en bloque'],
+  },
+  remo_mochila: {
+    id: 'remo_mochila',
+    name: 'Remo con mochila a una mano',
+    measure: 'reps',
+    perArm: true,
+    equipment: 'mochila',
+    muscles: ['Dorsal', 'Romboides', 'Bíceps'],
+    cues: ['Carga la mochila con libros o botellas', 'Mano libre apoyada en una silla, espalda recta', 'Tira del codo hacia la cadera'],
+    mistakes: ['Girar el tronco para subir', 'Mochila con el peso suelto que se mueve'],
+  },
+  curl_mochila: {
+    id: 'curl_mochila',
+    name: 'Curl con mochila',
+    measure: 'reps',
+    perArm: true,
+    equipment: 'mochila',
+    muscles: ['Bíceps', 'Braquial'],
+    cues: ['Coge la mochila por el asa superior', 'Codo pegado al cuerpo', 'Sube sin balanceo y baja en 3 segundos'],
+    mistakes: ['Balancear el cuerpo', 'Peso demasiado ligero: añade botellas de agua'],
+  },
+  press_mochila: {
+    id: 'press_mochila',
+    name: 'Press con mochila a una mano',
+    measure: 'reps',
+    perArm: true,
+    equipment: 'mochila',
+    muscles: ['Hombro', 'Tríceps'],
+    cues: ['Mochila apoyada en el hombro, agarrada por el asa', 'Empuja vertical hasta estirar el brazo', 'Abdomen firme, sin arquear la espalda'],
+    mistakes: ['Inclinarse hacia un lado', 'Arquear la zona lumbar'],
+  },
+  curl_isometrico_toalla: {
+    id: 'curl_isometrico_toalla',
+    name: 'Curl isométrico con toalla',
+    measure: 'time',
+    perArm: true,
+    equipment: 'toalla',
+    muscles: ['Bíceps', 'Antebrazo'],
+    cues: ['Pisa un extremo de la toalla y agarra el otro', 'Codo a 90° pegado al cuerpo', 'Tira hacia arriba con toda tu fuerza sin moverte', 'Respira; no aguantes el aire'],
+    mistakes: ['Tirar a medio gas: tiene que costar', 'Subir el hombro'],
+  },
+  agarre_toalla: {
+    id: 'agarre_toalla',
+    name: 'Escurrir la toalla',
+    measure: 'time',
+    perArm: false,
+    equipment: 'toalla',
+    muscles: ['Antebrazo', 'Agarre'],
+    cues: ['Enrolla una toalla y agárrala con las dos manos', 'Retuércela como si la escurrieras, con fuerza máxima', 'Cambia el sentido de giro en cada serie'],
+    mistakes: ['Apretar poco', 'Tensar los hombros'],
+  },
+  elevaciones_yt: {
+    id: 'elevaciones_yt',
+    name: 'Elevaciones en Y tumbado',
+    measure: 'reps',
+    perArm: false,
+    equipment: 'ninguno',
+    muscles: ['Hombro posterior', 'Trapecio inferior'],
+    cues: ['Boca abajo, brazos estirados por delante formando una Y', 'Pulgares hacia arriba', 'Levanta los brazos sin despegar el pecho', 'Pausa de 1 segundo arriba'],
+    mistakes: ['Arquear la zona lumbar', 'Encoger los hombros hacia las orejas'],
+  },
+};

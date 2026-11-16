@@ -6,12 +6,13 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getPrescriptions, getSessionLog, getSessionSets, saveHomeSession, type SlotChange } from '@/db/repo';
+import { getPrescriptions, getSessionLog, getSessionSets, getTripOn, saveHomeSession, type SlotChange } from '@/db/repo';
 import { formatLong, today as getToday } from '@/domain/dates';
 import { describeChange } from '@/domain/format';
 import type { Feeling, Prescription } from '@/domain/progression';
 import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
-import { TEMPLATES, exerciseFor } from '@/domain/templates';
+import { exerciseFor, type Slot } from '@/domain/templates';
+import { sessionSlots } from '@/domain/travel';
 import { Button, Card, FeelingPicker, SectionTitle } from '@/ui/components';
 import { syncReminders } from '@/notifications/reminders';
 import { ExerciseCard } from '@/ui/ExerciseCard';
@@ -23,7 +24,8 @@ export default function SessionScreen() {
   const params = useLocalSearchParams<{ kind: string; date?: string }>();
   const kind = (['A', 'B', 'C'].includes(params.kind) ? params.kind : 'A') as SessionKind;
   const date = params.date ?? getToday();
-  const slots = TEMPLATES[kind];
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [travelling, setTravelling] = useState(false);
 
   const [targets, setTargets] = useState<Record<string, Prescription> | null>(null);
   const [values, setValues] = useState<Record<string, number[]>>({});
@@ -34,11 +36,16 @@ export default function SessionScreen() {
 
   useEffect(() => {
     (async () => {
-      const t = await getPrescriptions(db, kind);
+      // De viaje, los ejercicios se adaptan al material disponible ese día.
+      const trip = await getTripOn(db, date);
+      const slots = sessionSlots(kind, trip?.gear);
+      const t = await getPrescriptions(db, slots);
       const log = await getSessionLog(db, date, kind);
       const saved = log?.status === 'done' ? await getSessionSets(db, log.id) : {};
       const initial: Record<string, number[]> = {};
       for (const s of slots) initial[s.key] = saved[s.key] ?? Array(t[s.key].sets).fill(t[s.key].reps);
+      setSlots(slots);
+      setTravelling(!!trip);
       setTargets(t);
       setValues(initial);
       if (log?.status === 'done') {
@@ -46,7 +53,7 @@ export default function SessionScreen() {
         setFeeling(log.feeling);
       }
     })();
-  }, [db, kind, date, slots]);
+  }, [db, kind, date]);
 
   const save = async () => {
     if (!feeling) return;
@@ -58,6 +65,7 @@ export default function SessionScreen() {
         kind,
         feeling,
         slots.map((s) => ({ slotKey: s.key, exerciseId: s.exerciseId, values: values[s.key] ?? [] })),
+        slots,
       );
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setChanges(result);
@@ -131,6 +139,11 @@ export default function SessionScreen() {
             ? 'Editando un registro guardado.'
             : 'Está precargado lo planificado: corrige solo las series que no salieron así.'}
         </Text>
+        {travelling && (
+          <Text style={[type.caption, { color: colors.info, marginTop: 4 }]}>
+            <Ionicons name="airplane" size={12} color={colors.info} /> Modo viaje: ejercicios adaptados a lo que tienes a mano.
+          </Text>
+        )}
       </View>
 
       {slots.map((s) => (

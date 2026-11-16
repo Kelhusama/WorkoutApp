@@ -10,7 +10,7 @@ export interface Slot extends SlotRules {
   note?: string;
 }
 
-const slot = (
+export const slot = (
   key: string,
   exerciseId: string,
   initialSets: number,

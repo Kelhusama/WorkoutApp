@@ -18,6 +18,7 @@ import {
   weekStart,
   type ISODate,
 } from '@/domain/dates';
+import { gearSummary } from '@/domain/travel';
 import { useDays, type PlannedDay } from '@/hooks/useWeek';
 import { syncReminders } from '@/notifications/reminders';
 import { Button, Card } from '@/ui/components';
@@ -81,7 +82,9 @@ export default function CalendarScreen() {
 
   const inRange = mode === 'semana' ? days : days.filter((d) => d.date.startsWith(anchor.slice(0, 7)));
   const done = inRange.filter((d) => d.status === 'done').length;
-  const planned = inRange.filter((d) => d.type !== 'rest' && d.date <= todayDate).length;
+  const planned = inRange.filter((d) => d.type !== 'rest' && d.status !== 'excused' && d.date <= todayDate).length;
+  const trips = [...new Map(days.filter((d) => d.trip).map((d) => [d.trip!.id, d.trip!])).values()];
+  const newTrip = (date: ISODate) => router.push({ pathname: '/viaje', params: { date } });
 
   const selectedDay = days.find((d) => d.date === selected);
 
@@ -115,7 +118,7 @@ export default function CalendarScreen() {
 
       {mode === 'mes' ? (
         <Card style={{ gap: space.md }}>
-          <MonthGrid days={days} month={monthStart(anchor)} selected={selected} onSelect={setSelected} />
+          <MonthGrid days={days} month={monthStart(anchor)} selected={selected} onSelect={setSelected} onLongPress={newTrip} />
           <Legend />
         </Card>
       ) : (
@@ -150,6 +153,26 @@ export default function CalendarScreen() {
         <Button label="Volver a la semana tipo" variant="secondary" icon="refresh" onPress={resetWeek} />
       )}
 
+      <Card style={{ gap: space.md }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+          <Ionicons name="airplane-outline" size={22} color={colors.info} />
+          <Text style={[type.subtitle, { flex: 1 }]}>Viajes</Text>
+        </View>
+        {trips.length === 0 && <Text style={type.caption}>Sin viajes en estas fechas. De viaje, las sesiones se adaptan a lo que tengas a mano y los días sin entrenar no cuentan como fallo.</Text>}
+        {trips.map((t) => (
+          <Pressable key={t.id} onPress={() => router.push({ pathname: '/viaje', params: { id: String(t.id) } })} style={styles.tripRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={type.body}>
+                {formatShort(t.from)} – {formatShort(t.to)}
+              </Text>
+              <Text style={type.caption}>{gearSummary(t.gear)}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.faint} />
+          </Pressable>
+        ))}
+        <Button label="Añadir viaje" variant="secondary" icon="add" onPress={() => newTrip(mode === 'mes' && selected ? selected : todayDate)} />
+      </Card>
+
       <Pressable onPress={() => router.push('/semana-tipo')} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
         <Card style={styles.templateCard}>
           <Ionicons name="options-outline" size={22} color={colors.accent} />
@@ -162,13 +185,14 @@ export default function CalendarScreen() {
       </Pressable>
 
       <Text style={[type.caption, { textAlign: 'center' }]}>
-        {mode === 'mes' ? 'Toca un día para ver el detalle. ' : ''}Con ⇄ cambias un día solo para esa semana.
+        {mode === 'mes' ? 'Toca un día para ver el detalle. ' : ''}Con ⇄ cambias un día solo para esa semana.{mode === 'mes' ? ' Mantén pulsado un día para crear un viaje.' : ''}
       </Text>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  tripRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: 4 },
   templateCard: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   segment: { flexDirection: 'row', backgroundColor: colors.cardHigh, borderRadius: radius.md, padding: 4 },

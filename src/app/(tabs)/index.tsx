@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,11 +9,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getBodyLog } from '@/db/body';
 import { deleteLog, getPrescriptions, markMissed } from '@/db/repo';
 import { syncReminders } from '@/notifications/reminders';
-import { addDays, formatLong, today as getToday } from '@/domain/dates';
+import { addDays, formatLong, formatShort, today as getToday } from '@/domain/dates';
 import { FEELING_LABEL, TEMPO_LABEL, type Prescription } from '@/domain/progression';
 import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
 import { prescriptionShort } from '@/domain/format';
-import { TEMPLATES, exerciseFor } from '@/domain/templates';
+import { exerciseFor } from '@/domain/templates';
+import { gearSummary, sessionSlots } from '@/domain/travel';
 import { useWeek } from '@/hooks/useWeek';
 import { Button, Card, Pill, SectionTitle, type IconName } from '@/ui/components';
 import { GoalsSummary } from '@/ui/goals';
@@ -30,14 +31,21 @@ export default function TodayScreen() {
   const [prescriptions, setPrescriptions] = useState<Record<string, Prescription> | null>(null);
 
   const kind = day && day.type !== 'gym' && day.type !== 'rest' ? (day.type as SessionKind) : null;
+  const trip = day?.trip;
+  const gear = trip?.gear;
+  // De viaje los ejercicios se adaptan al material disponible.
+  const slots = useMemo(
+    () => (kind ? sessionSlots(kind, gear ? { mochila: gear.mochila, mesa: gear.mesa, gimnasio: gear.gimnasio } : null) : []),
+    [kind, gear?.mochila, gear?.mesa, gear?.gimnasio], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const [lastWeighIn, setLastWeighIn] = useState<string | null | undefined>(undefined);
 
   useFocusEffect(
     useCallback(() => {
-      if (kind) getPrescriptions(db, kind).then(setPrescriptions);
+      if (slots.length) getPrescriptions(db, slots).then(setPrescriptions);
       getBodyLog(db).then((log) => setLastWeighIn(log.length ? log[log.length - 1].date : null));
-    }, [db, kind]),
+    }, [db, slots]),
   );
 
   const needsWeighIn = lastWeighIn === null || (lastWeighIn != null && lastWeighIn <= addDays(todayDate, -7));
@@ -83,6 +91,19 @@ export default function TodayScreen() {
         <WeekStrip days={days} />
       </Card>
 
+      {trip ? (
+        <Pressable onPress={() => router.push({ pathname: '/viaje', params: { id: String(trip.id) } })}>
+          <Card style={styles.tripCard}>
+            <Ionicons name="airplane" size={20} color={colors.info} />
+            <View style={{ flex: 1 }}>
+              <Text style={type.subtitle}>De viaje hasta el {formatShort(trip.to)}</Text>
+              <Text style={type.caption}>{gearSummary(trip.gear)} · sesiones adaptadas</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.faint} />
+          </Card>
+        </Pressable>
+      ) : null}
+
       {day && (
         <Card style={{ marginTop: space.lg, gap: space.md }}>
           <View style={styles.headerRow}>
@@ -100,9 +121,10 @@ export default function TodayScreen() {
 
           {kind && prescriptions && day.status !== 'done' && (
             <View style={{ gap: space.sm }}>
-              {TEMPLATES[kind].map((s) => {
+              {slots.map((s) => {
                 const ex = exerciseFor(s);
                 const p = prescriptions[s.key];
+                if (!p) return null;
                 return (
                   <View key={s.key} style={styles.exRow}>
                     <Text style={[type.body, { flex: 1 }]} numberOfLines={1}>
@@ -148,6 +170,12 @@ export default function TodayScreen() {
               </Text>
             </Pressable>
           )}
+          {!trip && !day.log && (
+            <Pressable onPress={() => router.push({ pathname: '/viaje', params: { date: todayDate } })} style={styles.changeDay}>
+              <Ionicons name="airplane-outline" size={16} color={colors.muted} />
+              <Text style={type.caption}>Hoy estoy fuera</Text>
+            </Pressable>
+          )}
         </Card>
       )}
 
@@ -178,6 +206,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   changeDay: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 4 },
+  tripCard: { marginTop: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md, borderColor: colors.info },
   bell: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   exRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   exPresc: { fontSize: 15, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },

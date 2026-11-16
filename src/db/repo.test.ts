@@ -3,7 +3,22 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { addDays, today, weekStart } from '../domain/dates';
-import { clearWeekOverrides, loadDays, markMissed, saveGymSession, saveTemplate, setOverride } from './repo';
+import { TEMPLATES } from '../domain/templates';
+import { NO_GEAR, travelSlots } from '../domain/travel';
+import {
+  clearWeekOverrides,
+  deleteTrip,
+  getPrescriptions,
+  getTripOn,
+  getTrips,
+  loadDays,
+  markMissed,
+  saveGymSession,
+  saveHomeSession,
+  saveTemplate,
+  saveTrip,
+  setOverride,
+} from './repo';
 import { migrate } from './schema';
 import { createTestDb } from './testDb';
 
@@ -68,4 +83,68 @@ test('un día registrado conserva lo hecho aunque cambie el plan', async () => {
   assert.equal(days[1].status, 'done');
   assert.equal(days[2].type, 'A');
   assert.equal(days[2].status, 'missed');
+});
+
+// ---------- Viajes ----------
+
+test('de viaje sin gimnasio de hotel, el día de gimnasio pasa a sesión de casa', async () => {
+  const db = createTestDb();
+  await migrate(db);
+  const next = addDays(monday, 7);
+  await saveTrip(db, { from: next, to: addDays(next, 6), gear: NO_GEAR });
+  const noGym = await loadDays(db, next, addDays(next, 6));
+  assert.equal(noGym.days.filter((d) => d.type === 'gym').length, 0);
+  assert.ok(noGym.days.every((d) => d.trip));
+  // Sigue sin haber tirón justo después de lo que era gimnasio... y los descansos se mantienen.
+  assert.equal(noGym.days.filter((d) => d.type === 'rest').length, 2);
+
+  await saveTrip(db, { from: next, to: addDays(next, 6), gear: { ...NO_GEAR, gimnasio: true } });
+  const withGym = await loadDays(db, next, addDays(next, 6));
+  assert.equal(withGym.days.filter((d) => d.type === 'gym').length, 2);
+});
+
+test('un día de viaje pasado sin entrenar no cuenta como fallo', async () => {
+  const db = createTestDb();
+  await migrate(db);
+  const last = addDays(monday, -7);
+  await saveTrip(db, { from: addDays(last, 1), to: addDays(last, 2), gear: NO_GEAR });
+  const { days } = await loadDays(db, last, addDays(last, 6));
+  assert.equal(days[0].status, 'missed'); // lunes, sin viaje
+  assert.equal(days[1].status, 'excused');
+  assert.equal(days[2].status, 'excused');
+  assert.equal(days[3].status, 'missed');
+});
+
+test('guardar un viaje que se solapa sustituye al anterior; se puede borrar', async () => {
+  const db = createTestDb();
+  await migrate(db);
+  await saveTrip(db, { from: '2026-12-01', to: '2026-12-05', gear: NO_GEAR });
+  const id = await saveTrip(db, { from: '2026-12-04', to: '2026-12-08', gear: { ...NO_GEAR, mesa: true } });
+  let trips = await getTrips(db);
+  assert.equal(trips.length, 1);
+  assert.deepEqual([trips[0].from, trips[0].to, trips[0].gear.mesa], ['2026-12-04', '2026-12-08', true]);
+  assert.equal((await getTripOn(db, '2026-12-06'))?.id, id);
+  assert.equal(await getTripOn(db, '2026-12-02'), null);
+  // Editar el mismo viaje (fechas al revés se ordenan)
+  await saveTrip(db, { id, from: '2026-12-10', to: '2026-12-09', gear: NO_GEAR });
+  trips = await getTrips(db);
+  assert.deepEqual([trips.length, trips[0].from, trips[0].to], [1, '2026-12-09', '2026-12-10']);
+  await deleteTrip(db, trips[0].id);
+  assert.equal((await getTrips(db)).length, 0);
+});
+
+test('la sesión de viaje guarda su propia progresión sin tocar la de casa', async () => {
+  const db = createTestDb();
+  await migrate(db);
+  const slots = travelSlots('A', NO_GEAR);
+  const before = await getPrescriptions(db, slots);
+  const results = slots.map((s) => ({ slotKey: s.key, exerciseId: s.exerciseId, values: Array(before[s.key].sets).fill(before[s.key].reps) }));
+  const changes = await saveHomeSession(db, '2026-12-01', 'A', 'facil', results, slots);
+  assert.equal(changes.length, slots.length);
+  const after = await getPrescriptions(db, slots);
+  assert.equal(after['V.A.remo_toalla'].reps, before['V.A.remo_toalla'].reps + 1);
+  const home = await getPrescriptions(db, TEMPLATES.A);
+  assert.deepEqual(home['A.dominadas'], { sets: 5, reps: 2, tempo: 0 });
+  // Guardar otra vez el mismo día no vuelve a subir la dificultad
+  assert.equal((await saveHomeSession(db, '2026-12-01', 'A', 'facil', results, slots)).length, 0);
 });

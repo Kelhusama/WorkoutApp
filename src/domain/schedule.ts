@@ -2,7 +2,8 @@ import type { ISODate } from './dates';
 
 export type SessionKind = 'A' | 'B' | 'C';
 export type DayType = 'gym' | SessionKind | 'rest';
-export type DayStatus = 'done' | 'missed' | 'pending' | 'future' | 'rest';
+/** 'excused' = día de viaje pasado sin entrenar: no cuenta como fallo (R3). */
+export type DayStatus = 'done' | 'missed' | 'pending' | 'future' | 'rest' | 'excused';
 
 /** Qué se hace un día: gimnasio, sesión en casa o descanso. La sesión A/B/C concreta la reparte la app. */
 export type Role = 'gym' | 'casa' | 'rest';
@@ -78,10 +79,11 @@ export function dayStatus(
   date: ISODate,
   todayDate: ISODate,
   logged?: 'done' | 'missed',
+  travelling = false,
 ): DayStatus {
   if (logged) return logged;
   if (type === 'rest') return 'rest';
-  if (date < todayDate) return 'missed';
+  if (date < todayDate) return travelling ? 'excused' : 'missed';
   if (date === todayDate) return 'pending';
   return 'future';
 }

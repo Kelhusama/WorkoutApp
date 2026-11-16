@@ -14,6 +14,7 @@ export const STATUS_STYLE: Record<DayStatus, { label: string; color: string; bg:
   pending: { label: 'Hoy', color: colors.accent, bg: colors.accentSoft },
   future: { label: 'Pendiente', color: colors.muted, bg: colors.cardHigh },
   rest: { label: 'Descanso', color: colors.faint, bg: colors.cardHigh },
+  excused: { label: 'Viaje', color: colors.info, bg: colors.infoSoft },
 };
 
 const TYPE_LETTER: Record<DayType, string> = { gym: 'G', A: 'A', B: 'B', C: 'C', rest: '–' };
@@ -41,12 +42,15 @@ export function WeekStrip({ days }: { days: PlannedDay[] }) {
                 <Ionicons name="checkmark" size={16} color={colors.success} />
               ) : d.status === 'missed' ? (
                 <Ionicons name="close" size={16} color={colors.danger} />
+              ) : d.status === 'excused' ? (
+                <Ionicons name="airplane" size={15} color={colors.info} />
               ) : (
                 <Text style={[styles.stripType, { color: d.type === 'rest' ? colors.faint : colors.text }]}>
                   {TYPE_LETTER[d.type]}
                 </Text>
               )}
             </View>
+            <View style={[styles.stripTrip, d.trip && { backgroundColor: colors.info }]} />
           </View>
         );
       })}
@@ -81,6 +85,8 @@ export function DayRow({ day, onPress, onChange }: { day: PlannedDay; onPress?: 
           {day.overridden ? <Text style={[type.caption, { color: colors.info }]}>  · cambiado</Text> : null}
         </Text>
         <Text style={type.caption} numberOfLines={1}>
+          {day.trip ? <Ionicons name="airplane" size={12} color={colors.info} /> : null}
+          {day.trip ? ' De viaje · ' : ''}
           {detail}
         </Text>
       </View>
@@ -100,6 +106,7 @@ const styles = StyleSheet.create({
   stripLetter: { fontSize: 12, fontWeight: '700', color: colors.muted },
   stripDot: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
   stripType: { fontSize: 14, fontWeight: '800' },
+  stripTrip: { width: 14, height: 3, borderRadius: 2 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
