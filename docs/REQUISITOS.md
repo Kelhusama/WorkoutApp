@@ -247,12 +247,37 @@ Revisadas: wger, Liftosaur, LiftLog (Expo/React Native), Flexify, FitoTrack, MyF
 | 13 | ~~Copia de seguridad: exportar y restaurar en JSON~~ ✅ (Perfil y avisos; sin fotos) | wger, Flexify | Hecho |
 | 14 | Programas predefinidos («Camino a 10 dominadas», «50 flexiones») | Liftosaur | Medio |
 
+## Ampliación: estiramientos, flexibilidad y marcha (plan, 16/11/2026)
+
+La investigación con dosis, rutinas, tests, plan de marcha y fuentes está en [INVESTIGACION.md](INVESTIGACION.md). Se construye punto por punto:
+
+1. **Menú**: una zona «Entrenar» que reúna Fuerza, Estiramientos, Flexibilidad y Marcha, con Hoy como entrada diaria (pendiente del informe de usabilidad).
+2. **Estiramientos**
+   - Rutina de ~5 min tras cada sesión A, B y C, ofrecida al guardar la sesión.
+   - Rutina de tren inferior de ~11 min, con tres niveles de aductores y dos estiramientos de abductores.
+   - Modo guiado: un estiramiento cada vez, con su dibujo, cuenta atrás de 30 o 60 s y cambio de lado.
+   - Gráficas: minutos por semana y zona con líneas en 5 y 10 min; días por semana.
+3. **Flexibilidad**
+   - Programa de 10–15 min, 3–5 días por semana, en tres niveles; sube de nivel con ≥80 % de sesiones en 4 semanas.
+   - Seis tests mensuales (dedos-suelo, rodilla a la pared, apertura sentado, rascado de espalda, elevación de pierna recta, sentadilla profunda) con gráfica cada uno.
+   - Hitos: tocar el suelo con las palmas, sentadilla profunda 2 min, apertura +20 cm.
+4. **Marcha de 50 km**
+   - Elegir evento y fecha → plan de 16 o 12 semanas encajado con los días de gimnasio.
+   - Registro de caminatas (km, tiempo, desnivel, mochila, esfuerzo, molestias). Entrada manual; el GPS necesitaría el APK.
+   - Gráficas: km semanales, tirada más larga frente a 50 km, ritmo; semáforo de preparación y tiempo previsto.
+   - Lista de comprobación del día de la marcha.
+   - Ajuste de la fuerza de pierna en semanas pico.
+5. **Icono**: opciones geométricas con motivos canarios generadas (Teide facetado, siete barras, archipiélago, pintadera, espiral, drago, Teide y barra, Teide de líneas). Pendiente de elegir.
+
+Por decidir: si «abductores» es la cara interna del muslo (aductores), qué sede y fecha de la Marcha del Mamut, y qué icono.
+
 ## Debes (lo que tiene que hacer el usuario)
 
 - [x] ~~Capturas de Huawei Salud~~: recibida una (16/11/2026); sus valores son el caso de prueba del lector.
 - [ ] **Probar «Pegar datos de la captura»** en el móvil y avisar si algún valor sale mal o falta.
 - [ ] **Cuenta gratuita de Expo** (expo.dev), para compilar el APK en la nube.
 - [ ] **Nombre definitivo** de la app («Forja» es provisional).
+- [ ] Elegir **icono**, y **sede y fecha** de la Marcha del Mamut.
 - [ ] Confirmar si es viable hacer **press de banca 3×5 al final del gimnasio** cuando no toque.
 - [ ] (Opcional) Pedir la **copia de datos de la cuenta Huawei** para importar el historial de peso.
 
