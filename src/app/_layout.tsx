@@ -25,6 +25,9 @@ export default function RootLayout() {
           <Stack.Screen name="test" options={{ title: 'Test de máximo', presentation: 'modal' }} />
           <Stack.Screen name="perfil" options={{ title: 'Perfil y avisos' }} />
           <Stack.Screen name="medicion" options={{ title: 'Medición' }} />
+          <Stack.Screen name="flexibilidad" options={{ title: 'Flexibilidad' }} />
+          <Stack.Screen name="flexionar" options={{ title: 'Sesión de flexibilidad' }} />
+          <Stack.Screen name="flex-test" options={{ title: 'Test de flexibilidad' }} />
           <Stack.Screen name="indicador/[id]" options={{ title: 'Indicador' }} />
           <Stack.Screen name="semana-tipo" options={{ title: 'Semana tipo' }} />
           <Stack.Screen name="dia" options={{ title: 'Cambiar día', presentation: 'modal' }} />

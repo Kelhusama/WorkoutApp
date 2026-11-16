@@ -10,6 +10,7 @@ import { WALK_LABEL } from '@/domain/march';
 import { GOAL_KM, KIND_LABEL, LAST_STEP, stepAt } from '@/domain/marchPlan';
 import { SESSION_INFO } from '@/domain/schedule';
 import { getStretching } from '@/db/stretch';
+import { useFlex } from '@/hooks/useFlex';
 import { useMarch } from '@/hooks/useMarch';
 import { useWeek } from '@/hooks/useWeek';
 import { Card, Pill, type IconName } from '@/ui/components';
@@ -61,6 +62,7 @@ export default function TrainScreen() {
   const db = useSQLiteContext();
   const [stretchMinutes, setStretchMinutes] = useState(0);
   const [stretchDays, setStretchDays] = useState(0);
+  const { view: flex } = useFlex();
 
   useFocusEffect(
     useCallback(() => {
@@ -146,8 +148,21 @@ export default function TrainScreen() {
         <Text style={type.caption}>Rutina guiada de 5 minutos tras cada sesión y otra de 10 para el tren inferior.</Text>
       </Area>
 
-      <Area icon="resize" title="Flexibilidad" status="Pronto" soon>
-        <Text style={type.caption}>Programa por niveles y seis tests mensuales para medir tu progreso.</Text>
+      <Area icon="resize" title="Flexibilidad" status={flex ? `Nivel ${flex.progress.level}` : undefined} onPress={() => router.push('/flexibilidad')}>
+        <Text style={type.body}>
+          {flex && flex.sessions.length > 0 ? (
+            <>
+              Sesiones: <Text style={styles.strong}>{flex.week.label}</Text>
+            </>
+          ) : (
+            'Programa de 10–15 minutos, 3 días por semana.'
+          )}
+        </Text>
+        {flex?.testDue ? (
+          <Text style={[type.caption, { color: colors.accent }]}>Test pendiente: toca para medir tu progreso.</Text>
+        ) : (
+          <Text style={type.caption}>Tres niveles y seis tests mensuales para medir tu progreso.</Text>
+        )}
       </Area>
     </ScrollView>
   );

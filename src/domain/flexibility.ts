@@ -303,6 +303,23 @@ export function sessionSteps(exercises: readonly FlexExercise[], level: FlexLeve
 /** Pausa para colocarse antes de cada paso. */
 export const FLEX_PREP_SECONDS = 5;
 
+export type FlexPhase = 'prep' | 'reps' | 'contract' | 'hold';
+
+/** Fase que sigue dentro del mismo paso de la sesión guiada, o `null` si el paso ha terminado. */
+export function nextPhase(step: FlexStep, phase: FlexPhase): FlexPhase | null {
+  const order: FlexPhase[] = ['prep', 'reps', 'contract', 'hold'];
+  const has: Record<FlexPhase, boolean> = { prep: true, reps: step.reps > 0, contract: step.contract > 0, hold: step.hold > 0 };
+  return order.slice(order.indexOf(phase) + 1).find((p) => has[p]) ?? null;
+}
+
+/** Segundos que suma una fase al completarla; la preparación no cuenta. */
+export function phaseSeconds(step: FlexStep, phase: FlexPhase): number {
+  if (phase === 'prep') return 0;
+  if (phase === 'contract') return step.contract;
+  if (phase === 'hold') return step.hold;
+  return step.seconds - step.contract - step.hold;
+}
+
 export function sessionMinutes(steps: readonly FlexStep[]): number {
   return Math.round(steps.reduce((a, s) => a + s.seconds + FLEX_PREP_SECONDS, 0) / 60);
 }

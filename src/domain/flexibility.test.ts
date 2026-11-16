@@ -23,6 +23,8 @@ import {
   formatFlexValue,
   isFlexTestId,
   milestones,
+  nextPhase,
+  phaseSeconds,
   sessionExercises,
   sessionMinutes,
   sessionSteps,
@@ -31,6 +33,7 @@ import {
   testSummary,
   validateFlexValue,
   weekAdherence,
+  type FlexPhase,
   type FlexResult,
 } from './flexibility';
 
@@ -116,6 +119,24 @@ test('los pasos desdoblan series y lados, y la sesión dura lo previsto', () => 
       assert.ok(m >= limits[level][0] && m <= limits[level][1], `nivel ${level}, sesión ${n}: ${m} min`);
     }
   }
+});
+
+test('las fases de un paso van en orden y suman su duración', () => {
+  const walk = (id: string, level: 1 | 2 | 3) => {
+    const step = exerciseSteps(FLEX_BY_ID[id], level)[0];
+    const phases: FlexPhase[] = [];
+    let total = 0;
+    for (let p: FlexPhase | null = 'prep'; p; p = nextPhase(step, p)) {
+      phases.push(p);
+      total += phaseSeconds(step, p);
+    }
+    assert.equal(total, step.seconds, id);
+    return phases;
+  };
+  assert.deepEqual(walk('rana_mariposa', 1), ['prep', 'hold']);
+  assert.deepEqual(walk('rana_mariposa', 2), ['prep', 'contract', 'hold']);
+  assert.deepEqual(walk('cosaca', 1), ['prep', 'reps']);
+  assert.deepEqual(walk('rodilla_pared', 2), ['prep', 'reps', 'hold']);
 });
 
 test('adherencia semanal: días de lunes a domingo, «X de 3 esta semana»', () => {
