@@ -172,4 +172,48 @@ export const ILLUSTRATIONS: Record<string, Illustration> = {
     bothArms: true,
     caption: 'Boca abajo, levanta los brazos estirados formando una Y. Pausa arriba.',
   },
+
+  // ---------- Tren inferior ----------
+  elevacion_tibial: {
+    start: { hip: [74, 130], torso: -100, hand: [84, 132], elbowBend: 1, foot: [104, 198], kneeBend: -1, footAngle: 0 },
+    end: { hip: [74, 130], torso: -100, hand: [84, 132], elbowBend: 1, foot: [104, 198], kneeBend: -1, footAngle: -38 },
+    props: [FLOOR, { kind: 'wall', x: 46 }],
+    focus: ['shin'],
+    caption: 'Espalda en la pared y pies adelantados. Sube las puntas todo lo que puedas y baja lento.',
+  },
+  elevacion_talones: {
+    start: { hip: [100, 127], torso: -90, hand: [146, 96], elbowBend: 1, foot: [98, 198], kneeBend: -1, footAngle: 0, farFoot: [84, 172], farKneeBend: -1 },
+    end: { hip: [100, 117], torso: -90, hand: [146, 88], elbowBend: 1, foot: [98, 188], kneeBend: -1, footAngle: 42, farFoot: [84, 162], farKneeBend: -1 },
+    props: [FLOOR, { kind: 'wall', x: 150 }],
+    focus: ['shin'],
+    caption: 'A una pierna, con una mano en la pared. Sube al máximo sobre la punta y baja en 3 segundos.',
+  },
+  plancha_copenhague: {
+    start: { hip: [109, 174], torso: 176, hand: [84, 196], elbowBend: -1, foot: [176, 146], kneeBend: -1, farFoot: [168, 172] },
+    end: { hip: [109, 160], torso: 168.5, hand: [84, 196], elbowBend: -1, foot: [176, 146], kneeBend: -1, farFoot: [172, 158] },
+    props: [FLOOR, { kind: 'bench', x: 150, y: 152, w: 44, h: 48 }],
+    focus: ['thigh'],
+    caption: 'De lado, antebrazo en el suelo y el pie de arriba sobre una silla. Sube la cadera y aguanta.',
+  },
+  abduccion_cadera: {
+    start: { hip: [110, 186], torso: 180, hand: [70, 196], elbowBend: -1, foot: [182, 184], kneeBend: -1, farFoot: [182, 192] },
+    end: { hip: [110, 186], torso: 180, hand: [70, 196], elbowBend: -1, foot: [172, 146], kneeBend: -1, farFoot: [182, 192] },
+    props: [FLOOR],
+    focus: ['glute', 'thigh'],
+    caption: 'Tumbado de lado, sube la pierna de arriba recta y un poco hacia atrás. Sin girar la cadera.',
+  },
+  zancada_estatica: {
+    start: { hip: [94, 128], torso: -90, hand: [100, 130], elbowBend: 1, foot: [122, 198], kneeBend: -1, footAngle: 0, farFoot: [56, 194], farKneeBend: 1 },
+    end: { hip: [94, 152], torso: -90, hand: [100, 154], elbowBend: 1, foot: [122, 198], kneeBend: -1, footAngle: 0, farFoot: [56, 194], farKneeBend: 1 },
+    props: [FLOOR],
+    focus: ['thigh', 'glute'],
+    caption: 'Un pie delante y otro detrás. Baja recto hasta que la rodilla de atrás casi toque el suelo.',
+  },
+  peso_muerto_una_pierna: {
+    start: { hip: [100, 126], torso: -90, hand: [104, 128], elbowBend: 1, foot: [98, 198], kneeBend: -1, footAngle: 0, farFoot: [106, 198] },
+    end: { hip: [94, 124], torso: -14, hand: [146, 164], elbowBend: 1, foot: [98, 198], kneeBend: -1, footAngle: 0, farFoot: [30, 122] },
+    props: [FLOOR],
+    focus: ['thigh', 'glute'],
+    caption: 'Sobre una pierna, inclina el tronco y lleva la otra pierna atrás en línea. Espalda recta.',
+  },
 };

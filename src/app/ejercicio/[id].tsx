@@ -32,7 +32,7 @@ export default function ExerciseScreen() {
   if (!ex) return null;
   const stats = exerciseStats(history);
   const unit = ex.measure === 'time' ? ' s' : '';
-  const perArm = ex.perArm ? ' por brazo' : '';
+  const perArm = ex.perArm ? ` por ${ex.side ?? 'brazo'}` : '';
 
   return (
     <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: space.xxl, gap: space.md }}>

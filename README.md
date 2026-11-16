@@ -19,6 +19,7 @@ Requisitos completos en [docs/REQUISITOS.md](docs/REQUISITOS.md).
 - Avisos de sesión en casa a las 9:00, 10:00 y 12:00 (ajustables)
 - Sección Cuerpo: perfil, peso, medidas, valores de la báscula Huawei Scale 3 e indicadores con rangos e historial
 - Modo viaje: sesiones adaptadas al material disponible; los días de viaje no cuentan como fallo
+- Bloque de pierna en cada sesión de casa (tibial, gemelo, aductores, glúteo medio, muslo)
 - Seguimiento: ficha de cada ejercicio con récords y gráfica, racha, cumplimiento y fotos de progreso
 
 Siguientes pasos y tareas pendientes: ver «Debes» y «Pendientes de desarrollo» en [docs/REQUISITOS.md](docs/REQUISITOS.md).

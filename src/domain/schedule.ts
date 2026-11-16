@@ -89,9 +89,9 @@ export function dayStatus(
 }
 
 export const SESSION_INFO: Record<DayType, { title: string; subtitle: string; icon: string }> = {
-  A: { title: 'Tirón', subtitle: 'Dominadas · bíceps · espalda', icon: 'arrow-down-circle' },
-  B: { title: 'Empuje', subtitle: 'Pecho · hombro · antebrazo', icon: 'arrow-up-circle' },
-  C: { title: 'Mixta suave', subtitle: 'Dominadas · hombro · bíceps', icon: 'sync-circle' },
+  A: { title: 'Tirón', subtitle: 'Dominadas · bíceps · gemelo y tibial', icon: 'arrow-down-circle' },
+  B: { title: 'Empuje', subtitle: 'Pecho · hombro · aductores', icon: 'arrow-up-circle' },
+  C: { title: 'Mixta suave', subtitle: 'Dominadas · hombro · pierna', icon: 'sync-circle' },
   gym: { title: 'Gimnasio', subtitle: 'Tu rutina + press de banca', icon: 'barbell' },
   rest: { title: 'Descanso', subtitle: 'Recupera: aquí también se crece', icon: 'moon' },
 };

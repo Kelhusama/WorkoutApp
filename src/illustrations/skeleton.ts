@@ -14,10 +14,12 @@ export type Prop =
   /** Silla, banco o mesa: tablero con el borde superior en `y`. */
   | { kind: 'bench'; x: number; y: number; w: number; h: number }
   /** Puerta cerrada con pomo, para anclar una toalla. */
-  | { kind: 'door'; x: number; knobY: number };
+  | { kind: 'door'; x: number; knobY: number }
+  /** Pared lisa en la que apoyarse. */
+  | { kind: 'wall'; x: number };
 
 /** Zonas que trabajan y se resaltan. */
-export type Focus = 'upperArm' | 'forearm' | 'chest' | 'back' | 'shoulder';
+export type Focus = 'upperArm' | 'forearm' | 'chest' | 'back' | 'shoulder' | 'thigh' | 'shin' | 'glute';
 
 export interface Pose {
   hip: Pt;
@@ -33,6 +35,12 @@ export interface Pose {
   wrist?: number;
   /** Mano del brazo lejano, si no acompaña al cercano. */
   farHand?: Pt;
+  /** Pie de la pierna lejana, si no acompaña a la cercana. */
+  farFoot?: Pt;
+  /** Ángulo del pie cercano (0 = plano hacia delante, negativo = punta arriba). Por defecto, perpendicular a la tibia. */
+  footAngle?: number;
+  /** Sentido de la rodilla lejana, si difiere de la cercana. */
+  farKneeBend?: 1 | -1;
 }
 
 export interface Illustration {
@@ -124,7 +132,8 @@ export function buildSkeleton(p: Pose, ill?: Pick<Illustration, 'bothArms' | 'pr
   const onFloor = floorY !== null && p.foot[1] >= floorY - 4;
   // Con la pierna casi estirada (tumbado), la lejana apenas se separa para que no se doble la rodilla.
   const stretched = Math.hypot(p.foot[0] - p.hip[0], p.foot[1] - p.hip[1]) > 72.5;
-  const farLeg = solveTwoBone(p.hip, add(p.foot, onFloor ? (stretched ? [1.5, 0] : [6, 0]) : [5, -3]), BONES.thigh, BONES.shin, p.kneeBend);
+  const farFootTarget = p.farFoot ?? add(p.foot, onFloor ? (stretched ? [1.5, 0] : [6, 0]) : [5, -3]);
+  const farLeg = solveTwoBone(p.hip, farFootTarget, BONES.thigh, BONES.shin, p.farKneeBend ?? p.kneeBend);
 
   const sk: Skeleton = {
     hip: p.hip,
@@ -136,7 +145,7 @@ export function buildSkeleton(p: Pose, ill?: Pick<Illustration, 'bothArms' | 'pr
     hand: arm.end,
     knee: leg.joint,
     foot: leg.end,
-    toe: toeOf(leg.joint, leg.end, floorY),
+    toe: p.footAngle !== undefined ? along(leg.end, unit(p.footAngle), BONES.foot) : toeOf(leg.joint, leg.end, floorY),
     farElbow: farArm.joint,
     farHand: farArm.end,
     farKnee: farLeg.joint,
@@ -160,6 +169,9 @@ export function lerpPose(a: Pose, b: Pose, t: number): Pose {
     kneeBend: a.kneeBend,
     wrist: a.wrist !== undefined && b.wrist !== undefined ? lerp(a.wrist, b.wrist, t) : a.wrist,
     farHand: a.farHand && b.farHand ? lerpPt(a.farHand, b.farHand, t) : a.farHand,
+    farFoot: a.farFoot && b.farFoot ? lerpPt(a.farFoot, b.farFoot, t) : a.farFoot,
+    footAngle: a.footAngle !== undefined && b.footAngle !== undefined ? lerp(a.footAngle, b.footAngle, t) : a.footAngle,
+    farKneeBend: a.farKneeBend,
   };
 }
 

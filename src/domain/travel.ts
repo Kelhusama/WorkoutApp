@@ -1,6 +1,6 @@
 import type { ISODate } from './dates';
 import type { SessionKind } from './schedule';
-import { TEMPLATES, slot, type Slot } from './templates';
+import { LEG_KEYS, TEMPLATES, slot, type Slot } from './templates';
 
 /** Lo que tienes a mano durante un viaje. Sin nada marcado: solo tu cuerpo y una toalla. */
 export interface TravelGear {
@@ -28,12 +28,13 @@ export function tripOn<T extends { from: ISODate; to: ISODate }>(trips: readonly
 const TIME = { allowsTempo: false, step: 5 } as const;
 
 /**
- * Sesión de casa adaptada al viaje. Las flexiones conservan su clave para que la progresión siga;
+ * Sesión de casa adaptada al viaje. Las flexiones y el bloque de pierna conservan su clave para que la progresión siga;
  * el resto usa claves propias (V.…) con sus propios rangos.
  */
 export function travelSlots(kind: SessionKind, gear: TravelGear): Slot[] {
   const home = TEMPLATES[kind];
   const keep = (key: string) => home.find((s) => s.key === key)!;
+  const legs = LEG_KEYS[kind].map(keep);
   const curl = gear.mochila
     ? slot(`V.${kind}.curl_mochila`, 'curl_mochila', 3, 8, 15, 4)
     : slot(`V.${kind}.curl_iso`, 'curl_isometrico_toalla', 3, 15, 30, 4, TIME);
@@ -49,10 +50,11 @@ export function travelSlots(kind: SessionKind, gear: TravelGear): Slot[] {
           ? slot('V.A.remo_toalla2', 'remo_toalla', 3, 8, 15, 4)
           : slot('V.A.agarre', 'agarre_toalla', 3, 20, 40, 4, TIME),
       curl,
+      ...legs,
     ];
   }
   if (kind === 'B') {
-    return [keep('B.flexiones'), keep('B.inclinadas'), keep('B.pica'), slot('V.B.agarre', 'agarre_toalla', 2, 20, 40, 3, TIME)];
+    return [keep('B.flexiones'), keep('B.inclinadas'), keep('B.pica'), slot('V.B.agarre', 'agarre_toalla', 2, 20, 40, 3, TIME), ...legs];
   }
   return [
     gear.mesa
@@ -62,6 +64,7 @@ export function travelSlots(kind: SessionKind, gear: TravelGear): Slot[] {
     curl,
     slot('V.C.yt', 'elevaciones_yt', 2, 10, 15, 3),
     slot('V.C.agarre', 'agarre_toalla', 2, 20, 40, 3, TIME),
+    ...legs,
   ];
 }
 

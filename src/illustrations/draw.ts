@@ -53,6 +53,8 @@ function body(sk: Skeleton, ill: Illustration, p: Palette): Shape[] {
   const foreFar = ill.bothArms && has('forearm') ? p.accentFar : p.far;
   const upper = has('upperArm') ? p.accent : p.near;
   const fore = has('forearm') ? p.accent : p.near;
+  const thigh = has('thigh') ? p.accent : p.near;
+  const shin = has('shin') ? p.accent : p.near;
   const out: Shape[] = [];
 
   // Lado lejano
@@ -64,14 +66,15 @@ function body(sk: Skeleton, ill: Illustration, p: Palette): Shape[] {
   out.push({ k: 'circle', c: sk.farHand, r: 4.2, fill: foreFar });
 
   // Pierna cercana
-  out.push(limb(sk.hip, sk.knee, 8.2, 6.4, p.near, o));
-  out.push(limb(sk.knee, sk.foot, 6, 4.4, p.near, o));
+  out.push(limb(sk.hip, sk.knee, 8.2, 6.4, thigh, o));
+  out.push(limb(sk.knee, sk.foot, 6, 4.4, shin, o));
   out.push(limb(sk.foot, sk.toe, 3.9, 3.2, p.near, o));
 
   // Tronco, cuello y cabeza
   out.push(limb(sk.hip, sk.neck, 8.8, 10.8, p.torso, o));
   if (has('chest')) out.push(limb(add(along(sk.neck, sk.u, -7), [sk.n[0] * 4.5, sk.n[1] * 4.5]), add(along(sk.neck, sk.u, -21), [sk.n[0] * 4.5, sk.n[1] * 4.5]), 5.4, 4.4, p.accent, false));
   if (has('back')) out.push(limb(add(along(sk.neck, sk.u, -8), [sk.n[0] * -4.5, sk.n[1] * -4.5]), add(along(sk.neck, sk.u, -30), [sk.n[0] * -3.5, sk.n[1] * -3.5]), 5.2, 4, p.accent, false));
+  if (has('glute')) out.push({ k: 'circle', c: add(sk.hip, [sk.n[0] * -2, sk.n[1] * -2]), r: 8.4, fill: p.accent, outline: o });
   out.push(limb(sk.neck, sk.head, 4.6, 4.6, p.near, false));
   out.push({ k: 'circle', c: sk.head, r: 9.6, fill: p.near, outline: o });
 
@@ -116,6 +119,8 @@ function props(list: Prop[]): Shape[] {
       out.push({ k: 'line', a: [p.x + 6, p.y + 4], b: [p.x + 3, p.y + p.h], stroke: INK.metalDark, width: 4 });
       out.push({ k: 'line', a: [p.x + p.w - 6, p.y + 4], b: [p.x + p.w - 3, p.y + p.h], stroke: INK.metalDark, width: 4 });
       out.push({ k: 'rect', x: p.x, y: p.y, w: p.w, h: 7, r: 3.5, fill: INK.far });
+    } else if (p.kind === 'wall') {
+      out.push({ k: 'rect', x: p.x, y: 14, w: 9, h: 186, r: 2, fill: INK.metalDark });
     } else {
       out.push({ k: 'rect', x: p.x, y: 14, w: 9, h: 186, r: 2, fill: INK.metalDark });
       out.push({ k: 'circle', c: [p.x - 3, p.knobY], r: 4, fill: INK.metal });

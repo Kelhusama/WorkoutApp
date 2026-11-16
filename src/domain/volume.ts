@@ -2,7 +2,7 @@
  * Volumen semanal por grupo muscular: series que trabajan cada músculo.
  * Una serie cuenta 1 para el músculo principal del ejercicio y 0,5 para los que ayudan.
  */
-export type MuscleGroup = 'pecho' | 'biceps' | 'espalda' | 'hombro' | 'triceps' | 'antebrazo';
+export type MuscleGroup = 'pecho' | 'biceps' | 'espalda' | 'hombro' | 'triceps' | 'antebrazo' | 'muslo' | 'cadera' | 'pantorrilla';
 
 export const GROUP_LABEL: Record<MuscleGroup, string> = {
   pecho: 'Pecho',
@@ -11,10 +11,16 @@ export const GROUP_LABEL: Record<MuscleGroup, string> = {
   hombro: 'Hombro',
   triceps: 'Tríceps',
   antebrazo: 'Antebrazo',
+  muslo: 'Muslo y glúteo',
+  cadera: 'Aductores y glúteo medio',
+  pantorrilla: 'Gemelo y tibial',
 };
 
+/** Tren inferior: se entrena para aguantar la marcha y no se compara con la zona de hipertrofia. */
+export const LOWER_GROUPS: MuscleGroup[] = ['muslo', 'cadera', 'pantorrilla'];
+
 /** Prioridades del usuario primero. */
-export const GROUP_ORDER: MuscleGroup[] = ['pecho', 'biceps', 'espalda', 'hombro', 'triceps', 'antebrazo'];
+export const GROUP_ORDER: MuscleGroup[] = ['pecho', 'biceps', 'espalda', 'hombro', 'triceps', 'antebrazo', 'muslo', 'cadera', 'pantorrilla'];
 
 /** Zona orientativa para ganar músculo: unas 10–20 series semanales por grupo. */
 export const HYPERTROPHY_RANGE = { min: 10, max: 20 } as const;
@@ -44,10 +50,16 @@ export const EXERCISE_MUSCLES: Record<string, Share> = {
   curl_isometrico_toalla: { biceps: 1, antebrazo: 0.5 },
   agarre_toalla: { antebrazo: 1 },
   elevaciones_yt: { hombro: 1, espalda: 0.5 },
+  elevacion_tibial: { pantorrilla: 1 },
+  elevacion_talones: { pantorrilla: 1 },
+  plancha_copenhague: { cadera: 1 },
+  abduccion_cadera: { cadera: 1 },
+  zancada_estatica: { muslo: 1 },
+  peso_muerto_una_pierna: { muslo: 1 },
 };
 
 export function weeklyVolume(sets: readonly { exerciseId: string; sets: number }[]): Record<MuscleGroup, number> {
-  const out: Record<MuscleGroup, number> = { pecho: 0, biceps: 0, espalda: 0, hombro: 0, triceps: 0, antebrazo: 0 };
+  const out: Record<MuscleGroup, number> = { pecho: 0, biceps: 0, espalda: 0, hombro: 0, triceps: 0, antebrazo: 0, muslo: 0, cadera: 0, pantorrilla: 0 };
   for (const s of sets) {
     const share = EXERCISE_MUSCLES[s.exerciseId];
     if (!share) continue;

@@ -5,7 +5,10 @@ export interface Exercise {
   name: string;
   /** 'reps' = repeticiones · 'time' = segundos. */
   measure: 'reps' | 'time';
+  /** Se hace un lado cada vez (las series son por lado). */
   perArm: boolean;
+  /** Qué lado se alterna cuando `perArm` es cierto. Por defecto, el brazo. */
+  side?: 'brazo' | 'pierna' | 'lado';
   equipment: Equipment;
   muscles: string[];
   cues: string[];
@@ -278,5 +281,72 @@ export const EXERCISES: Record<string, Exercise> = {
     muscles: ['Hombro posterior', 'Trapecio inferior'],
     cues: ['Boca abajo, brazos estirados por delante formando una Y', 'Pulgares hacia arriba', 'Levanta los brazos sin despegar el pecho', 'Pausa de 1 segundo arriba'],
     mistakes: ['Arquear la zona lumbar', 'Encoger los hombros hacia las orejas'],
+  },
+
+  // ---------- Tren inferior ----------
+  elevacion_tibial: {
+    id: 'elevacion_tibial',
+    name: 'Elevación de tibial en pared',
+    measure: 'reps',
+    perArm: false,
+    equipment: 'ninguno',
+    muscles: ["Tibial anterior"],
+    cues: ["Espalda y glúteo apoyados en la pared","Pies a un paso de la pared, piernas estiradas","Sube las puntas todo lo que puedas","Baja en 2–3 segundos sin dejar caer"],
+    mistakes: ["Doblar las rodillas","Pies demasiado cerca de la pared: resulta muy fácil"],
+  },
+  elevacion_talones: {
+    id: 'elevacion_talones',
+    name: 'Elevación de talón a una pierna',
+    measure: 'reps',
+    perArm: true,
+    side: 'pierna',
+    equipment: 'ninguno',
+    muscles: ["Gemelo","Sóleo"],
+    cues: ["Una mano en la pared solo para el equilibrio","Sube al máximo sobre la punta","Pausa de 1 segundo arriba","Baja en 3 segundos; mejor aún con el talón fuera de un escalón"],
+    mistakes: ["Rebotar abajo","Empujarte con la mano de la pared"],
+  },
+  plancha_copenhague: {
+    id: 'plancha_copenhague',
+    name: 'Plancha Copenhague',
+    measure: 'time',
+    perArm: true,
+    side: 'lado',
+    equipment: 'ninguno',
+    muscles: ["Aductores","Oblicuos"],
+    cues: ["De lado, antebrazo bajo el hombro","Apoya en una silla la rodilla de la pierna de arriba (más fácil) o el pie (más difícil)","Sube la cadera hasta quedar recto","Aprieta la pierna de arriba contra la silla"],
+    mistakes: ["Cadera caída o hacia atrás","Empezar con el pie si aún cuesta: usa la rodilla"],
+  },
+  abduccion_cadera: {
+    id: 'abduccion_cadera',
+    name: 'Abducción de cadera tumbado',
+    measure: 'reps',
+    perArm: true,
+    side: 'pierna',
+    equipment: 'ninguno',
+    muscles: ["Glúteo medio"],
+    cues: ["Tumbado de lado, cuerpo en línea recta","Sube la pierna de arriba recta y ligeramente hacia atrás","Punta del pie mirando al frente o un poco al suelo","Baja lento; con la goma en los tobillos es más duro"],
+    mistakes: ["Girar la cadera hacia atrás","Subir con la punta hacia el techo: trabaja otro músculo"],
+  },
+  zancada_estatica: {
+    id: 'zancada_estatica',
+    name: 'Zancada estática',
+    measure: 'reps',
+    perArm: true,
+    side: 'pierna',
+    equipment: 'ninguno',
+    muscles: ["Cuádriceps","Glúteo"],
+    cues: ["Un pie delante y otro detrás, a un paso largo","Baja recto hasta que la rodilla de atrás casi toque el suelo","Tronco erguido, peso en el talón de delante","Con la mancuerna en la mano es más duro"],
+    mistakes: ["Rodilla de delante hacia dentro","Impulsarte con la pierna de atrás"],
+  },
+  peso_muerto_una_pierna: {
+    id: 'peso_muerto_una_pierna',
+    name: 'Peso muerto a una pierna',
+    measure: 'reps',
+    perArm: true,
+    side: 'pierna',
+    equipment: 'ninguno',
+    muscles: ["Isquiotibiales","Glúteo","Equilibrio del tobillo"],
+    cues: ["Sobre una pierna, rodilla un poco flexionada","Inclina el tronco llevando la otra pierna atrás, en línea","Baja en 3 segundos con la espalda recta","Con la mancuerna en la mano contraria es más duro"],
+    mistakes: ["Redondear la espalda","Abrir la cadera hacia un lado"],
   },
 };

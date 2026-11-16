@@ -17,7 +17,7 @@ App Android personal para seguir el rendimiento, ganar músculo (bíceps y pecho
 | Flexiones | ~10 poco estrictas |
 | Press banca | 50 kg |
 | Material en casa | Barra de dominadas colgada (varios agarres: neutro, supino, prono ancho), mancuerna única de 10 kg, gomas elásticas |
-| Fuera del alcance | Piernas (no se planifican) |
+| Tren inferior | Desde el 16/11/2026 se trabaja en casa con un bloque corto en cada sesión, para preparar la marcha de 50 km. La pierna pesada sigue siendo la del gimnasio |
 
 ### Objetivos
 
@@ -73,6 +73,17 @@ Sin llegar al fallo salvo en tests. Los ejercicios con mancuerna se hacen a una 
 - Curl martillo: 3 × 10–12 por brazo
 - Pájaros o separación de goma: 2 × 15
 - Colgarse de la barra: 2 × 30 s
+
+### Bloque de pierna ✅ (16/11/2026)
+Dos ejercicios al final de cada sesión, sin material, 2 series (hasta 3). Las sesiones pasan de unos 15 a unos 20 minutos.
+
+| Sesión | Ejercicios | Para qué |
+|---|---|---|
+| A | Elevación de tibial en pared (15–25) · Elevación de talón a una pierna (10–20 por pierna) | Tibial y gemelo: lo que más se carga al caminar muchas horas |
+| B | Plancha Copenhague (15–40 s por lado) · Abducción de cadera tumbado (12–20 por pierna) | Aductores y glúteo medio: estabilidad de cadera |
+| C | Zancada estática (8–15 por pierna) · Peso muerto a una pierna (8–12 por pierna) | Cuádriceps, isquios, glúteo y equilibrio |
+
+No se cambia ningún día: el gimnasio ya aporta la pierna pesada, y lo que hace falta para caminar responde mejor a dosis pequeñas tres veces por semana. El bloque también se hace de viaje.
 
 ### Progresión automática
 Basada en reps completadas + sensación (fácil / normal / dura):
@@ -261,8 +272,12 @@ La investigación con dosis, rutinas, tests, plan de marcha y fuentes está en [
    - Programa de 10–15 min, 3–5 días por semana, en tres niveles; sube de nivel con ≥80 % de sesiones en 4 semanas.
    - Seis tests mensuales (dedos-suelo, rodilla a la pared, apertura sentado, rascado de espalda, elevación de pierna recta, sentadilla profunda) con gráfica cada uno.
    - Hitos: tocar el suelo con las palmas, sentadilla profunda 2 min, apertura +20 cm.
-4. **Marcha de 50 km**
-   - Elegir evento y fecha → plan de 16 o 12 semanas encajado con los días de gimnasio.
+4. **Marcha de 50 km** — plan diseñado ✅ (lógica en `src/domain/marchPlan.ts`, con tests); pantallas pendientes.
+   - **Se empieza cuando se quiera**, sin depender de una fecha. Son 18 escalones: 2 de base, carga hasta 30 km con descargas cada 3–4 escalones, dos fines de semana dobles, ensayo general de 36 km, dos de reducción y el reto de 50 km.
+   - **Entrada según lo que ya caminas**: el primer escalón que te pide algo más (como mucho el 7).
+   - **Avanza al completar la tirada larga** (vale el 90 %). Si una semana no sale, se repite. Tras un parón de 2 semanas o más se retrocede un escalón por semana parada (máximo 4).
+   - **Tres caminatas por semana**: dos cortas en días de sesión de casa y la larga en el último día de descanso; en los fines de semana dobles, otra el día anterior.
+   - Opcional: fecha de un evento, para ver si las semanas que quedan alcanzan.
    - Registro de caminatas (km, tiempo, desnivel, mochila, esfuerzo, molestias). Entrada manual; el GPS necesitaría el APK.
    - Gráficas: km semanales, tirada más larga frente a 50 km, ritmo; semáforo de preparación y tiempo previsto.
    - Lista de comprobación del día de la marcha.

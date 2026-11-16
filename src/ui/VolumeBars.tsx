@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { GROUP_LABEL, GROUP_ORDER, HYPERTROPHY_RANGE, volumeVerdict, type MuscleGroup } from '@/domain/volume';
+import { GROUP_LABEL, GROUP_ORDER, HYPERTROPHY_RANGE, LOWER_GROUPS, volumeVerdict, type MuscleGroup } from '@/domain/volume';
 import { Card } from './components';
 import { colors, space, type } from './theme';
 
@@ -15,7 +15,10 @@ export function VolumeBars({ volume }: { volume: Record<MuscleGroup, number> }) 
     <Card style={{ gap: space.md }}>
       {GROUP_ORDER.map((g) => {
         const v = volume[g];
-        const verdict = volumeVerdict(v);
+        const lower = LOWER_GROUPS.includes(g);
+        const verdict = lower
+          ? { label: v > 0 ? 'Para la marcha' : 'Sin trabajar', tone: v > 0 ? ('good' as const) : ('low' as const) }
+          : volumeVerdict(v);
         return (
           <View key={g} style={{ gap: 4 }}>
             <View style={styles.row}>
@@ -24,7 +27,9 @@ export function VolumeBars({ volume }: { volume: Record<MuscleGroup, number> }) 
               <Text style={styles.value}>{fmt(v)}</Text>
             </View>
             <View style={styles.track} accessibilityLabel={`${GROUP_LABEL[g]}: ${fmt(v)} series, ${verdict.label}`}>
-              <View style={[styles.zone, { left: pct(HYPERTROPHY_RANGE.min), width: pct(HYPERTROPHY_RANGE.max - HYPERTROPHY_RANGE.min) }]} />
+              {!lower && (
+                <View style={[styles.zone, { left: pct(HYPERTROPHY_RANGE.min), width: pct(HYPERTROPHY_RANGE.max - HYPERTROPHY_RANGE.min) }]} />
+              )}
               <View style={[styles.fill, { width: pct(v), backgroundColor: TONE[verdict.tone] }]} />
             </View>
           </View>
@@ -32,8 +37,8 @@ export function VolumeBars({ volume }: { volume: Record<MuscleGroup, number> }) 
       })}
       <Text style={type.caption}>
         Series de esta semana en casa (la franja marca la zona de {HYPERTROPHY_RANGE.min}–{HYPERTROPHY_RANGE.max} series, orientativa para ganar
-        músculo). Una serie cuenta 1 para el músculo principal y 0,5 para los que ayudan. No incluye el gimnasio, que no se registra por
-        ejercicio.
+        músculo). Una serie cuenta 1 para el músculo principal y 0,5 para los que ayudan. El tren inferior se trabaja para aguantar
+        la marcha y no se compara con esa zona. No incluye el gimnasio, que no se registra por ejercicio.
       </Text>
     </Card>
   );

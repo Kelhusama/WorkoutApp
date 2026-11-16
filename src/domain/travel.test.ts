@@ -36,7 +36,7 @@ test('cualquier combinación de material da sesiones válidas, con ejercicio y d
 test('sin material: remo con toalla, curl isométrico y flexiones', () => {
   assert.deepEqual(
     travelSlots('A', NO_GEAR).map((s) => s.exerciseId),
-    ['remo_toalla', 'agarre_toalla', 'curl_isometrico_toalla'],
+    ['remo_toalla', 'agarre_toalla', 'curl_isometrico_toalla', 'elevacion_tibial', 'elevacion_talones'],
   );
   assert.equal(travelSlots('C', NO_GEAR)[1].exerciseId, 'flexion_pica');
 });
@@ -45,7 +45,7 @@ test('con mesa y mochila se usan el remo invertido y la mochila', () => {
   const gear = { mochila: true, mesa: true, gimnasio: false };
   assert.deepEqual(
     travelSlots('A', gear).map((s) => s.exerciseId),
-    ['remo_invertido', 'remo_mochila', 'curl_mochila'],
+    ['remo_invertido', 'remo_mochila', 'curl_mochila', 'elevacion_tibial', 'elevacion_talones'],
   );
 });
 

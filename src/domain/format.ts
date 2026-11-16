@@ -11,7 +11,7 @@ export function amountText(value: number, ex: Exercise, short = false): string {
 
 /** "5 series de 2 repeticiones por brazo". */
 export function prescriptionText(p: Prescription, ex: Exercise): string {
-  return `${plural(p.sets, 'serie', 'series')} de ${amountText(p.reps, ex)}${ex.perArm ? ' con cada brazo' : ''}`;
+  return `${plural(p.sets, 'serie', 'series')} de ${amountText(p.reps, ex)}${ex.perArm ? (ex.side === 'lado' ? ' por cada lado' : ` con cada ${ex.side ?? 'brazo'}`) : ''}`;
 }
 
 export function describeChange(change: ChangeKind, next: Prescription, ex: Exercise): string {
@@ -32,5 +32,5 @@ export function describeChange(change: ChangeKind, next: Prescription, ex: Exerc
 
 /** "5 series · 2 reps" para listas compactas. */
 export function prescriptionShort(p: Prescription, ex: Exercise): string {
-  return `${plural(p.sets, 'serie', 'series')} · ${amountText(p.reps, ex, true)}${ex.perArm ? '/brazo' : ''}`;
+  return `${plural(p.sets, 'serie', 'series')} · ${amountText(p.reps, ex, true)}${ex.perArm ? `/${ex.side ?? 'brazo'}` : ''}`;
 }
