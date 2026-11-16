@@ -249,7 +249,8 @@ Revisadas: wger, Liftosaur, LiftLog (Expo/React Native), Flexify, FitoTrack, MyF
 
 ## Debes (lo que tiene que hacer el usuario)
 
-- [ ] **Capturas de Huawei Salud**: 1–2 capturas en español del detalle de una pesada, con todos los valores visibles. Si hace falta desplazarse, varias. Son necesarias para la lectura automática de capturas.
+- [x] ~~Capturas de Huawei Salud~~: recibida una (16/11/2026); sus valores son el caso de prueba del lector.
+- [ ] **Probar «Pegar datos de la captura»** en el móvil y avisar si algún valor sale mal o falta.
 - [ ] **Cuenta gratuita de Expo** (expo.dev), para compilar el APK en la nube.
 - [ ] **Nombre definitivo** de la app («Forja» es provisional).
 - [ ] Confirmar si es viable hacer **press de banca 3×5 al final del gimnasio** cuando no toque.
@@ -258,7 +259,9 @@ Revisadas: wger, Liftosaur, LiftLog (Expo/React Native), Flexify, FitoTrack, MyF
 ## Pendientes de desarrollo (orden propuesto)
 
 1. **Generar el APK** con EAS Build (development build). Es necesario para la lectura de capturas, los avisos puntuales al minuto y cualquier función nativa que no está en Expo Go.
-2. **Leer captura de Huawei Salud**: botón «Leer captura» en *Registrar medición*. Eliges la imagen de la galería, el móvil lee el texto con ML Kit de Google (gratis, sin internet, la imagen no sale del teléfono) y se rellenan los campos de la báscula buscando cada valor por su nombre. El usuario revisa antes de guardar. Requiere el APK y capturas reales.
+2. **Leer captura de Huawei Salud**:
+   - ✅ **Pegando el texto** (16/11/2026, funciona sin APK): en *Registrar medición*, «Pegar datos de la captura» lee del portapapeles el texto copiado de la captura («Copiar texto» en Google Fotos o Lens), rellena peso y valores de la báscula y pone la fecha de la medición. El usuario revisa antes de guardar. Probado con el texto de una captura real en varias disposiciones; falta probarlo con lo que copia realmente el móvil.
+   - Pendiente: **elegir la imagen directamente** con ML Kit de Google (gratis, sin internet), usando el mismo lector (`src/domain/scaleText.ts`). Requiere el APK.
 3. ~~Rediseñar los dibujos de los ejercicios~~ ✅ hecho (16/11/2026).
 4. ~~Modo viaje~~ ✅ hecho (16/11/2026).
 5. ~~Seguimiento de ejercicios: gráficas, récords, racha y fotos~~ ✅ hecho (16/11/2026).

@@ -1,13 +1,15 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { getBodyLog, getProfile, saveBodyEntry } from '@/db/body';
 import type { BodyEntry, Sex } from '@/domain/body';
 import { formatLong, today } from '@/domain/dates';
+import { SCALE_FIELD_LABEL, parseScaleText } from '@/domain/scaleText';
 import { Button, Card, SectionTitle } from '@/ui/components';
 import { NumberField, numberToText, parseNumber } from '@/ui/NumberField';
 import { colors, space, type } from '@/ui/theme';
@@ -40,7 +42,10 @@ const SCALE: { key: Field; label: string; unit: string; decimal?: boolean }[] = 
 export default function MeasurementScreen() {
   const db = useSQLiteContext();
   const { date: dateParam } = useLocalSearchParams<{ date?: string }>();
-  const date = dateParam ?? today();
+  const [date, setDate] = useState(dateParam ?? today());
+  // Valores leídos de una captura, pendientes de volcar tras cambiar a la fecha de esa medición.
+  const imported = useRef<Partial<Record<Field, string>> | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [sex, setSex] = useState<Sex>('H');
   const [f, setF] = useState<Partial<Record<Field, string>>>({});
   const [showScale, setShowScale] = useState(true);
@@ -60,6 +65,8 @@ export default function MeasurementScreen() {
         for (const t of TAPE) next[t.key] = numberToText(base[t.key] as number | null);
       }
       if (same) for (const s of SCALE) next[s.key] = numberToText(same[s.key] as number | null);
+      if (imported.current) Object.assign(next, imported.current);
+      imported.current = null;
       setF(next);
     })();
   }, [db, date]);
@@ -67,6 +74,29 @@ export default function MeasurementScreen() {
   const set = (k: Field) => (v: string) => setF((prev) => ({ ...prev, [k]: v }));
   const weight = parseNumber(f.weight ?? '');
   const valid = weight != null && weight > 30 && weight < 300;
+
+  const pasteCapture = async () => {
+    const reading = parseScaleText(await Clipboard.getStringAsync(), today());
+    if (reading.found.length === 0) {
+      Alert.alert(
+        'No encuentro datos de la báscula',
+        'Abre la captura de Huawei Salud en Google Fotos o Google Lens, pulsa «Copiar texto» (selecciona todo) y vuelve a intentarlo.',
+      );
+      return;
+    }
+    const read: Partial<Record<Field, string>> = {};
+    for (const k of reading.found) read[k] = numberToText(reading.values[k]);
+    if (reading.date && reading.date !== date) {
+      // La medición es de otro día: se cambia la fecha y los valores se vuelcan al cargarla.
+      imported.current = read;
+      setDate(reading.date);
+    } else {
+      setF((prev) => ({ ...prev, ...read }));
+    }
+    setShowScale(true);
+    setNotice(`Leído: ${reading.found.map((k) => SCALE_FIELD_LABEL[k]).join(', ')}. Revisa los números antes de guardar.`);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
 
   const save = async () => {
     if (!valid) return;
@@ -83,6 +113,19 @@ export default function MeasurementScreen() {
     <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: space.xxl }} keyboardShouldPersistTaps="handled">
       <Text style={type.overline}>{formatLong(date)}</Text>
       <Text style={type.caption}>Por la mañana, en ayunas y después de ir al baño. Usa siempre la misma cinta y el mismo sitio.</Text>
+
+      <Card style={{ gap: space.sm }}>
+        <Button label="Pegar datos de la captura" variant="secondary" icon="clipboard-outline" onPress={pasteCapture} />
+        <Text style={type.caption}>
+          Haz una captura de la medición en Huawei Salud, ábrela en Google Fotos o Lens, pulsa «Copiar texto» y luego este botón.
+        </Text>
+        {notice && (
+          <View style={{ flexDirection: 'row', gap: space.sm }}>
+            <Ionicons name="checkmark-circle" size={16} color={colors.success} style={{ marginTop: 1 }} />
+            <Text style={[type.caption, { color: colors.success, flex: 1 }]}>{notice}</Text>
+          </View>
+        )}
+      </Card>
 
       <Card style={{ gap: space.lg }}>
         <NumberField label="Peso" unit="kg" value={f.weight ?? ''} onChange={set('weight')} placeholder="80,0" />
