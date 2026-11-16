@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { INDICATORS, formatValue, rangeFor, seriesFor, targets, type BodyEntry } from '@/domain/body';
 import { formatShort } from '@/domain/dates';
+import { trendRatePerWeek, trendWeight } from '@/domain/insights';
 import { useBody } from '@/hooks/useBody';
 import { Button, Card, Pill, SectionTitle } from '@/ui/components';
 import { LineChart, TONE_COLOR } from '@/ui/LineChart';
@@ -38,6 +39,9 @@ export default function BodyScreen() {
   const { profile, entries, last, loaded } = useBody();
   const prev = entries.length > 1 ? entries[entries.length - 2] : null;
   const t = profile && last ? targets(last, profile) : null;
+  const trend = trendWeight(entries);
+  const trendNow = trend.length ? trend[trend.length - 1].value : 0;
+  const rate = trendRatePerWeek(trend);
 
   return (
     <ScrollView
@@ -48,7 +52,7 @@ export default function BodyScreen() {
           <Text style={type.overline}>Cuerpo</Text>
           <Text style={[type.hero, { marginTop: 2 }]}>Peso e indicadores</Text>
         </View>
-        <Pressable accessibilityLabel="Perfil" onPress={() => router.push('/perfil')} style={styles.iconBtn}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Perfil y avisos" onPress={() => router.push('/perfil')} style={styles.iconBtn}>
           <Ionicons name="person-circle-outline" size={26} color={colors.text} />
         </Pressable>
       </View>
@@ -74,6 +78,19 @@ export default function BodyScreen() {
               </View>
               <Delta now={last.weight} before={prev?.weight} unit=" kg" />
             </View>
+            {trend.length > 1 && (
+              <View style={styles.trend} accessible accessibilityLabel={`Peso tendencial ${fmt(trendNow)} kilos`}>
+                <Ionicons name="analytics" size={18} color={colors.accent} />
+                <View style={{ flex: 1 }}>
+                  <Text style={type.subtitle}>Tendencia: {fmt(trendNow)} kg</Text>
+                  <Text style={type.caption}>
+                    {rate === null
+                      ? 'Tu peso real, sin los altibajos de agua y comida. Con dos semanas más se verá el ritmo.'
+                      : `${rate > 0 ? '+' : ''}${fmt(rate, 2)} kg por semana${rate < -0.05 ? ' · bajando' : rate > 0.05 ? ' · subiendo' : ' · estable'}`}
+                  </Text>
+                </View>
+              </View>
+            )}
             <View style={styles.measures}>
               {MEASURES.map((m) => (
                 <View key={m.key} style={styles.measure}>
@@ -93,8 +110,11 @@ export default function BodyScreen() {
       {entries.length > 1 && (
         <>
           <SectionTitle>Evolución del peso</SectionTitle>
-          <Card>
-            <LineChart points={entries.map((e) => ({ date: e.date, value: e.weight }))} format={(v) => fmt(v)} />
+          <Card style={{ gap: space.sm }}>
+            <LineChart points={trend} ghost={entries.map((e) => ({ date: e.date, value: e.weight }))} format={(v) => fmt(v)} />
+            <Text style={type.caption}>
+              La línea es tu peso tendencial; los puntos grises, cada pesada. Fíjate en la línea: un día suelto sube o baja por agua y comida.
+            </Text>
           </Card>
         </>
       )}
@@ -145,6 +165,8 @@ export default function BodyScreen() {
                     return (
                       <Pressable
                         key={def.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${def.name}${current ? `: ${formatValue(def, current.value)}` : ', sin dato'}${range ? `, ${range.label}` : ''}. Ver detalle`}
                         onPress={() => router.push({ pathname: '/indicador/[id]', params: { id: def.id } })}
                         style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
                         <Card style={styles.indicator}>
@@ -179,8 +201,9 @@ export default function BodyScreen() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center' },
-  iconBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
+  iconBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   weightRow: { flexDirection: 'row', alignItems: 'flex-end' },
+  trend: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, borderRadius: 12, backgroundColor: colors.cardHigh },
   weight: { fontSize: 40, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
   weightUnit: { fontSize: 18, fontWeight: '600', color: colors.muted },
   measures: { flexDirection: 'row', justifyContent: 'space-between' },

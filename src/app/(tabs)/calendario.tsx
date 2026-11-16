@@ -21,33 +21,13 @@ import {
 import { gearSummary } from '@/domain/travel';
 import { useDays, type PlannedDay } from '@/hooks/useWeek';
 import { syncReminders } from '@/notifications/reminders';
-import { Button, Card } from '@/ui/components';
+import { Button, Card, Segmented } from '@/ui/components';
 import { Legend, MonthGrid } from '@/ui/MonthGrid';
 import { openDay } from '@/ui/navigation';
-import { colors, radius, space, type } from '@/ui/theme';
+import { colors, space, type } from '@/ui/theme';
 import { DayRow } from '@/ui/week';
 
 type Mode = 'semana' | 'mes';
-
-function Segmented<T extends string>({ options, value, onChange }: { options: { id: T; label: string }[]; value: T; onChange: (v: T) => void }) {
-  return (
-    <View style={styles.segment}>
-      {options.map((o) => {
-        const active = o.id === value;
-        return (
-          <Pressable
-            key={o.id}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: active }}
-            onPress={() => onChange(o.id)}
-            style={[styles.segmentItem, active && { backgroundColor: colors.accent }]}>
-            <Text style={[styles.segmentLabel, active && { color: colors.onAccent }]}>{o.label}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
 
 export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
@@ -87,12 +67,14 @@ export default function CalendarScreen() {
   const newTrip = (date: ISODate) => router.push({ pathname: '/viaje', params: { date } });
 
   const selectedDay = days.find((d) => d.date === selected);
+  const showsToday = mode === 'semana' ? todayDate >= from && todayDate <= to : anchor.slice(0, 7) === todayDate.slice(0, 7);
 
   return (
     <ScrollView
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={{ padding: space.lg, paddingTop: insets.top + space.lg, paddingBottom: space.xxl, gap: space.lg }}>
       <Segmented
+        label="Vista del calendario"
         options={[
           { id: 'semana', label: 'Semana' },
           { id: 'mes', label: 'Mes' },
@@ -102,23 +84,35 @@ export default function CalendarScreen() {
       />
 
       <View style={styles.nav}>
-        <Pressable accessibilityLabel="Anterior" onPress={() => shift(-1)} hitSlop={12}>
+        <Pressable accessibilityRole="button" accessibilityLabel={mode === 'semana' ? 'Semana anterior' : 'Mes anterior'} onPress={() => shift(-1)} style={styles.arrow}>
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Pressable onPress={() => setAnchor(todayDate)} style={{ alignItems: 'center' }}>
+        <View style={{ flex: 1, alignItems: 'center' }}>
           <Text style={type.title}>{title}</Text>
           <Text style={type.caption}>
             {done} de {planned} sesiones hechas
           </Text>
-        </Pressable>
-        <Pressable accessibilityLabel="Siguiente" onPress={() => shift(1)} hitSlop={12}>
+        </View>
+        <Pressable accessibilityRole="button" accessibilityLabel={mode === 'semana' ? 'Semana siguiente' : 'Mes siguiente'} onPress={() => shift(1)} style={styles.arrow}>
           <Ionicons name="chevron-forward" size={26} color={colors.text} />
         </Pressable>
       </View>
 
+      {!showsToday && (
+        <Button
+          label={mode === 'semana' ? 'Volver a esta semana' : 'Volver a este mes'}
+          variant="secondary"
+          icon="today-outline"
+          onPress={() => {
+            setAnchor(todayDate);
+            setSelected(todayDate);
+          }}
+        />
+      )}
+
       {mode === 'mes' ? (
         <Card style={{ gap: space.md }}>
-          <MonthGrid days={days} month={monthStart(anchor)} selected={selected} onSelect={setSelected} onLongPress={newTrip} />
+          <MonthGrid days={days} month={monthStart(anchor)} selected={selected} onSelect={setSelected} />
           <Legend />
         </Card>
       ) : (
@@ -185,7 +179,7 @@ export default function CalendarScreen() {
       </Pressable>
 
       <Text style={[type.caption, { textAlign: 'center' }]}>
-        {mode === 'mes' ? 'Toca un día para ver el detalle. ' : ''}Con ⇄ cambias un día solo para esa semana.{mode === 'mes' ? ' Mantén pulsado un día para crear un viaje.' : ''}
+        {mode === 'mes' ? 'Toca un día para ver el detalle. ' : ''}Con ⇄ cambias un día solo para esa semana.
       </Text>
     </ScrollView>
   );
@@ -195,7 +189,5 @@ const styles = StyleSheet.create({
   tripRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: 4 },
   templateCard: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  segment: { flexDirection: 'row', backgroundColor: colors.cardHigh, borderRadius: radius.md, padding: 4 },
-  segmentItem: { flex: 1, paddingVertical: 10, borderRadius: radius.sm, alignItems: 'center' },
-  segmentLabel: { fontSize: 15, fontWeight: '700', color: colors.muted },
+  arrow: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
 });

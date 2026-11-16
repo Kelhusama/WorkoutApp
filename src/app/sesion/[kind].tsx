@@ -19,6 +19,7 @@ import { exerciseFor, type Slot } from '@/domain/templates';
 import { sessionSlots } from '@/domain/travel';
 import { Button, Card, FeelingPicker, SectionTitle } from '@/ui/components';
 import { syncReminders } from '@/notifications/reminders';
+import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { ExerciseCard } from '@/ui/ExerciseCard';
 import { RestTimer } from '@/ui/RestTimer';
 import { colors, space, type } from '@/ui/theme';
@@ -39,6 +40,8 @@ export default function SessionScreen() {
   const [saving, setSaving] = useState(false);
   const [changes, setChanges] = useState<SlotChange[] | null>(null);
   const [records, setRecords] = useState<NewRecord[]>([]);
+  const [dirty, setDirty] = useState(false);
+  useUnsavedGuard(dirty, 'las series que has apuntado');
 
   useEffect(() => {
     (async () => {
@@ -70,6 +73,7 @@ export default function SessionScreen() {
       const before = await getBests(db, date);
       const result = await saveHomeSession(db, date, kind, feeling, results, slots);
       setRecords(detectRecords(before, results));
+      setDirty(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setChanges(result);
       syncReminders(db);
@@ -184,14 +188,23 @@ export default function SessionScreen() {
           slot={s}
           target={targets[s.key]}
           values={values[s.key] ?? []}
-          onChange={(v) => setValues((prev) => ({ ...prev, [s.key]: v }))}
+          onChange={(v) => {
+            setDirty(true);
+            setValues((prev) => ({ ...prev, [s.key]: v }));
+          }}
         />
       ))}
 
       <SectionTitle>¿Cómo ha ido?</SectionTitle>
-      <FeelingPicker value={feeling} onChange={setFeeling} />
+      <FeelingPicker
+        value={feeling}
+        onChange={(v) => {
+          setDirty(true);
+          setFeeling(v);
+        }}
+      />
       <Text style={type.caption}>
-        Con «Fácil» la app sube la dificultad; con «Dura» la mantiene.
+        {feeling ? 'Con «Fácil» la app sube la dificultad; con «Dura» la mantiene.' : 'Elige cómo ha ido para poder guardar: con «Fácil» sube la dificultad y con «Dura» se mantiene.'}
       </Text>
 
       <View style={{ marginTop: space.md }}>

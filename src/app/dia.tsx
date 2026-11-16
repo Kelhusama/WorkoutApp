@@ -2,9 +2,9 @@ import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Alert, ScrollView, Text, View } from 'react-native';
 
-import { getTemplate, loadDays, setOverride, type PlannedDay } from '@/db/repo';
+import { deleteLog, getTemplate, loadDays, setOverride, type PlannedDay } from '@/db/repo';
 import { addDays, formatLong, today, weekStart, weekdayIndex } from '@/domain/dates';
 import { ROLE_INFO, SESSION_INFO, roleOf, type Role } from '@/domain/schedule';
 import { syncReminders } from '@/notifications/reminders';
@@ -43,10 +43,29 @@ export default function DayScreen() {
         <Text style={type.overline}>{formatLong(date)}</Text>
         <Card>
           <Text style={type.body}>
-            Este día ya está registrado como {SESSION_INFO[day.type].title.toLowerCase()}. Para cambiarlo, primero deshaz el
+            Este día ya está registrado como {SESSION_INFO[day.type].title.toLowerCase()}. Para cambiar lo que se hace, primero hay que borrar ese
             registro.
           </Text>
         </Card>
+        <Button
+          label="Borrar el registro de este día"
+          variant="secondary"
+          icon="trash-outline"
+          onPress={() =>
+            Alert.alert('¿Borrar el registro?', 'Se pierden las series apuntadas ese día. No se puede deshacer.', [
+              { text: 'Cancelar', style: 'cancel' },
+              {
+                text: 'Borrar',
+                style: 'destructive',
+                onPress: async () => {
+                  if (day.type !== 'rest') await deleteLog(db, date, day.type);
+                  syncReminders(db);
+                  router.back();
+                },
+              },
+            ])
+          }
+        />
       </ScrollView>
     );
   }

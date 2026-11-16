@@ -9,10 +9,10 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 
 import { addPhoto, deletePhoto, getPhotos, type PhotoPose, type ProgressPhoto } from '@/db/stats';
 import { formatShort, fromISODate, today } from '@/domain/dates';
-import { Button, Card, SectionTitle } from '@/ui/components';
+import { Button, Card, SectionTitle, Segmented } from '@/ui/components';
 import { colors, radius, space, type } from '@/ui/theme';
 
-const POSES: { id: PhotoPose; label: string }[] = [
+const POSES: readonly { id: PhotoPose; label: string }[] = [
   { id: 'frente', label: 'Frente' },
   { id: 'lado', label: 'Lado' },
   { id: 'espalda', label: 'Espalda' },
@@ -90,21 +90,15 @@ export default function PhotosScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: space.xxl }}>
-      <View style={styles.segment}>
-        {POSES.map((p) => (
-          <Pressable
-            key={p.id}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: pose === p.id }}
-            onPress={() => {
-              setPose(p.id);
-              setBeforeId(null);
-            }}
-            style={[styles.segmentItem, pose === p.id && { backgroundColor: colors.accent }]}>
-            <Text style={[styles.segmentLabel, pose === p.id && { color: colors.onAccent }]}>{p.label}</Text>
-          </Pressable>
-        ))}
-      </View>
+      <Segmented
+        label="Postura"
+        options={POSES}
+        value={pose}
+        onChange={(p) => {
+          setPose(p);
+          setBeforeId(null);
+        }}
+      />
 
       {canCompare ? (
         <Card style={{ gap: space.sm }}>
@@ -149,16 +143,21 @@ export default function PhotosScreen() {
               <Pressable
                 key={p.id}
                 onPress={() => setBeforeId(p.id)}
-                onLongPress={() => remove(p)}
-                accessibilityLabel={`Foto del ${formatShort(p.date)}`}
+                accessibilityRole="button"
+                accessibilityLabel={`Foto del ${formatShort(p.date)}. Usar como «antes»`}
                 style={[styles.thumbWrap, before?.id === p.id && canCompare && { borderColor: colors.accent }]}>
                 <Image source={{ uri: p.uri }} style={styles.thumb} contentFit="cover" />
-                <Text style={styles.thumbDate}>{formatShort(p.date)}</Text>
+                <View style={styles.thumbFoot}>
+                  <Text style={styles.thumbDate}>{formatShort(p.date)}</Text>
+                  <Pressable accessibilityRole="button" accessibilityLabel={`Borrar la foto del ${formatShort(p.date)}`} onPress={() => remove(p)} style={styles.thumbDelete}>
+                    <Ionicons name="trash-outline" size={18} color={colors.muted} />
+                  </Pressable>
+                </View>
               </Pressable>
             ))}
           </View>
           <Text style={[type.caption, { textAlign: 'center' }]}>
-            <Ionicons name="information-circle-outline" size={13} color={colors.muted} /> Mantén pulsada una foto para borrarla. Las fotos solo se guardan en tu móvil.
+            <Ionicons name="information-circle-outline" size={13} color={colors.muted} /> Toca una foto para usarla como «antes». Las fotos solo se guardan en tu móvil.
           </Text>
         </>
       )}
@@ -167,12 +166,11 @@ export default function PhotosScreen() {
 }
 
 const styles = StyleSheet.create({
-  segment: { flexDirection: 'row', backgroundColor: colors.cardHigh, borderRadius: radius.md, padding: 4 },
-  segmentItem: { flex: 1, paddingVertical: 10, borderRadius: radius.sm, alignItems: 'center' },
-  segmentLabel: { fontSize: 15, fontWeight: '700', color: colors.muted },
   compare: { width: '100%', aspectRatio: 3 / 4, borderRadius: radius.md, backgroundColor: colors.cardHigh },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   thumbWrap: { width: '31.5%', borderRadius: radius.sm, borderWidth: 2, borderColor: 'transparent', overflow: 'hidden' },
   thumb: { width: '100%', aspectRatio: 3 / 4, backgroundColor: colors.cardHigh },
-  thumbDate: { fontSize: 11, color: colors.muted, textAlign: 'center', paddingVertical: 3 },
+  thumbFoot: { flexDirection: 'row', alignItems: 'center', paddingLeft: 8 },
+  thumbDate: { flex: 1, fontSize: 13, color: colors.muted },
+  thumbDelete: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
 });

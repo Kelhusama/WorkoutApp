@@ -408,6 +408,22 @@ export async function addTest(db: SQLiteDatabase, date: ISODate, test: 'dominada
   await db.runAsync('INSERT INTO test_log (date, test, value) VALUES (?, ?, ?)', date, test, value);
 }
 
+export interface TestResult {
+  id: number;
+  date: ISODate;
+  value: number;
+}
+
+/** Resultados de un test, del más reciente al más antiguo. */
+export async function getTests(db: SQLiteDatabase, test: 'dominadas' | 'flexiones'): Promise<TestResult[]> {
+  const rows = await db.getAllAsync<TestResult>('SELECT id, date, value FROM test_log WHERE test = ? ORDER BY date DESC, id DESC', test);
+  return rows.map((r) => ({ ...r }));
+}
+
+export async function deleteTest(db: SQLiteDatabase, id: number) {
+  await db.runAsync('DELETE FROM test_log WHERE id = ?', id);
+}
+
 export async function getBestTests(db: SQLiteDatabase) {
   const rows = await db.getAllAsync<{ test: 'dominadas' | 'flexiones'; best: number; last_date: ISODate }>(
     'SELECT test, MAX(value) AS best, MAX(date) AS last_date FROM test_log GROUP BY test',

@@ -73,12 +73,12 @@ export default function ProgressScreen() {
       <View style={styles.tiles}>
         <Card style={styles.tile}>
           <Ionicons name="flame" size={20} color={colors.accent} />
-          <Text style={styles.tileValue}>{streak?.current ?? 0}</Text>
-          <Text style={type.caption}>Racha actual</Text>
+          <Text style={styles.tileValue}>{streak?.weeks ?? 0}</Text>
+          <Text style={type.caption}>{streak?.weeks === 1 ? 'Semana cumplida' : 'Semanas cumplidas'}</Text>
         </Card>
         <Card style={styles.tile}>
           <Ionicons name="trophy" size={20} color={colors.accent} />
-          <Text style={styles.tileValue}>{streak?.best ?? 0}</Text>
+          <Text style={styles.tileValue}>{streak?.bestWeeks ?? 0}</Text>
           <Text style={type.caption}>Mejor racha</Text>
         </Card>
         <Card style={styles.tile}>
@@ -88,12 +88,38 @@ export default function ProgressScreen() {
         </Card>
       </View>
       <Text style={[type.caption, { marginTop: space.sm }]}>
-        La racha cuenta sesiones cumplidas seguidas. Los descansos y los viajes no la rompen; una sesión fallada sí.
+        Una semana se cumple si entrenas y fallas como mucho una sesión: ese es tu comodín
+        {streak?.passUsed ? ', y esta semana ya lo has usado' : ''}. Los descansos y los viajes no rompen la racha.
       </Text>
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Revisión de la semana. Abrir"
+        onPress={() => router.push('/revision')}
+        style={({ pressed }) => [{ marginTop: space.md }, pressed && { opacity: 0.7 }]}>
+        <Card style={styles.review}>
+          <Ionicons name="clipboard-outline" size={24} color={colors.accent} />
+          <View style={{ flex: 1 }}>
+            <Text style={type.subtitle}>Revisión de la semana</Text>
+            <Text style={type.caption}>Qué has hecho, qué récords has batido y un foco para la siguiente</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.faint} />
+        </Card>
+      </Pressable>
 
       <SectionTitle>Objetivos</SectionTitle>
       <GoalsSummary />
 
+      {shownCharts.length === 0 && (
+        <>
+          <SectionTitle>Evolución</SectionTitle>
+          <Card>
+            <Text style={type.caption}>
+              Con dos registros de banca o dos tests de máximo verás aquí cómo evolucionas.
+            </Text>
+          </Card>
+        </>
+      )}
       {shownCharts.length > 0 && (
         <>
           <SectionTitle>Evolución</SectionTitle>
@@ -125,6 +151,8 @@ export default function ProgressScreen() {
           {exercises.map((e, i) => (
             <Pressable
               key={e.exerciseId}
+              accessibilityRole="button"
+              accessibilityLabel={`${EXERCISES[e.exerciseId].name}. Ver récords y gráfica`}
               onPress={() => router.push({ pathname: '/ejercicio/[id]', params: { id: e.exerciseId } })}
               style={({ pressed }) => [styles.row, i > 0 && styles.divider, pressed && { opacity: 0.6 }]}>
               <View style={{ flex: 1 }}>
@@ -140,7 +168,7 @@ export default function ProgressScreen() {
       )}
 
       <SectionTitle>Fotos</SectionTitle>
-      <Pressable onPress={() => router.push('/fotos')} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Fotos de progreso. Abrir" onPress={() => router.push('/fotos')} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
         <Card style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
           <Ionicons name="camera-outline" size={24} color={colors.accent} />
           <View style={{ flex: 1 }}>
@@ -188,7 +216,8 @@ const styles = StyleSheet.create({
   tiles: { flexDirection: 'row', gap: space.sm, marginTop: space.lg },
   tile: { flex: 1, gap: 2, padding: space.md },
   tileValue: { fontSize: 26, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'], marginTop: 4 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.md },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.md, minHeight: 56 },
+  review: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 64 },
   divider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   date: { width: 52, fontSize: 13, fontWeight: '700', color: colors.muted },
 });

@@ -3,7 +3,8 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 
 import { loadDays } from '@/db/repo';
-import { addDays, today } from '@/domain/dates';
+import { addDays, today, weekStart } from '@/domain/dates';
+import { tallyWeeks, weekStreak } from '@/domain/insights';
 import { adherence, streak } from '@/domain/stats';
 
 export interface StreakInfo {
@@ -12,6 +13,11 @@ export interface StreakInfo {
   /** Sesiones hechas y planificadas en las últimas 4 semanas. */
   done: number;
   planned: number;
+  /** Semanas cumplidas seguidas (se permite fallar una sesión por semana). */
+  weeks: number;
+  bestWeeks: number;
+  /** Ya se ha gastado el comodín de esta semana. */
+  passUsed: boolean;
 }
 
 /** Racha de sesiones y cumplimiento reciente. Se recalcula al volver a la pantalla. */
@@ -28,7 +34,8 @@ export function useStreak(): StreakInfo | null {
         const first = days.findIndex((d) => d.log);
         const counted = first < 0 ? [] : days.slice(first);
         const recent = counted.filter((d) => d.date > addDays(end, -28));
-        setInfo({ ...streak(counted), ...adherence(recent) });
+        const w = weekStreak(tallyWeeks(counted), weekStart(end));
+        setInfo({ ...streak(counted), ...adherence(recent), weeks: w.current, bestWeeks: w.best, passUsed: w.passUsed });
       })();
     }, [db]),
   );

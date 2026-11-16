@@ -20,12 +20,15 @@ export function LineChart({
   height = 180,
   format = (v: number) => v.toFixed(1),
   compact = false,
+  ghost,
 }: {
   points: Point[];
   ranges?: Range[];
   height?: number;
   format?: (v: number) => string;
   compact?: boolean;
+  /** Valores sin suavizar, uno por punto, dibujados de fondo (p. ej. cada pesada bajo la tendencia). */
+  ghost?: Point[];
 }) {
   const [width, setWidth] = useState(0);
   if (points.length === 0) {
@@ -36,7 +39,7 @@ export function LineChart({
   const padR = compact ? 2 : 10;
   const padT = 8;
   const padB = compact ? 4 : 22;
-  const values = points.map((p) => p.value);
+  const values = [...points, ...(ghost ?? [])].map((p) => p.value);
   let lo = Math.min(...values);
   let hi = Math.max(...values);
   const span = hi - lo || Math.max(Math.abs(hi) * 0.05, 1);
@@ -66,10 +69,11 @@ export function LineChart({
           ))}
           {!compact &&
             [hi - span * 0.25, lo + span * 0.25].map((v, i) => (
-              <SvgText key={i} x={padL - 6} y={y(v) + 4} fill={colors.faint} fontSize={10} textAnchor="end">
+              <SvgText key={i} x={padL - 6} y={y(v) + 4} fill={colors.faint} fontSize={11} textAnchor="end">
                 {format(v)}
               </SvgText>
             ))}
+          {!compact && ghost?.map((p, i) => <Circle key={`g${p.date}`} cx={x(i)} cy={y(p.value)} r={3} fill={colors.faint} opacity={0.7} />)}
           {points.length > 1 && (
             <Polyline
               points={points.map((p, i) => `${x(i)},${y(p.value)}`).join(' ')}
@@ -85,13 +89,24 @@ export function LineChart({
             <Circle cx={x(points.length - 1)} cy={y(points[points.length - 1].value)} r={3} fill={colors.accent} />
           )}
           {!compact && (
+            <SvgText
+              x={Math.min(x(points.length - 1), padL + w - 2)}
+              y={Math.max(14, y(points[points.length - 1].value) - 9)}
+              fill={colors.text}
+              fontSize={12}
+              fontWeight="700"
+              textAnchor="end">
+              {format(points[points.length - 1].value)}
+            </SvgText>
+          )}
+          {!compact && (
             <>
               <Line x1={padL} y1={height - padB} x2={padL + w} y2={height - padB} stroke={colors.border} />
-              <SvgText x={padL} y={height - 6} fill={colors.faint} fontSize={10}>
+              <SvgText x={padL} y={height - 6} fill={colors.faint} fontSize={11}>
                 {formatShort(points[0].date)}
               </SvgText>
               {points.length > 1 && (
-                <SvgText x={padL + w} y={height - 6} fill={colors.faint} fontSize={10} textAnchor="end">
+                <SvgText x={padL + w} y={height - 6} fill={colors.faint} fontSize={11} textAnchor="end">
                   {formatShort(points[points.length - 1].date)}
                 </SvgText>
               )}

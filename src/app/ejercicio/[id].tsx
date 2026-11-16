@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { getExerciseHistory } from '@/db/stats';
 import { formatShort } from '@/domain/dates';
@@ -10,9 +10,9 @@ import { EXERCISES } from '@/domain/exercises';
 import { amountText } from '@/domain/format';
 import { exerciseStats, seriesOf, type SessionSets } from '@/domain/stats';
 import { ExerciseFigure } from '@/illustrations/ExerciseFigure';
-import { Card, SectionTitle } from '@/ui/components';
+import { Card, SectionTitle, Segmented } from '@/ui/components';
 import { LineChart } from '@/ui/LineChart';
-import { colors, radius, space, type } from '@/ui/theme';
+import { colors, space, type } from '@/ui/theme';
 
 type Metric = 'best' | 'total';
 
@@ -71,23 +71,15 @@ export default function ExerciseScreen() {
 
           <SectionTitle>Evolución</SectionTitle>
           <Card style={{ gap: space.md }}>
-            <View style={styles.segment}>
-              {(
-                [
-                  ['best', 'Mejor serie'],
-                  ['total', 'Total de la sesión'],
-                ] as const
-              ).map(([m, label]) => (
-                <Pressable
-                  key={m}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: metric === m }}
-                  onPress={() => setMetric(m)}
-                  style={[styles.segmentItem, metric === m && { backgroundColor: colors.accent }]}>
-                  <Text style={[styles.segmentLabel, metric === m && { color: colors.onAccent }]}>{label}</Text>
-                </Pressable>
-              ))}
-            </View>
+            <Segmented
+              label="Qué mostrar en la gráfica"
+              options={[
+                { id: 'best', label: 'Mejor serie' },
+                { id: 'total', label: 'Total' },
+              ]}
+              value={metric}
+              onChange={setMetric}
+            />
             <LineChart points={seriesOf(history, metric)} format={(v) => String(Math.round(v))} />
             {history.length < 2 && <Text style={type.caption}>Con dos sesiones o más verás la línea de evolución.</Text>}
           </Card>
@@ -135,9 +127,6 @@ const styles = StyleSheet.create({
   tiles: { flexDirection: 'row', gap: space.sm },
   tile: { flex: 1, gap: 2, padding: space.md },
   tileValue: { fontSize: 20, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'], marginTop: 4 },
-  segment: { flexDirection: 'row', backgroundColor: colors.cardHigh, borderRadius: radius.md, padding: 4 },
-  segmentItem: { flex: 1, paddingVertical: 8, borderRadius: radius.sm, alignItems: 'center' },
-  segmentLabel: { fontSize: 13, fontWeight: '700', color: colors.muted },
   histRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.md },
   divider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   bullet: { flexDirection: 'row', gap: space.sm },

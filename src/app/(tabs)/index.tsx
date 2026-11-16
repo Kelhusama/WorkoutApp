@@ -9,7 +9,7 @@ import { getBodyLog } from '@/db/body';
 import { deleteLog, getPrescriptions, markMissed } from '@/db/repo';
 import { getRecentFeelings } from '@/db/stats';
 import { stretchedOn } from '@/db/stretch';
-import { addDays, formatLong, formatShort, today as getToday } from '@/domain/dates';
+import { addDays, formatLong, formatShort, today as getToday, weekdayIndex } from '@/domain/dates';
 import { prescriptionShort } from '@/domain/format';
 import { needsDeload } from '@/domain/gymTools';
 import { WALK_LABEL } from '@/domain/march';
@@ -271,6 +271,14 @@ export default function TodayScreen() {
           detail="Tres de tus últimas cuatro sesiones han sido duras: haz una serie menos por ejercicio."
         />
       )}
+      {[0, 5, 6].includes(weekdayIndex(todayDate)) && (
+        <PlanRow
+          icon="clipboard-outline"
+          title="Revisión de la semana"
+          detail="Mira cómo ha ido y cuál es tu foco para la siguiente."
+          onPress={() => router.push('/revision')}
+        />
+      )}
       {needsWeighIn && (
         <PlanRow
           icon="scale-outline"
@@ -283,13 +291,19 @@ export default function TodayScreen() {
       <SectionTitle>Esta semana</SectionTitle>
       <Card style={{ gap: space.md }}>
         <WeekStrip days={days} onPressDay={(d) => (d.type !== 'rest' && d.date <= todayDate ? openDay(d.type, d.date) : router.push('/calendario'))} />
-        {streak && streak.current > 0 && (
+        {streak && (streak.weeks > 0 || streak.passUsed) && (
           <View style={styles.streak}>
             <Ionicons name="flame" size={16} color={colors.accent} />
             <Text style={type.caption}>
-              Racha: <Text style={{ color: colors.text, fontWeight: '800' }}>{streak.current}</Text>{' '}
-              {streak.current === 1 ? 'sesión' : 'sesiones seguidas'}
-              {streak.best > streak.current ? ` · mejor: ${streak.best}` : streak.current > 1 ? ' · tu mejor racha' : ''}
+              {streak.weeks > 0 ? (
+                <>
+                  Racha: <Text style={{ color: colors.text, fontWeight: '800' }}>{streak.weeks}</Text>{' '}
+                  {streak.weeks === 1 ? 'semana cumplida' : 'semanas cumplidas'}
+                </>
+              ) : (
+                'Aún puedes cumplir la semana'
+              )}
+              {streak.passUsed ? ' · comodín usado' : ' · te queda un comodín'}
             </Text>
           </View>
         )}
