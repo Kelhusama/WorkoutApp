@@ -22,6 +22,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="entrenar"
+        options={{
+          title: 'Entrenar',
+          tabBarIcon: ({ color, size }) => <Ionicons name="fitness" size={size} color={color as string} />,
+        }}
+      />
+      <Tabs.Screen
         name="calendario"
         options={{
           title: 'Calendario',

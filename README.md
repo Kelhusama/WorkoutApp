@@ -20,6 +20,7 @@ Requisitos completos en [docs/REQUISITOS.md](docs/REQUISITOS.md).
 - Sección Cuerpo: perfil, peso, medidas, valores de la báscula Huawei Scale 3 e indicadores con rangos e historial
 - Modo viaje: sesiones adaptadas al material disponible; los días de viaje no cuentan como fallo
 - Bloque de pierna en cada sesión de casa (tibial, gemelo, aductores, glúteo medio, muslo)
+- Plan de marcha de 50 km por escalones, con registro de caminatas y gráficas
 - Seguimiento: ficha de cada ejercicio con récords y gráfica, racha, cumplimiento y fotos de progreso
 
 Siguientes pasos y tareas pendientes: ver «Debes» y «Pendientes de desarrollo» en [docs/REQUISITOS.md](docs/REQUISITOS.md).

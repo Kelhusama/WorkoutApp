@@ -262,7 +262,7 @@ Revisadas: wger, Liftosaur, LiftLog (Expo/React Native), Flexify, FitoTrack, MyF
 
 La investigación con dosis, rutinas, tests, plan de marcha y fuentes está en [INVESTIGACION.md](INVESTIGACION.md). Se construye punto por punto:
 
-1. **Menú**: una zona «Entrenar» que reúna Fuerza, Estiramientos, Flexibilidad y Marcha, con Hoy como entrada diaria (pendiente del informe de usabilidad).
+1. **Menú** ✅: pestaña «Entrenar» con Fuerza, Marcha, Estiramientos y Flexibilidad (las dos últimas, aún como «Pronto»). Barra: Hoy · Entrenar · Calendario · Cuerpo · Progreso.
 2. **Estiramientos**
    - Rutina de ~5 min tras cada sesión A, B y C, ofrecida al guardar la sesión.
    - Rutina de tren inferior de ~11 min, con tres niveles de aductores y dos estiramientos de abductores.
@@ -272,12 +272,15 @@ La investigación con dosis, rutinas, tests, plan de marcha y fuentes está en [
    - Programa de 10–15 min, 3–5 días por semana, en tres niveles; sube de nivel con ≥80 % de sesiones en 4 semanas.
    - Seis tests mensuales (dedos-suelo, rodilla a la pared, apertura sentado, rascado de espalda, elevación de pierna recta, sentadilla profunda) con gráfica cada uno.
    - Hitos: tocar el suelo con las palmas, sentadilla profunda 2 min, apertura +20 cm.
-4. **Marcha de 50 km** — plan diseñado ✅ (lógica en `src/domain/marchPlan.ts`, con tests); pantallas pendientes.
+4. **Marcha de 50 km** ✅ (16/11/2026): plan (`src/domain/marchPlan.ts`), estado según las caminatas (`src/domain/march.ts`) y pantallas *Marcha* y *Registrar caminata*.
    - **Se empieza cuando se quiera**, sin depender de una fecha. Son 18 escalones: 2 de base, carga hasta 30 km con descargas cada 3–4 escalones, dos fines de semana dobles, ensayo general de 36 km, dos de reducción y el reto de 50 km.
    - **Entrada según lo que ya caminas**: el primer escalón que te pide algo más (como mucho el 7).
    - **Avanza al completar la tirada larga** (vale el 90 %). Si una semana no sale, se repite. Tras un parón de 2 semanas o más se retrocede un escalón por semana parada (máximo 4).
    - **Tres caminatas por semana**: dos cortas en días de sesión de casa y la larga en el último día de descanso; en los fines de semana dobles, otra el día anterior.
-   - Opcional: fecha de un evento, para ver si las semanas que quedan alcanzan.
+   - **Pantalla Marcha**: escalón actual, caminatas del escalón con el día sugerido, semáforo de preparación, tiempo previsto, gráficas de km semanales y tirada más larga, los 18 escalones, lista del día de la marcha y ajuste manual del escalón.
+   - **Registrar caminata**: día, tipo, km, tiempo, desnivel, mochila, esfuerzo y molestias. Entrada manual.
+   - **Hoy** avisa si toca una caminata del plan.
+   - Pendiente: fecha de un evento para ver si las semanas alcanzan; GPS (necesita el APK); ajustar la fuerza de pierna en las semanas pico.
    - Registro de caminatas (km, tiempo, desnivel, mochila, esfuerzo, molestias). Entrada manual; el GPS necesitaría el APK.
    - Gráficas: km semanales, tirada más larga frente a 50 km, ritmo; semáforo de preparación y tiempo previsto.
    - Lista de comprobación del día de la marcha.
@@ -285,6 +288,10 @@ La investigación con dosis, rutinas, tests, plan de marcha y fuentes está en [
 5. **Icono**: opciones geométricas con motivos canarios generadas (Teide facetado, siete barras, archipiélago, pintadera, espiral, drago, Teide y barra, Teide de líneas). Pendiente de elegir.
 
 Por decidir: si «abductores» es la cara interna del muslo (aductores), qué sede y fecha de la Marcha del Mamut, y qué icono.
+
+## Tendencias (16/11/2026)
+
+Revisión de lo que hacen ahora las apps líderes, con 12 ideas priorizadas y lo que conviene no hacer: [TENDENCIAS.md](TENDENCIAS.md). Las primeras: revisión semanal, proyección de objetivos, doble progresión en la banca, peso tendencial y racha flexible.
 
 ## Debes (lo que tiene que hacer el usuario)
 

@@ -31,6 +31,8 @@ export default function RootLayout() {
           <Stack.Screen name="viaje" options={{ title: 'Viaje' }} />
           <Stack.Screen name="ejercicio/[id]" options={{ title: 'Ejercicio' }} />
           <Stack.Screen name="fotos" options={{ title: 'Fotos de progreso' }} />
+          <Stack.Screen name="marcha" options={{ title: 'Marcha' }} />
+          <Stack.Screen name="caminata" options={{ title: 'Caminata' }} />
         </Stack>
       </ThemeProvider>
     </SQLiteProvider>

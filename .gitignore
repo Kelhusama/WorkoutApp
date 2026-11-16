@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Copias de trabajo temporales de agentes
+.claude/worktrees/

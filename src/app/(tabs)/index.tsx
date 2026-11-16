@@ -12,11 +12,13 @@ import { needsDeload } from '@/domain/gymTools';
 import { deleteLog, getPrescriptions, markMissed } from '@/db/repo';
 import { syncReminders } from '@/notifications/reminders';
 import { addDays, formatLong, formatShort, today as getToday } from '@/domain/dates';
+import { WALK_LABEL } from '@/domain/march';
 import { FEELING_LABEL, TEMPO_LABEL, type Prescription } from '@/domain/progression';
 import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
 import { prescriptionShort } from '@/domain/format';
 import { exerciseFor } from '@/domain/templates';
 import { gearSummary, sessionSlots } from '@/domain/travel';
+import { useMarch } from '@/hooks/useMarch';
 import { useStreak } from '@/hooks/useStreak';
 import { useWeek } from '@/hooks/useWeek';
 import { Button, Card, Pill, SectionTitle, type IconName } from '@/ui/components';
@@ -31,6 +33,7 @@ export default function TodayScreen() {
   const todayDate = getToday();
   const { days, reload } = useWeek(todayDate);
   const streak = useStreak();
+  const march = useMarch().view;
   const day = days.find((d) => d.date === todayDate);
   const [prescriptions, setPrescriptions] = useState<Record<string, Prescription> | null>(null);
 
@@ -193,6 +196,24 @@ export default function TodayScreen() {
             </Pressable>
           )}
         </Card>
+      )}
+
+      {march?.dueToday && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Marcha: hoy toca ${WALK_LABEL[march.dueToday.kind]} de ${march.dueToday.km} kilómetros. Registrar`}
+          onPress={() => router.push({ pathname: '/caminata', params: { kind: march.dueToday!.kind, km: String(march.dueToday!.km) } })}>
+          <Card style={{ marginTop: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 56 }}>
+            <Ionicons name="walk" size={22} color={colors.accent} />
+            <View style={{ flex: 1 }}>
+              <Text style={type.subtitle}>
+                {WALK_LABEL[march.dueToday.kind]} · {march.dueToday.km} km
+              </Text>
+              <Text style={type.caption}>Plan de marcha · toca para registrarla</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.faint} />
+          </Card>
+        </Pressable>
       )}
 
       {deload && (

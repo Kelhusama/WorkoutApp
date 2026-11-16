@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 8;
+const LATEST = 9;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -156,6 +156,24 @@ export async function migrate(db: SQLiteDatabase) {
       );
     `);
     version = 8;
+  }
+
+  if (version === 8) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS walk_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        kind TEXT NOT NULL CHECK (kind IN ('suave','cuestas','larga','extra','libre')),
+        km REAL NOT NULL CHECK (km > 0),
+        minutes REAL NOT NULL DEFAULT 0,
+        elevation REAL,
+        pack_kg REAL,
+        effort INTEGER,
+        notes TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_walk_log_date ON walk_log (date);
+    `);
+    version = 9;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);
