@@ -14,12 +14,12 @@ Requisitos completos en [docs/REQUISITOS.md](docs/REQUISITOS.md).
 - Objetivos con hitos y tests de máximo
 - Dibujos animados propios de cada ejercicio, con claves de técnica y errores típicos
 
-**Fase 2 (parcial)** ✅
-- Calendario con vista de semana y de mes
+**Fase 2** ✅
+- Calendario con vista de semana y de mes; semana tipo configurable y cambio de días sueltos
 - Avisos de sesión en casa a las 9:00, 10:00 y 12:00 (ajustables)
-- Semana tipo configurable y cambio de días sueltos
-- Valores de la báscula Huawei Scale 3 (registro manual) con indicadores e historial
-- Sección Cuerpo: perfil, peso y medidas, e indicadores (IMC, cintura/altura, % grasa, masa magra, FFMI, ritmo semanal, metabolismo basal, gasto diario) con rangos e historial
+- Sección Cuerpo: perfil, peso, medidas, valores de la báscula Huawei Scale 3 e indicadores con rangos e historial
+- Modo viaje: sesiones adaptadas al material disponible; los días de viaje no cuentan como fallo
+- Seguimiento: ficha de cada ejercicio con récords y gráfica, racha, cumplimiento y fotos de progreso
 
 Siguientes pasos y tareas pendientes: ver «Debes» y «Pendientes de desarrollo» en [docs/REQUISITOS.md](docs/REQUISITOS.md).
 
@@ -40,7 +40,7 @@ npm run typecheck
 src/
   app/        pantallas (Expo Router)
   domain/     lógica pura: fechas, plan, ejercicios, progresión, objetivos, indicadores corporales
-  illustrations/  dibujos animados de los ejercicios (figura con cinemática inversa)
+  illustrations/  dibujos animados: esqueleto con cinemática inversa (skeleton), formas puras (draw) y posturas (library)
   db/         SQLite: esquema y consultas
   hooks/      useWeek
   ui/         tema y componentes

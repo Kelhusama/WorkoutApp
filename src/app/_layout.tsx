@@ -29,6 +29,8 @@ export default function RootLayout() {
           <Stack.Screen name="semana-tipo" options={{ title: 'Semana tipo' }} />
           <Stack.Screen name="dia" options={{ title: 'Cambiar día', presentation: 'modal' }} />
           <Stack.Screen name="viaje" options={{ title: 'Viaje' }} />
+          <Stack.Screen name="ejercicio/[id]" options={{ title: 'Ejercicio' }} />
+          <Stack.Screen name="fotos" options={{ title: 'Fotos de progreso' }} />
         </Stack>
       </ThemeProvider>
     </SQLiteProvider>

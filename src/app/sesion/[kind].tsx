@@ -7,8 +7,11 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getPrescriptions, getSessionLog, getSessionSets, getTripOn, saveHomeSession, type SlotChange } from '@/db/repo';
+import { getBests } from '@/db/stats';
 import { formatLong, today as getToday } from '@/domain/dates';
-import { describeChange } from '@/domain/format';
+import { EXERCISES } from '@/domain/exercises';
+import { detectRecords, type NewRecord } from '@/domain/stats';
+import { amountText, describeChange } from '@/domain/format';
 import type { Feeling, Prescription } from '@/domain/progression';
 import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
 import { exerciseFor, type Slot } from '@/domain/templates';
@@ -33,6 +36,7 @@ export default function SessionScreen() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [changes, setChanges] = useState<SlotChange[] | null>(null);
+  const [records, setRecords] = useState<NewRecord[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -59,14 +63,11 @@ export default function SessionScreen() {
     if (!feeling) return;
     setSaving(true);
     try {
-      const result = await saveHomeSession(
-        db,
-        date,
-        kind,
-        feeling,
-        slots.map((s) => ({ slotKey: s.key, exerciseId: s.exerciseId, values: values[s.key] ?? [] })),
-        slots,
-      );
+      const results = slots.map((s) => ({ slotKey: s.key, exerciseId: s.exerciseId, values: values[s.key] ?? [] }));
+      // Marcas anteriores a hoy, para saber si esta sesión bate algún récord.
+      const before = await getBests(db, date);
+      const result = await saveHomeSession(db, date, kind, feeling, results, slots);
+      setRecords(detectRecords(before, results));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setChanges(result);
       syncReminders(db);
@@ -94,6 +95,29 @@ export default function SessionScreen() {
           <Text style={type.hero}>¡Sesión hecha!</Text>
           <Text style={type.caption}>{formatLong(date)}</Text>
         </View>
+        {records.length > 0 && (
+          <Card style={{ gap: space.md, borderColor: colors.accent, marginBottom: space.md }}>
+            <Text style={[type.subtitle, { color: colors.accent }]}>
+              {records.length === 1 ? '¡Nuevo récord!' : `¡${records.length} récords nuevos!`}
+            </Text>
+            {records.map((r) => {
+              const ex = EXERCISES[r.exerciseId];
+              return (
+                <View key={r.exerciseId + r.kind} style={styles.changeRow}>
+                  <Ionicons name="trophy" size={20} color={colors.accent} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={type.subtitle}>{ex.name}</Text>
+                    <Text style={type.caption}>
+                      {r.kind === 'serie'
+                        ? `${amountText(r.value, ex)} en una serie (antes ${r.previous})`
+                        : `${amountText(r.value, ex)} en toda la sesión (antes ${r.previous})`}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </Card>
+        )}
         {changes.length > 0 ? (
           <>
             <SectionTitle>Para la próxima vez</SectionTitle>

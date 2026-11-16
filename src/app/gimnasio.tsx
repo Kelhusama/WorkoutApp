@@ -3,10 +3,11 @@ import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getLastBench, getSessionLog, saveGymSession } from '@/db/repo';
+import { getBenchSeries } from '@/db/stats';
 import { syncReminders } from '@/notifications/reminders';
 import { formatLong, formatShort, today as getToday } from '@/domain/dates';
 import type { Feeling } from '@/domain/progression';
@@ -50,7 +51,13 @@ export default function GymScreen() {
 
   const save = async () => {
     if (!feeling) return;
+    // Mejor 1RM estimado de otros días, para avisar si hoy se bate.
+    const previous = (await getBenchSeries(db)).filter((p) => p.date !== date).map((p) => p.value);
+    const best = previous.length ? Math.max(...previous) : null;
     await saveGymSession(db, date, feeling, didBench ? { weight, reps } : null);
+    if (didBench && best !== null && estimate1RM(weight, reps) > best) {
+      Alert.alert('¡Récord de banca!', `1RM estimado: ${fmtKg(estimate1RM(weight, reps))} kg (antes ${fmtKg(best)} kg).`);
+    }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     syncReminders(db);
     router.back();

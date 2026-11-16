@@ -1,39 +1,145 @@
-import { useFocusEffect } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getRecentLogs, type SessionLog } from '@/db/repo';
-import { formatShort } from '@/domain/dates';
+import { getBenchSeries, getExerciseSummaries, getPhotos, getTestSeries } from '@/db/stats';
+import type { Point } from '@/domain/body';
+import { formatShort, type ISODate } from '@/domain/dates';
+import { EXERCISES } from '@/domain/exercises';
 import { FEELING_LABEL } from '@/domain/progression';
 import { SESSION_INFO } from '@/domain/schedule';
+import { useStreak } from '@/hooks/useStreak';
 import { Card, Pill, SectionTitle } from '@/ui/components';
 import { GoalsSummary } from '@/ui/goals';
+import { LineChart } from '@/ui/LineChart';
 import { colors, space, type } from '@/ui/theme';
 import { STATUS_STYLE } from '@/ui/week';
+
+interface Charts {
+  banca: Point[];
+  dominadas: Point[];
+  flexiones: Point[];
+}
+
+const CHARTS: { key: keyof Charts; title: string; unit: string; decimals: number }[] = [
+  { key: 'banca', title: 'Press de banca · 1RM estimado', unit: ' kg', decimals: 1 },
+  { key: 'dominadas', title: 'Test de dominadas', unit: '', decimals: 0 },
+  { key: 'flexiones', title: 'Test de flexiones', unit: '', decimals: 0 },
+];
 
 export default function ProgressScreen() {
   const db = useSQLiteContext();
   const insets = useSafeAreaInsets();
+  const streak = useStreak();
   const [logs, setLogs] = useState<SessionLog[]>([]);
+  const [charts, setCharts] = useState<Charts>({ banca: [], dominadas: [], flexiones: [] });
+  const [exercises, setExercises] = useState<{ exerciseId: string; sessions: number; lastDate: ISODate }[]>([]);
+  const [photoCount, setPhotoCount] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
-      getRecentLogs(db, 15).then(setLogs);
+      (async () => {
+        setLogs(await getRecentLogs(db, 10));
+        setCharts({
+          banca: await getBenchSeries(db),
+          dominadas: await getTestSeries(db, 'dominadas'),
+          flexiones: await getTestSeries(db, 'flexiones'),
+        });
+        setExercises((await getExerciseSummaries(db)).filter((e) => EXERCISES[e.exerciseId]));
+        setPhotoCount((await getPhotos(db)).length);
+      })();
     }, [db]),
   );
+
+  const pct = streak && streak.planned > 0 ? Math.round((streak.done / streak.planned) * 100) : null;
+  const shownCharts = CHARTS.filter((c) => charts[c.key].length >= 2);
 
   return (
     <ScrollView
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={{ padding: space.lg, paddingTop: insets.top + space.lg, paddingBottom: space.xxl }}>
       <Text style={type.overline}>Progreso</Text>
-      <Text style={[type.hero, { marginTop: 2 }]}>Tus objetivos</Text>
+      <Text style={[type.hero, { marginTop: 2 }]}>Cómo vas</Text>
 
-      <View style={{ marginTop: space.lg }}>
-        <GoalsSummary />
+      <View style={styles.tiles}>
+        <Card style={styles.tile}>
+          <Ionicons name="flame" size={20} color={colors.accent} />
+          <Text style={styles.tileValue}>{streak?.current ?? 0}</Text>
+          <Text style={type.caption}>Racha actual</Text>
+        </Card>
+        <Card style={styles.tile}>
+          <Ionicons name="trophy" size={20} color={colors.accent} />
+          <Text style={styles.tileValue}>{streak?.best ?? 0}</Text>
+          <Text style={type.caption}>Mejor racha</Text>
+        </Card>
+        <Card style={styles.tile}>
+          <Ionicons name="checkmark-done" size={20} color={colors.accent} />
+          <Text style={styles.tileValue}>{pct === null ? '—' : `${pct}%`}</Text>
+          <Text style={type.caption}>Últimas 4 semanas</Text>
+        </Card>
       </View>
+      <Text style={[type.caption, { marginTop: space.sm }]}>
+        La racha cuenta sesiones cumplidas seguidas. Los descansos y los viajes no la rompen; una sesión fallada sí.
+      </Text>
+
+      <SectionTitle>Objetivos</SectionTitle>
+      <GoalsSummary />
+
+      {shownCharts.length > 0 && (
+        <>
+          <SectionTitle>Evolución</SectionTitle>
+          <View style={{ gap: space.md }}>
+            {shownCharts.map((c) => (
+              <Card key={c.key} style={{ gap: space.sm }}>
+                <Text style={type.subtitle}>{c.title}</Text>
+                <LineChart points={charts[c.key]} height={150} format={(v) => v.toFixed(c.decimals).replace('.', ',')} />
+              </Card>
+            ))}
+          </View>
+        </>
+      )}
+
+      <SectionTitle>Ejercicios</SectionTitle>
+      {exercises.length === 0 ? (
+        <Card>
+          <Text style={type.caption}>Cuando registres sesiones verás aquí cada ejercicio con sus récords y su gráfica.</Text>
+        </Card>
+      ) : (
+        <Card style={{ paddingVertical: space.sm }}>
+          {exercises.map((e, i) => (
+            <Pressable
+              key={e.exerciseId}
+              onPress={() => router.push({ pathname: '/ejercicio/[id]', params: { id: e.exerciseId } })}
+              style={({ pressed }) => [styles.row, i > 0 && styles.divider, pressed && { opacity: 0.6 }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={type.subtitle}>{EXERCISES[e.exerciseId].name}</Text>
+                <Text style={type.caption}>
+                  {e.sessions} {e.sessions === 1 ? 'sesión' : 'sesiones'} · última {formatShort(e.lastDate)}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.faint} />
+            </Pressable>
+          ))}
+        </Card>
+      )}
+
+      <SectionTitle>Fotos</SectionTitle>
+      <Pressable onPress={() => router.push('/fotos')} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+        <Card style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+          <Ionicons name="camera-outline" size={24} color={colors.accent} />
+          <View style={{ flex: 1 }}>
+            <Text style={type.subtitle}>Fotos de progreso</Text>
+            <Text style={type.caption}>
+              {photoCount === 0 ? 'Compara el antes y el ahora: frente, lado y espalda' : `${photoCount} ${photoCount === 1 ? 'foto guardada' : 'fotos guardadas'}`}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.faint} />
+        </Card>
+      </Pressable>
 
       <SectionTitle>Últimos registros</SectionTitle>
       {logs.length === 0 ? (
@@ -67,6 +173,9 @@ export default function ProgressScreen() {
 }
 
 const styles = StyleSheet.create({
+  tiles: { flexDirection: 'row', gap: space.sm, marginTop: space.lg },
+  tile: { flex: 1, gap: 2, padding: space.md },
+  tileValue: { fontSize: 26, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'], marginTop: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.md },
   divider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   date: { width: 52, fontSize: 13, fontWeight: '700', color: colors.muted },

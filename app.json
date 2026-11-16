@@ -25,7 +25,21 @@
       "expo-router",
       "expo-sqlite",
       "expo-font",
-      ["expo-notifications", { "enableRemoteNotifications": false }]
+      [
+        "expo-notifications",
+        {
+          "enableRemoteNotifications": false
+        }
+      ],
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Forja usa la cámara para tus fotos de progreso.",
+          "photosPermission": "Forja lee tus fotos para guardar las de progreso.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

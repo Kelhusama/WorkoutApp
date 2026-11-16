@@ -15,6 +15,7 @@ import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
 import { prescriptionShort } from '@/domain/format';
 import { exerciseFor } from '@/domain/templates';
 import { gearSummary, sessionSlots } from '@/domain/travel';
+import { useStreak } from '@/hooks/useStreak';
 import { useWeek } from '@/hooks/useWeek';
 import { Button, Card, Pill, SectionTitle, type IconName } from '@/ui/components';
 import { GoalsSummary } from '@/ui/goals';
@@ -27,6 +28,7 @@ export default function TodayScreen() {
   const insets = useSafeAreaInsets();
   const todayDate = getToday();
   const { days, reload } = useWeek(todayDate);
+  const streak = useStreak();
   const day = days.find((d) => d.date === todayDate);
   const [prescriptions, setPrescriptions] = useState<Record<string, Prescription> | null>(null);
 
@@ -87,8 +89,18 @@ export default function TodayScreen() {
         </Pressable>
       </View>
 
-      <Card style={{ marginTop: space.lg }}>
+      <Card style={{ marginTop: space.lg, gap: space.md }}>
         <WeekStrip days={days} />
+        {streak && streak.current > 0 && (
+          <View style={styles.streak}>
+            <Ionicons name="flame" size={16} color={colors.accent} />
+            <Text style={type.caption}>
+              Racha: <Text style={{ color: colors.text, fontWeight: '800' }}>{streak.current}</Text>{' '}
+              {streak.current === 1 ? 'sesión' : 'sesiones seguidas'}
+              {streak.best > streak.current ? ` · mejor: ${streak.best}` : streak.current > 1 ? ' · tu mejor racha' : ''}
+            </Text>
+          </View>
+        )}
       </Card>
 
       {trip ? (
@@ -207,6 +219,7 @@ const styles = StyleSheet.create({
   },
   changeDay: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 4 },
   tripCard: { marginTop: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md, borderColor: colors.info },
+  streak: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   bell: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   exRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   exPresc: { fontSize: 15, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },

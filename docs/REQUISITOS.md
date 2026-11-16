@@ -2,7 +2,7 @@
 
 App Android personal para seguir el rendimiento, ganar músculo (bíceps y pecho sobre todo), perder grasa y llegar a 10 dominadas. Combina 2 días de gimnasio con sesiones cortas en casa.
 
-> Estado: en desarrollo · actualizado 12/11/2026
+> Estado: en desarrollo · actualizado 16/11/2026
 
 ---
 
@@ -44,7 +44,7 @@ Los hitos se muestran como progreso y celebran al alcanzarse.
 ### Reglas
 - **R1** — Nunca una sesión de tirón fuerte (A) el día siguiente al gimnasio.
 - **R2** — Si una sesión no se hace, se marca como **fallada** y el plan **no se reorganiza**.
-- **R3** — Los días marcados como **viaje** usan alternativas sin material y no cuentan como fallo si no se entrena.
+- **R3** ✅ — Los días marcados como **viaje** usan alternativas según el material y no cuentan como fallo si no se entrena.
 - **R4** — Si pasan más de 10 días sin registrar press de banca, se recuerda hacerlo al final del gimnasio (3×5).
 
 
@@ -106,18 +106,22 @@ El usuario tiene su rutina (halterofilia y ejercicios compuestos, sin trabajo ai
 
 ---
 
-## 5. Modo viaje
+## 5. Modo viaje ✅
 
-- Marcar rango de días en el calendario (mantener pulsado y arrastrar) o con el botón rápido **"Hoy estoy fuera"**.
-- Equipo disponible por viaje: nada / mochila / mesa / gimnasio de hotel.
-- Sustituciones:
+- **Crear un viaje**: desde *Calendario → Viajes → Añadir viaje*, manteniendo pulsado un día en la vista de mes, o con **«Hoy estoy fuera»** en Hoy. Se eligen las fechas y el material.
+- **Material disponible** (se pueden combinar): mochila con peso, mesa robusta, gimnasio en el hotel. Sin nada marcado basta el cuerpo, una toalla y una puerta.
+- **Sesiones adaptadas**:
 
-| Sin… | Alternativa |
-|---|---|
-| Barra | Remo invertido bajo mesa, toalla en puerta |
-| Mancuerna | Mochila con libros o botellas |
-| Nada | Flexiones (variantes) + curl isométrico con toalla |
-| Gym de hotel | Registro libre |
+| Sesión | Sin material | Con mesa | Con mochila |
+|---|---|---|---|
+| A · Tirón | Remo con toalla en la puerta, escurrir la toalla, curl isométrico con toalla | Remo invertido bajo la mesa | Remo y curl con mochila |
+| B · Empuje | Flexiones (las mismas, con su progresión) y escurrir la toalla | — | — |
+| C · Mixta | Remo con toalla, flexión en pica, curl isométrico, elevaciones en Y, escurrir la toalla | Remo invertido | Press y curl con mochila |
+
+- Las alternativas llevan **su propia progresión**; las flexiones conservan la de casa.
+- **Sin gimnasio de hotel**, los días de gimnasio pasan a sesión de casa adaptada. Con gimnasio, se mantienen.
+- Un día de viaje **sin entrenar no cuenta como fallo** ni rompe la racha (aparece como «Viaje»).
+- Guardar un viaje que se solapa con otro lo sustituye.
 
 ---
 
@@ -128,13 +132,14 @@ El usuario tiene su rutina (halterofilia y ejercicios compuestos, sin trabajo ai
 - **Peso y medidas** semanales: peso corporal, cintura, brazo, pecho.
 - **Fotos de progreso** (frente / lado / espalda), opcional y periódico.
 
-### Pantallas de seguimiento
-- Gráfica de evolución por ejercicio
-- Récords personales, con aviso al batirlos
-- Racha de días cumplidos (viaje y descanso no la rompen)
-- Evolución de peso y medidas
-- Galería de fotos con comparador antes/después
-- Progreso hacia los objetivos e hitos
+### Pantallas de seguimiento ✅
+- **Ficha de cada ejercicio** (Progreso → Ejercicios): dibujo, mejor serie, mayor total en una sesión, gráfica de evolución (mejor serie o total), historial y técnica.
+- **Récords** con aviso al guardar la sesión (mejor serie o mayor total; la primera vez no cuenta). En el gimnasio, aviso al batir el 1RM estimado de banca.
+- **Racha** de sesiones cumplidas seguidas, mejor racha y % de cumplimiento de las últimas 4 semanas. Descansos y viajes no la rompen; una sesión fallada sí.
+- **Gráficas** de banca (1RM estimado) y de los tests de dominadas y flexiones.
+- **Fotos de progreso** (frente, lado, espalda): cámara o galería, comparador antes/ahora y borrado. Se guardan solo en el móvil.
+- Evolución de peso y medidas (sección Cuerpo).
+- Progreso hacia los objetivos e hitos.
 
 ---
 
@@ -149,7 +154,7 @@ El usuario tiene su rutina (halterofilia y ejercicios compuestos, sin trabajo ai
 ## 8. Fichas de ejercicios
 
 Cada ejercicio incluye:
-- **Dibujo animado propio** (figura que va de la posición inicial a la final en bucle). Sin vídeos de YouTube: no son fiables.
+- **Dibujo animado propio** ✅: figura con volumen que va de la posición inicial a la final en bucle, con el músculo que trabaja resaltado y los dos extremos del recorrido en sombra. Sin vídeos de YouTube: no son fiables.
 - 3–4 claves de técnica
 - Errores típicos
 
@@ -229,13 +234,13 @@ Revisadas: wger, Liftosaur, LiftLog (Expo/React Native), Flexify, FitoTrack, MyF
 |---|---|---|---|
 | 1 | Temporizador de descanso entre series con vibración | Flexify, Liftosaur | Bajo |
 | 2 | Repeticiones en reserva (RIR) por serie para afinar la progresión | MyFit | Bajo-medio |
-| 3 | Récords por ejercicio (más reps, mejor 1RM, más volumen) con aviso | Flexify, Liftosaur | Medio |
+| 3 | ~~Récords por ejercicio con aviso~~ ✅ | Flexify, Liftosaur | Hecho |
 | 4 | Volumen semanal por músculo (series de pecho y bíceps) frente a un objetivo de hipertrofia | Liftosaur | Medio |
 | 5 | Series de calentamiento automáticas para la banca (% del peso de trabajo) | Liftosaur | Bajo |
 | 6 | Calculadora de discos para la barra | Liftosaur | Bajo |
 | 7 | Semana de descarga automática si se acumulan sesiones «dura» o se estanca la banca | Liftosaur | Medio |
-| 8 | Sustituir un ejercicio por otro del mismo músculo (útil en viajes) | Liftosaur | Medio |
-| 9 | Fotos de progreso con comparación antes/después | wger | Medio |
+| 8 | Sustituir un ejercicio por otro del mismo músculo fuera de los viajes (en viajes ya está) | Liftosaur | Medio |
+| 9 | ~~Fotos de progreso con comparación antes/después~~ ✅ | wger | Hecho |
 | 10 | Gráfica de rendimiento junto al peso corporal (p. ej. dominadas frente a kg) | Liftosaur | Medio |
 | 11 | Registro rápido de cardio o pasos | FitoTrack, Flexify | Medio |
 | 12 | Registro sencillo de calorías y proteína frente al objetivo | wger | Bajo (solo totales) / Alto (con base de alimentos) |
@@ -254,9 +259,9 @@ Revisadas: wger, Liftosaur, LiftLog (Expo/React Native), Flexify, FitoTrack, MyF
 
 1. **Generar el APK** con EAS Build (development build). Es necesario para la lectura de capturas, los avisos puntuales al minuto y cualquier función nativa que no está en Expo Go.
 2. **Leer captura de Huawei Salud**: botón «Leer captura» en *Registrar medición*. Eliges la imagen de la galería, el móvil lee el texto con ML Kit de Google (gratis, sin internet, la imagen no sale del teléfono) y se rellenan los campos de la báscula buscando cada valor por su nombre. El usuario revisa antes de guardar. Requiere el APK y capturas reales.
-3. **Rediseñar los dibujos de los ejercicios con Fable**: sustituir las figuras de palitos por ilustraciones más vistosas, manteniendo la animación de inicio a fin y que el brazo que trabaja vaya resaltado. Usar el modelo Claude Fable 5.2 para el diseño.
-4. **Modo viaje** (sección 5).
-5. **Seguimiento de ejercicios**: gráficas por ejercicio, récords, racha y fotos de progreso.
+3. ~~Rediseñar los dibujos de los ejercicios~~ ✅ hecho (16/11/2026).
+4. ~~Modo viaje~~ ✅ hecho (16/11/2026).
+5. ~~Seguimiento de ejercicios: gráficas, récords, racha y fotos~~ ✅ hecho (16/11/2026).
 6. **Copia en Google Drive** con inicio de sesión de Google (sección 9).
 7. **Icono y pantalla de inicio** propios (ahora son los de la plantilla de Expo).
 8. **Ideas de apps libres** (tabla anterior), empezando por el temporizador de descanso y el RIR por serie.
