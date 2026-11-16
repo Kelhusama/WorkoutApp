@@ -291,6 +291,7 @@ Por decidir: si «abductores» es la cara interna del muslo (aductores), qué se
 - [x] ~~Capturas de Huawei Salud~~: recibida una (16/11/2026); sus valores son el caso de prueba del lector.
 - [ ] **Probar «Pegar datos de la captura»** en el móvil y avisar si algún valor sale mal o falta.
 - [ ] **Cuenta gratuita de Expo** (expo.dev), para compilar el APK en la nube.
+- [ ] **Google Drive**: crear el proyecto de Google Cloud, generar el APK y pegar el ID de cliente web en `app.json`, siguiendo [GOOGLE.md](GOOGLE.md); después probar en el móvil iniciar sesión, guardar y restaurar.
 - [ ] **Nombre definitivo** de la app («Forja» es provisional).
 - [ ] Elegir **icono**, y **sede y fecha** de la Marcha del Mamut.
 - [ ] Confirmar si es viable hacer **press de banca 3×5 al final del gimnasio** cuando no toque.
@@ -305,7 +306,7 @@ Por decidir: si «abductores» es la cara interna del muslo (aductores), qué se
 3. ~~Rediseñar los dibujos de los ejercicios~~ ✅ hecho (16/11/2026).
 4. ~~Modo viaje~~ ✅ hecho (16/11/2026).
 5. ~~Seguimiento de ejercicios: gráficas, récords, racha y fotos~~ ✅ hecho (16/11/2026).
-6. **Copia en Google Drive** con inicio de sesión de Google (sección 9).
+6. **Copia en Google Drive** con inicio de sesión de Google (sección 9): código hecho (16/11/2026) y probado solo en el ordenador; falta el proyecto de Google Cloud, el APK y probarlo en el móvil. Ver [GOOGLE.md](GOOGLE.md).
 7. **Icono y pantalla de inicio** propios (ahora son los de la plantilla de Expo).
 8. **Ideas de apps libres** (tabla anterior), empezando por el temporizador de descanso y el RIR por serie.
 9. (Opcional) **Importar la exportación de Huawei** para cargar el historial de peso.

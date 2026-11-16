@@ -28,3 +28,8 @@ export async function saveReminderSettings(db: SQLiteDatabase, s: ReminderSettin
   await set(db, 'reminders_enabled', s.enabled ? '1' : '0');
   await set(db, 'reminder_times', s.times.join(','));
 }
+
+/** Fecha y hora (ISO) de la última copia en Drive guardada o restaurada desde este móvil. */
+export const getDriveLastBackup = (db: SQLiteDatabase) => get(db, 'drive_last_backup');
+
+export const setDriveLastBackup = (db: SQLiteDatabase, iso: string) => set(db, 'drive_last_backup', iso);
