@@ -294,8 +294,17 @@ Por decidir: si «abductores» es la cara interna del muslo (aductores), qué se
 
 Revisión de lo que hacen ahora las apps líderes, con 12 ideas priorizadas y lo que conviene no hacer: [TENDENCIAS.md](TENDENCIAS.md). Las primeras: revisión semanal, proyección de objetivos, doble progresión en la banca, peso tendencial y racha flexible.
 
-## Siguiente (elegido por el usuario, 16/11/2026)
-De [TENDENCIAS.md](TENDENCIAS.md), por este orden: **revisión semanal**, **proyección de objetivos**, **peso tendencial** y **racha flexible**. Después, Flexibilidad (punto 3 de la ampliación).
+## Hecho el 17/11/2026
+- **Usabilidad**: 9 de los 12 hallazgos pendientes resueltos y 3 a medias (detalle en [USABILIDAD.md](USABILIDAD.md)).
+- **Tendencias**: revisión de la semana con un foco (*Progreso → Revisión de la semana*), proyección de cuándo se alcanzaría cada objetivo, peso tendencial con ritmo semanal en *Cuerpo* y racha por semanas con un comodín.
+- Lista de lo que falta probar en el móvil: [PRUEBAS.md](PRUEBAS.md).
+
+## Para seguir (por orden)
+1. **Flexibilidad**: en construcción en la rama `flexibilidad` (programa por niveles y seis tests mensuales). Falta revisarla y fusionarla.
+2. **Dibujos** de los 11 estiramientos de tren superior.
+3. **Icono**: pintadera; falta elegir la gama de color.
+4. **Usabilidad que queda**: encadenar los campos numéricos, tipografía propia y tocar un punto de la gráfica.
+5. **Con el APK**: fusionar la rama `google-drive`, leer la captura eligiendo la imagen y GPS en las caminatas.
 
 ## Debes (lo que tiene que hacer el usuario)
 
