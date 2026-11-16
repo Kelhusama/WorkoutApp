@@ -21,6 +21,7 @@ Requisitos completos en [docs/REQUISITOS.md](docs/REQUISITOS.md).
 - Modo viaje: sesiones adaptadas al material disponible; los días de viaje no cuentan como fallo
 - Bloque de pierna en cada sesión de casa (tibial, gemelo, aductores, glúteo medio, muslo)
 - Plan de marcha de 50 km por escalones, con registro de caminatas y gráficas
+- Estiramientos guiados con cuenta atrás y voz, y minutos semanales por zona
 - Seguimiento: ficha de cada ejercicio con récords y gráfica, racha, cumplimiento y fotos de progreso
 
 Siguientes pasos y tareas pendientes: ver «Debes» y «Pendientes de desarrollo» en [docs/REQUISITOS.md](docs/REQUISITOS.md).

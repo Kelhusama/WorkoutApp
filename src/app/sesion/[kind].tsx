@@ -11,6 +11,7 @@ import { getBests } from '@/db/stats';
 import { formatLong, today as getToday } from '@/domain/dates';
 import { EXERCISES } from '@/domain/exercises';
 import { detectRecords, type NewRecord } from '@/domain/stats';
+import { ROUTINES, routineAfter, routineMinutes } from '@/domain/stretches';
 import { amountText, describeChange } from '@/domain/format';
 import type { Feeling, Prescription } from '@/domain/progression';
 import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
@@ -147,8 +148,13 @@ export default function SessionScreen() {
             <Text style={type.caption}>Registro actualizado. La progresión ya se aplicó la primera vez que guardaste este día.</Text>
           </Card>
         )}
-        <View style={{ marginTop: space.xl }}>
-          <Button label="Volver" onPress={() => router.back()} />
+        <View style={{ marginTop: space.xl, gap: space.sm }}>
+          <Button
+            label={`Estirar ahora (${routineMinutes(ROUTINES[routineAfter(kind)])} min)`}
+            icon="body"
+            onPress={() => router.replace({ pathname: '/estirar/[rutina]', params: { rutina: routineAfter(kind) } })}
+          />
+          <Button label="Volver" variant="secondary" onPress={() => router.back()} />
         </View>
       </ScrollView>
     );

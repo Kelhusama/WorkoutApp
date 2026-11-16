@@ -263,11 +263,12 @@ Revisadas: wger, Liftosaur, LiftLog (Expo/React Native), Flexify, FitoTrack, MyF
 La investigación con dosis, rutinas, tests, plan de marcha y fuentes está en [INVESTIGACION.md](INVESTIGACION.md). Se construye punto por punto:
 
 1. **Menú** ✅: pestaña «Entrenar» con Fuerza, Marcha, Estiramientos y Flexibilidad (las dos últimas, aún como «Pronto»). Barra: Hoy · Entrenar · Calendario · Cuerpo · Progreso.
-2. **Estiramientos**
-   - Rutina de ~5 min tras cada sesión A, B y C, ofrecida al guardar la sesión.
-   - Rutina de tren inferior de ~11 min, con tres niveles de aductores y dos estiramientos de abductores.
-   - Modo guiado: un estiramiento cada vez, con su dibujo, cuenta atrás de 30 o 60 s y cambio de lado.
-   - Gráficas: minutos por semana y zona con líneas en 5 y 10 min; días por semana.
+2. **Estiramientos** ✅ (16/11/2026)
+   - Cuatro rutinas: tren inferior (10 min, 9 estiramientos, 3 min de aductores) y una de unos 5 min tras cada sesión A, B y C, que incluye un estiramiento de la zona de pierna trabajada.
+   - **Modo guiado**: un estiramiento cada vez, 5 s para colocarse, cuenta atrás de 30 o 60 s, cambio de lado, vibración, voz opcional y pantalla siempre encendida. Se puede pausar, saltar o terminar; solo cuenta lo que se ha mantenido.
+   - Se ofrece al guardar una sesión («Estirar ahora») y desde *Entrenar → Estiramientos*.
+   - **Gráficas**: minutos de la semana por zona frente a la franja de 5–10 min, días y minutos de la semana, y evolución semanal.
+   - Dibujos: los 9 de tren inferior y el cuelgue. **Pendiente**: dibujos de los 11 estiramientos de tren superior (ahora solo llevan texto).
 3. **Flexibilidad**
    - Programa de 10–15 min, 3–5 días por semana, en tres niveles; sube de nivel con ≥80 % de sesiones en 4 semanas.
    - Seis tests mensuales (dedos-suelo, rodilla a la pared, apertura sentado, rascado de espalda, elevación de pierna recta, sentadilla profunda) con gráfica cada uno.
@@ -292,6 +293,9 @@ Por decidir: si «abductores» es la cara interna del muslo (aductores), qué se
 ## Tendencias (16/11/2026)
 
 Revisión de lo que hacen ahora las apps líderes, con 12 ideas priorizadas y lo que conviene no hacer: [TENDENCIAS.md](TENDENCIAS.md). Las primeras: revisión semanal, proyección de objetivos, doble progresión en la banca, peso tendencial y racha flexible.
+
+## Siguiente (elegido por el usuario, 16/11/2026)
+De [TENDENCIAS.md](TENDENCIAS.md), por este orden: **revisión semanal**, **proyección de objetivos**, **peso tendencial** y **racha flexible**. Después, Flexibilidad (punto 3 de la ampliación).
 
 ## Debes (lo que tiene que hacer el usuario)
 

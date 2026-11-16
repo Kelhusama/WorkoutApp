@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 9;
+const LATEST = 10;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -174,6 +174,20 @@ export async function migrate(db: SQLiteDatabase) {
       CREATE INDEX IF NOT EXISTS idx_walk_log_date ON walk_log (date);
     `);
     version = 9;
+  }
+
+  if (version === 9) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS stretch_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        routine TEXT NOT NULL,
+        stretch_id TEXT NOT NULL,
+        seconds INTEGER NOT NULL CHECK (seconds > 0)
+      );
+      CREATE INDEX IF NOT EXISTS idx_stretch_log_date ON stretch_log (date);
+    `);
+    version = 10;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);

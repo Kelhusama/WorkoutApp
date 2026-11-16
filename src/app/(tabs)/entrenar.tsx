@@ -1,13 +1,15 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router } from 'expo-router';
-import type { ReactNode } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useCallback, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DAY_LONG, formatLong, today as getToday, weekdayIndex } from '@/domain/dates';
+import { DAY_LONG, addDays, formatLong, today as getToday, weekStart, weekdayIndex } from '@/domain/dates';
 import { WALK_LABEL } from '@/domain/march';
 import { GOAL_KM, KIND_LABEL, LAST_STEP, stepAt } from '@/domain/marchPlan';
 import { SESSION_INFO } from '@/domain/schedule';
+import { getStretching } from '@/db/stretch';
 import { useMarch } from '@/hooks/useMarch';
 import { useWeek } from '@/hooks/useWeek';
 import { Card, Pill, type IconName } from '@/ui/components';
@@ -56,6 +58,19 @@ export default function TrainScreen() {
   const todayDate = getToday();
   const { days } = useWeek(todayDate);
   const { view, dayOf } = useMarch();
+  const db = useSQLiteContext();
+  const [stretchMinutes, setStretchMinutes] = useState(0);
+  const [stretchDays, setStretchDays] = useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      const monday = weekStart(getToday());
+      getStretching(db, monday, addDays(monday, 6)).then((e) => {
+        setStretchMinutes(Math.round(e.reduce((a, x) => a + x.seconds, 0) / 60));
+        setStretchDays(new Set(e.map((x) => x.date)).size);
+      });
+    }, [db]),
+  );
 
   const todayPlan = days.find((d) => d.date === todayDate);
   const next = days.find((d) => d.date >= todayDate && d.type !== 'rest' && (d.status === 'pending' || d.status === 'future'));
@@ -118,8 +133,17 @@ export default function TrainScreen() {
         )}
       </Area>
 
-      <Area icon="body" title="Estiramientos" status="Pronto" soon>
-        <Text style={type.caption}>Rutina de 5 minutos tras cada sesión y otra de tren inferior, con cuenta atrás y gráficas por zona.</Text>
+      <Area icon="body" title="Estiramientos" status={stretchDays > 0 ? `${stretchDays} ${stretchDays === 1 ? 'día' : 'días'}` : undefined} onPress={() => router.push('/estiramientos')}>
+        <Text style={type.body}>
+          {stretchMinutes > 0 ? (
+            <>
+              Esta semana: <Text style={styles.strong}>{stretchMinutes} min</Text>
+            </>
+          ) : (
+            'Aún no has estirado esta semana.'
+          )}
+        </Text>
+        <Text style={type.caption}>Rutina guiada de 5 minutos tras cada sesión y otra de 10 para el tren inferior.</Text>
       </Area>
 
       <Area icon="resize" title="Flexibilidad" status="Pronto" soon>

@@ -18,6 +18,7 @@ const TABLES = [
   'test_log',
   'body_log',
   'walk_log',
+  'stretch_log',
 ] as const;
 
 type Row = Record<string, string | number | null>;
