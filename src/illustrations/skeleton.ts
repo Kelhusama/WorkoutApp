@@ -1,30 +1,37 @@
 /**
- * Figura de palitos en vista lateral (mirando a la derecha) con cinemática inversa de dos huesos.
+ * Esqueleto en vista lateral (mirando a la derecha) con cinemática inversa de dos huesos.
  * Coordenadas SVG: x a la derecha, y hacia abajo. Ángulos en grados: 0 = derecha, -90 = arriba, 90 = abajo.
  */
 
 export type Pt = readonly [number, number];
 
-export const BONES = { torso: 50, upperArm: 28, forearm: 26, thigh: 38, shin: 36, hand: 10, headR: 9 } as const;
+export const BONES = { torso: 50, upperArm: 28, forearm: 26, thigh: 38, shin: 36, hand: 10, foot: 11 } as const;
 
 export type Prop =
-  | { kind: 'bar'; x: number; y: number }
   | { kind: 'floor'; y: number }
-  | { kind: 'box'; x: number; y: number; w: number; h: number };
+  /** Barra de dominadas vista de perfil (se ve su sección). */
+  | { kind: 'bar'; x: number; y: number }
+  /** Silla, banco o mesa: tablero con el borde superior en `y`. */
+  | { kind: 'bench'; x: number; y: number; w: number; h: number }
+  /** Puerta cerrada con pomo, para anclar una toalla. */
+  | { kind: 'door'; x: number; knobY: number };
+
+/** Zonas que trabajan y se resaltan. */
+export type Focus = 'upperArm' | 'forearm' | 'chest' | 'back' | 'shoulder';
 
 export interface Pose {
   hip: Pt;
   /** Ángulo del tronco, de cadera a cuello. */
   torso: number;
-  /** Objetivo de la mano del brazo que trabaja. */
+  /** Objetivo de la mano del brazo cercano. */
   hand: Pt;
   /** Lado hacia el que se dobla el codo: 1 o -1. */
   elbowBend: 1 | -1;
   foot: Pt;
   kneeBend: 1 | -1;
-  /** Ángulo opcional de la mano (para curl de muñeca). */
+  /** Ángulo de la mano (para curl de muñeca). */
   wrist?: number;
-  /** Mano del otro brazo, fija (apoyo), si se dibuja. */
+  /** Mano del brazo lejano, si no acompaña al cercano. */
   farHand?: Pt;
 }
 
@@ -32,11 +39,14 @@ export interface Illustration {
   start: Pose;
   end: Pose;
   props: Prop[];
-  /** Mancuerna en la mano que trabaja. */
-  dumbbell?: boolean;
-  /** 'even' = ida y vuelta igual; 'slowReturn' = sube rápido y baja lento. */
+  focus: Focus[];
+  /** Los dos brazos hacen el mismo movimiento. */
+  bothArms?: boolean;
+  held?: 'dumbbell' | 'backpack';
+  /** Toalla desde la mano cercana hasta un punto, el pie o la otra mano. */
+  towelTo?: Pt | 'foot' | 'farHand';
+  /** 'even' = ida y vuelta igual; 'slowReturn' = va rápido y vuelve lento. */
   timing?: 'even' | 'slowReturn';
-  /** Texto corto que acompaña al dibujo. */
   caption: string;
   /**
    * Vista frontal con brazos simétricos (aperturas laterales).
@@ -46,8 +56,15 @@ export interface Illustration {
 }
 
 const rad = (d: number) => (d * Math.PI) / 180;
-const dir = (deg: number, len: number): Pt => [Math.cos(rad(deg)) * len, Math.sin(rad(deg)) * len];
-const add = (a: Pt, b: Pt): Pt => [a[0] + b[0], a[1] + b[1]];
+export const add = (a: Pt, b: Pt): Pt => [a[0] + b[0], a[1] + b[1]];
+export const scale = (a: Pt, k: number): Pt => [a[0] * k, a[1] * k];
+export const along = (a: Pt, dirV: Pt, d: number): Pt => [a[0] + dirV[0] * d, a[1] + dirV[1] * d];
+const unit = (deg: number): Pt => [Math.cos(rad(deg)), Math.sin(rad(deg))];
+
+function normalize(v: Pt): Pt {
+  const l = Math.hypot(v[0], v[1]) || 1;
+  return [v[0] / l, v[1] / l];
+}
 
 /** Resuelve la articulación intermedia (codo/rodilla) para alcanzar el objetivo. */
 export function solveTwoBone(root: Pt, target: Pt, l1: number, l2: number, bend: 1 | -1): { joint: Pt; end: Pt } {
@@ -69,27 +86,64 @@ export interface Skeleton {
   hip: Pt;
   neck: Pt;
   head: Pt;
+  /** Dirección del tronco (cadera → cuello) y normal hacia el pecho. */
+  u: Pt;
+  n: Pt;
   elbow: Pt;
   hand: Pt;
   handTip?: Pt;
   knee: Pt;
   foot: Pt;
-  farElbow?: Pt;
-  farHand?: Pt;
+  toe: Pt;
+  farElbow: Pt;
+  farHand: Pt;
+  farKnee: Pt;
+  farFoot: Pt;
+  farToe: Pt;
 }
 
-export function buildSkeleton(p: Pose): Skeleton {
-  const neck = add(p.hip, dir(p.torso, BONES.torso));
-  const head = add(neck, dir(p.torso, BONES.headR + 4));
+function toeOf(knee: Pt, foot: Pt, floorY: number | null): Pt {
+  const s = normalize([foot[0] - knee[0], foot[1] - knee[1]]);
+  const toe: Pt = [foot[0] + s[1] * BONES.foot, foot[1] - s[0] * BONES.foot];
+  return floorY !== null && toe[1] > floorY - 1 ? [toe[0], floorY - 1] : toe;
+}
+
+export function buildSkeleton(p: Pose, ill?: Pick<Illustration, 'bothArms' | 'props'>): Skeleton {
+  const u = unit(p.torso);
+  const n: Pt = [-u[1], u[0]];
+  const neck = along(p.hip, u, BONES.torso);
+  const head = along(neck, u, 15.5);
+  const floor = ill?.props.find((x) => x.kind === 'floor');
+  const floorY = floor && floor.kind === 'floor' ? floor.y : null;
+
   const arm = solveTwoBone(neck, p.hand, BONES.upperArm, BONES.forearm, p.elbowBend);
   const leg = solveTwoBone(p.hip, p.foot, BONES.thigh, BONES.shin, p.kneeBend);
-  const sk: Skeleton = { hip: p.hip, neck, head, elbow: arm.joint, hand: arm.end, knee: leg.joint, foot: leg.end };
-  if (p.wrist !== undefined) sk.handTip = add(arm.end, dir(p.wrist, BONES.hand));
-  if (p.farHand) {
-    const far = solveTwoBone(neck, p.farHand, BONES.upperArm, BONES.forearm, 1);
-    sk.farElbow = far.joint;
-    sk.farHand = far.end;
-  }
+
+  const farTarget: Pt = p.farHand ?? (ill?.bothArms ? add(p.hand, [5, -1]) : add(along(p.hip, n, 5), scale(u, 3)));
+  const farArm = solveTwoBone(add(neck, [2, -1]), farTarget, BONES.upperArm, BONES.forearm, p.elbowBend);
+  const onFloor = floorY !== null && p.foot[1] >= floorY - 4;
+  // Con la pierna casi estirada (tumbado), la lejana apenas se separa para que no se doble la rodilla.
+  const stretched = Math.hypot(p.foot[0] - p.hip[0], p.foot[1] - p.hip[1]) > 72.5;
+  const farLeg = solveTwoBone(p.hip, add(p.foot, onFloor ? (stretched ? [1.5, 0] : [6, 0]) : [5, -3]), BONES.thigh, BONES.shin, p.kneeBend);
+
+  const sk: Skeleton = {
+    hip: p.hip,
+    neck,
+    head,
+    u,
+    n,
+    elbow: arm.joint,
+    hand: arm.end,
+    knee: leg.joint,
+    foot: leg.end,
+    toe: toeOf(leg.joint, leg.end, floorY),
+    farElbow: farArm.joint,
+    farHand: farArm.end,
+    farKnee: farLeg.joint,
+    farFoot: farLeg.end,
+    farToe: toeOf(farLeg.joint, farLeg.end, floorY),
+  };
+  if (p.wrist !== undefined) sk.handTip = along(arm.end, unit(p.wrist), BONES.hand);
   return sk;
 }
 
