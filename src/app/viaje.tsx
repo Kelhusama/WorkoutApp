@@ -21,10 +21,10 @@ function DateStepper({ label, value, onChange }: { label: string; value: ISODate
         <Text style={type.caption}>{label}</Text>
         <Text style={type.subtitle}>{formatLong(value)}</Text>
       </View>
-      <Pressable accessibilityLabel={`${label}: un día antes`} onPress={() => onChange(addDays(value, -1))} style={styles.stepBtn} hitSlop={6}>
+      <Pressable accessibilityLabel={`${label}: un día antes`} onPress={() => onChange(addDays(value, -1))} style={styles.stepBtn}>
         <Ionicons name="remove" size={20} color={colors.text} />
       </Pressable>
-      <Pressable accessibilityLabel={`${label}: un día después`} onPress={() => onChange(addDays(value, 1))} style={styles.stepBtn} hitSlop={6}>
+      <Pressable accessibilityLabel={`${label}: un día después`} onPress={() => onChange(addDays(value, 1))} style={styles.stepBtn}>
         <Ionicons name="add" size={20} color={colors.text} />
       </Pressable>
     </View>
@@ -62,11 +62,25 @@ export default function TripScreen() {
   };
   const days = Math.round((fromISODate(to).getTime() - fromISODate(from).getTime()) / 86_400_000) + 1;
 
-  const save = async () => {
+  const doSave = async () => {
     await saveTrip(db, { id, from, to, gear });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     syncReminders(db);
     router.back();
+  };
+
+  const save = async () => {
+    // Guardar sustituye a los viajes que se solapen: mejor avisar antes de borrarlos.
+    const clash = (await getTrips(db, from, to)).filter((t) => t.id !== id);
+    if (clash.length === 0) return doSave();
+    Alert.alert(
+      'Ya hay un viaje en esas fechas',
+      `Del ${formatLong(clash[0].from).toLowerCase()} al ${formatLong(clash[0].to).toLowerCase()}. Si guardas, este lo sustituye.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Sustituir', style: 'destructive', onPress: doSave },
+      ],
+    );
   };
 
   const remove = () =>
@@ -144,8 +158,8 @@ export default function TripScreen() {
 const styles = StyleSheet.create({
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   stepBtn: {
-    width: 42,
-    height: 42,
+    width: 48,
+    height: 48,
     borderRadius: radius.sm,
     backgroundColor: colors.cardHigh,
     alignItems: 'center',

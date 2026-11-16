@@ -1,10 +1,12 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { getBestBench1RM, getBestTests } from '@/db/repo';
-import { formatShort } from '@/domain/dates';
+import { getBenchSeries, getTestSeries } from '@/db/stats';
+import type { Point } from '@/domain/body';
+import { formatShort, monthTitle, today } from '@/domain/dates';
+import { projectGoal, type Projection } from '@/domain/insights';
 import { GOALS, goalProgress, nextMilestone, type Goal } from '@/domain/strength';
 import { Button, Card, Pill, ProgressBar } from './components';
 import { colors, space, type } from './theme';
@@ -13,8 +15,29 @@ interface Current {
   value: number;
   measured: boolean;
   when?: string;
+  projection: Projection;
 }
 
+const num = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1).replace('.', ','));
+
+function projectionText(g: Goal, p: Projection): string {
+  switch (p.status) {
+    case 'conseguido':
+      return 'Objetivo conseguido.';
+    case 'pocos_datos':
+      return g.id === 'banca'
+        ? 'Con tres registros de banca en dos semanas o más verás cuándo llegarías.'
+        : 'Con tres tests en dos semanas o más verás cuándo llegarías.';
+    case 'estancado':
+      return 'En los últimos tres meses no has mejorado. Toca cambiar algo: más series, o un test tras una semana suave.';
+    case 'en_camino':
+      return `Mejoras ${num(p.perWeek)}${g.unit} por semana. A este ritmo llegarías en ${
+        p.weeks! > 104 ? 'más de dos años' : `${p.weeks} ${p.weeks === 1 ? 'semana' : 'semanas'} (${monthTitle(p.date!).toLowerCase()})`
+      }.`;
+  }
+}
+
+/** Objetivos: una tarjeta resumida (Hoy) o una por objetivo con hitos y proyección (Progreso). */
 export function GoalsSummary({ compact = false }: { compact?: boolean }) {
   const db = useSQLiteContext();
   const [current, setCurrent] = useState<Record<Goal['id'], Current> | null>(null);
@@ -22,27 +45,67 @@ export function GoalsSummary({ compact = false }: { compact?: boolean }) {
   useFocusEffect(
     useCallback(() => {
       (async () => {
-        const tests = await getBestTests(db);
-        const bench = await getBestBench1RM(db);
-        const pick = (g: Goal, v: number | null | undefined, when?: string): Current =>
-          v == null ? { value: g.start, measured: false } : { value: v, measured: true, when };
-        const [dom, flex, ban] = GOALS;
-        setCurrent({
-          dominadas: pick(dom, tests.dominadas?.best, tests.dominadas?.last_date),
-          flexiones: pick(flex, tests.flexiones?.best, tests.flexiones?.last_date),
-          banca: pick(ban, bench),
-        });
+        const now = today();
+        const series: Record<Goal['id'], Point[]> = {
+          dominadas: await getTestSeries(db, 'dominadas'),
+          flexiones: await getTestSeries(db, 'flexiones'),
+          banca: await getBenchSeries(db),
+        };
+        const out = {} as Record<Goal['id'], Current>;
+        for (const g of GOALS) {
+          const pts = series[g.id];
+          const best = pts.reduce<Point | null>((b, p) => (!b || p.value > b.value ? p : b), null);
+          out[g.id] = {
+            value: best?.value ?? g.start,
+            measured: best !== null,
+            when: best?.date,
+            projection: projectGoal(pts, g.target, now),
+          };
+        }
+        setCurrent(out);
       })();
     }, [db]),
   );
 
   if (!current) return null;
 
+  if (compact) {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Objetivos. Abrir progreso"
+        onPress={() => router.push('/progreso')}
+        style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+        <Card style={{ gap: space.md }}>
+          {GOALS.map((g) => {
+            const c = current[g.id];
+            const reached = c.value >= g.target;
+            return (
+              <View key={g.id} style={{ gap: 6 }}>
+                <View style={styles.row}>
+                  <Text style={[type.subtitle, { flex: 1 }]}>{g.title}</Text>
+                  <Text style={styles.valueSmall}>
+                    {num(c.value)}
+                    <Text style={styles.target}>
+                      {' '}
+                      / {g.target}
+                      {g.unit}
+                    </Text>
+                  </Text>
+                </View>
+                <ProgressBar value={goalProgress(g, c.value)} color={reached ? colors.success : colors.accent} />
+              </View>
+            );
+          })}
+        </Card>
+      </Pressable>
+    );
+  }
+
   return (
     <View style={{ gap: space.md }}>
       {GOALS.map((g) => {
         const c = current[g.id];
-        const pct = goalProgress(g, c.value);
         const next = nextMilestone(g, c.value);
         const reached = c.value >= g.target;
         return (
@@ -50,7 +113,7 @@ export function GoalsSummary({ compact = false }: { compact?: boolean }) {
             <View style={styles.row}>
               <Text style={[type.subtitle, { flex: 1 }]}>{g.title}</Text>
               <Text style={styles.value}>
-                {c.value}
+                {num(c.value)}
                 <Text style={styles.target}>
                   {' '}
                   / {g.target}
@@ -58,40 +121,33 @@ export function GoalsSummary({ compact = false }: { compact?: boolean }) {
                 </Text>
               </Text>
             </View>
-            <ProgressBar value={pct} color={reached ? colors.success : colors.accent} />
-            <View style={styles.row}>
-              <Text style={[type.caption, { flex: 1 }]}>
-                {reached
-                  ? '¡Meta conseguida!'
-                  : next
-                    ? `Próximo hito: ${next}${g.unit}`
-                    : ''}
-                {!c.measured ? ' · punto de partida' : c.when ? ` · ${formatShort(c.when)}` : ''}
-              </Text>
+            <ProgressBar value={goalProgress(g, c.value)} color={reached ? colors.success : colors.accent} />
+            <Text style={type.caption}>
+              {reached ? '¡Meta conseguida!' : next ? `Próximo hito: ${next}${g.unit}` : ''}
+              {!c.measured ? ' · punto de partida' : c.when ? ` · mejor marca el ${formatShort(c.when)}` : ''}
+            </Text>
+            <View style={styles.milestones}>
+              {g.milestones.map((m) => (
+                <Pill
+                  key={m}
+                  label={`${m}${g.unit}`}
+                  color={c.value >= m ? colors.success : colors.muted}
+                  bg={c.value >= m ? colors.successSoft : colors.cardHigh}
+                />
+              ))}
             </View>
-            {!compact && (
-              <>
-                <View style={styles.milestones}>
-                  {g.milestones.map((m) => (
-                    <Pill
-                      key={m}
-                      label={`${m}${g.unit}`}
-                      color={c.value >= m ? colors.success : colors.muted}
-                      bg={c.value >= m ? colors.successSoft : colors.cardHigh}
-                    />
-                  ))}
-                </View>
-                {g.id !== 'banca' ? (
-                  <Button
-                    label="Registrar test de máximo"
-                    variant="secondary"
-                    icon="stopwatch-outline"
-                    onPress={() => router.push({ pathname: '/test', params: { test: g.id } })}
-                  />
-                ) : (
-                  <Text style={type.caption}>Se calcula con la mejor serie de banca que registres en el gimnasio.</Text>
-                )}
-              </>
+            {!reached && (
+              <Text style={[type.caption, c.projection.status === 'en_camino' && { color: colors.text }]}>{projectionText(g, c.projection)}</Text>
+            )}
+            {g.id !== 'banca' ? (
+              <Button
+                label="Tests de máximo"
+                variant="secondary"
+                icon="stopwatch-outline"
+                onPress={() => router.push({ pathname: '/test', params: { test: g.id } })}
+              />
+            ) : (
+              <Text style={type.caption}>Se calcula con la mejor serie de banca que registres en el gimnasio.</Text>
             )}
           </Card>
         );
@@ -103,6 +159,7 @@ export function GoalsSummary({ compact = false }: { compact?: boolean }) {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
   value: { fontSize: 20, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
+  valueSmall: { fontSize: 16, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
   target: { fontSize: 14, fontWeight: '600', color: colors.muted },
   milestones: { flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' },
 });

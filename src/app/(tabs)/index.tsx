@@ -1,31 +1,64 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-
 import { getBodyLog } from '@/db/body';
-import { getRecentFeelings } from '@/db/stats';
-import { needsDeload } from '@/domain/gymTools';
 import { deleteLog, getPrescriptions, markMissed } from '@/db/repo';
-import { syncReminders } from '@/notifications/reminders';
+import { getRecentFeelings } from '@/db/stats';
+import { stretchedOn } from '@/db/stretch';
 import { addDays, formatLong, formatShort, today as getToday } from '@/domain/dates';
+import { prescriptionShort } from '@/domain/format';
+import { needsDeload } from '@/domain/gymTools';
 import { WALK_LABEL } from '@/domain/march';
 import { FEELING_LABEL, TEMPO_LABEL, type Prescription } from '@/domain/progression';
 import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
-import { prescriptionShort } from '@/domain/format';
+import { ROUTINES, routineAfter, routineMinutes } from '@/domain/stretches';
 import { exerciseFor } from '@/domain/templates';
 import { gearSummary, sessionSlots } from '@/domain/travel';
 import { useMarch } from '@/hooks/useMarch';
 import { useStreak } from '@/hooks/useStreak';
 import { useWeek } from '@/hooks/useWeek';
+import { syncReminders } from '@/notifications/reminders';
 import { Button, Card, Pill, SectionTitle, type IconName } from '@/ui/components';
 import { GoalsSummary } from '@/ui/goals';
 import { openDay } from '@/ui/navigation';
 import { colors, space, type } from '@/ui/theme';
 import { STATUS_STYLE, WeekStrip } from '@/ui/week';
+
+/** Fila de «Plan de hoy»: una cosa, una acción. */
+function PlanRow({
+  icon,
+  title,
+  detail,
+  onPress,
+  tint = colors.accent,
+}: {
+  icon: IconName;
+  title: string;
+  detail: string;
+  onPress?: () => void;
+  tint?: string;
+}) {
+  const body: ReactNode = (
+    <Card style={styles.planRow}>
+      <Ionicons name={icon} size={22} color={tint} />
+      <View style={{ flex: 1 }}>
+        <Text style={type.subtitle}>{title}</Text>
+        <Text style={type.caption}>{detail}</Text>
+      </View>
+      {onPress && <Ionicons name="chevron-forward" size={18} color={colors.faint} />}
+    </Card>
+  );
+  if (!onPress) return <View accessible accessibilityLabel={`${title}. ${detail}`}>{body}</View>;
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={`${title}. ${detail}`} onPress={onPress} style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+      {body}
+    </Pressable>
+  );
+}
 
 export default function TodayScreen() {
   const db = useSQLiteContext();
@@ -36,6 +69,11 @@ export default function TodayScreen() {
   const march = useMarch().view;
   const day = days.find((d) => d.date === todayDate);
   const [prescriptions, setPrescriptions] = useState<Record<string, Prescription> | null>(null);
+  const [lastWeighIn, setLastWeighIn] = useState<string | null | undefined>(undefined);
+  const [deload, setDeload] = useState(false);
+  const [stretched, setStretched] = useState(true);
+  const [showExercises, setShowExercises] = useState(false);
+  const [showMore, setShowMore] = useState(false);
 
   const kind = day && day.type !== 'gym' && day.type !== 'rest' ? (day.type as SessionKind) : null;
   const trip = day?.trip;
@@ -46,28 +84,27 @@ export default function TodayScreen() {
     [kind, gear?.mochila, gear?.mesa, gear?.gimnasio], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  const [lastWeighIn, setLastWeighIn] = useState<string | null | undefined>(undefined);
-  const [deload, setDeload] = useState(false);
-
   useFocusEffect(
     useCallback(() => {
       if (slots.length) getPrescriptions(db, slots).then(setPrescriptions);
       getBodyLog(db).then((log) => setLastWeighIn(log.length ? log[log.length - 1].date : null));
       getRecentFeelings(db).then((f) => setDeload(needsDeload(f)));
-    }, [db, slots]),
+      if (kind) stretchedOn(db, todayDate, routineAfter(kind)).then(setStretched);
+    }, [db, slots, kind, todayDate]),
   );
 
   const needsWeighIn = lastWeighIn === null || (lastWeighIn != null && lastWeighIn <= addDays(todayDate, -7));
 
   const skipToday = () => {
     if (!day || day.type === 'rest') return;
-    Alert.alert('¿Hoy no?', 'La sesión se marcará como fallada.', [
+    Alert.alert('¿Hoy no entrenas?', 'La sesión se marcará como fallada. Puedes deshacerlo después.', [
       { text: 'Cancelar', style: 'cancel' },
       {
-        text: 'Marcar fallada',
+        text: 'Marcar como fallada',
         style: 'destructive',
         onPress: async () => {
           await markMissed(db, todayDate, day.type as SessionKind | 'gym');
+          setShowMore(false);
           reload();
           syncReminders(db);
         },
@@ -82,22 +119,170 @@ export default function TodayScreen() {
     syncReminders(db);
   };
 
+  const info = day ? SESSION_INFO[day.type] : null;
+  const status = day ? STATUS_STYLE[day.status] : null;
+  const routine = kind ? ROUTINES[routineAfter(kind)] : null;
+
   return (
     <ScrollView
       style={{ backgroundColor: colors.bg }}
-      contentContainerStyle={{ padding: space.lg, paddingTop: insets.top + space.lg, paddingBottom: space.xxl }}>
+      contentContainerStyle={{ padding: space.lg, paddingTop: insets.top + space.lg, paddingBottom: space.xxl, gap: space.md }}>
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>
           <Text style={type.overline}>Hoy</Text>
           <Text style={[type.hero, { marginTop: 2 }]}>{formatLong(todayDate)}</Text>
         </View>
-        <Pressable accessibilityLabel="Perfil y avisos" onPress={() => router.push('/perfil')} style={styles.bell} hitSlop={8}>
-          <Ionicons name="notifications-outline" size={22} color={colors.text} />
+        <Pressable accessibilityRole="button" accessibilityLabel="Perfil y avisos" onPress={() => router.push('/perfil')} style={styles.round}>
+          <Ionicons name="person-circle-outline" size={26} color={colors.text} />
         </Pressable>
       </View>
 
-      <Card style={{ marginTop: space.lg, gap: space.md }}>
-        <WeekStrip days={days} />
+      {/* Lo de hoy, con la acción principal justo debajo del título */}
+      {day && info && status && (
+        <Card style={{ gap: space.md }}>
+          <View style={styles.headerRow}>
+            <View style={styles.icon}>
+              <Ionicons name={info.icon as IconName} size={26} color={colors.accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={type.title}>{info.title}</Text>
+              <Text style={type.caption}>{info.subtitle}</Text>
+            </View>
+            {day.type !== 'rest' && <Pill label={status.label} color={status.color} bg={status.bg} />}
+          </View>
+
+          {day.type === 'rest' && <Text style={type.caption}>Hoy toca descansar. El músculo crece mientras te recuperas.</Text>}
+
+          {day.type !== 'rest' && day.status === 'pending' && (
+            <Button
+              label={day.type === 'gym' ? 'Registrar gimnasio' : 'Registrar sesión'}
+              icon="checkmark-circle"
+              onPress={() => openDay(day.type, todayDate)}
+            />
+          )}
+          {day.status === 'done' && (
+            <>
+              <Text style={[type.body, { color: colors.success }]}>
+                ¡Hecho!{day.log?.feeling ? ` Sensación: ${FEELING_LABEL[day.log.feeling].toLowerCase()}.` : ''}
+              </Text>
+              <Button label="Editar registro" variant="secondary" icon="create-outline" onPress={() => openDay(day.type, todayDate)} />
+            </>
+          )}
+          {day.status === 'missed' && <Button label="Deshacer el fallo" variant="secondary" icon="arrow-undo" onPress={undoMissed} />}
+
+          {kind && prescriptions && day.status !== 'done' && (
+            <>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ expanded: showExercises }}
+                onPress={() => setShowExercises((v) => !v)}
+                style={styles.linkRow}>
+                <Text style={[type.subtitle, { flex: 1 }]}>
+                  {slots.length} ejercicios{trip ? ' adaptados al viaje' : ''}
+                </Text>
+                <Ionicons name={showExercises ? 'chevron-up' : 'chevron-down'} size={18} color={colors.muted} />
+              </Pressable>
+              {showExercises && (
+                <View style={{ gap: space.sm }}>
+                  {slots.map((s) => {
+                    const ex = exerciseFor(s);
+                    const p = prescriptions[s.key];
+                    if (!p) return null;
+                    return (
+                      <View key={s.key} style={styles.exRow}>
+                        <Text style={[type.body, { flex: 1 }]} numberOfLines={1}>
+                          {ex.name}
+                        </Text>
+                        {p.tempo > 0 && <Ionicons name="timer-outline" size={14} color={colors.info} accessibilityLabel={TEMPO_LABEL[p.tempo] ?? ''} />}
+                        <Text style={styles.exPresc}>{prescriptionShort(p, ex)}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+            </>
+          )}
+
+          {!day.log && (
+            <>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ expanded: showMore }}
+                onPress={() => setShowMore((v) => !v)}
+                style={styles.linkRow}>
+                <Text style={[type.caption, { flex: 1 }]}>Más opciones</Text>
+                <Ionicons name={showMore ? 'chevron-up' : 'chevron-down'} size={18} color={colors.muted} />
+              </Pressable>
+              {showMore && (
+                <View style={{ gap: space.sm }}>
+                  <Button
+                    label={day.overridden ? 'Cambiar otra vez lo que hago hoy' : 'Cambiar lo que hago hoy'}
+                    variant="secondary"
+                    icon="swap-horizontal"
+                    onPress={() => router.push({ pathname: '/dia', params: { date: todayDate } })}
+                  />
+                  {!trip && (
+                    <Button
+                      label="Hoy estoy de viaje"
+                      variant="secondary"
+                      icon="airplane-outline"
+                      onPress={() => router.push({ pathname: '/viaje', params: { date: todayDate } })}
+                    />
+                  )}
+                  {day.type !== 'rest' && day.status === 'pending' && <Button label="Hoy no entreno" variant="ghost" onPress={skipToday} />}
+                </View>
+              )}
+            </>
+          )}
+        </Card>
+      )}
+
+      {/* Plan de hoy: una fila por cosa pendiente */}
+      {trip && (
+        <PlanRow
+          icon="airplane"
+          tint={colors.info}
+          title={`De viaje hasta el ${formatShort(trip.to)}`}
+          detail={`${gearSummary(trip.gear)} · sesiones adaptadas`}
+          onPress={() => router.push({ pathname: '/viaje', params: { id: String(trip.id) } })}
+        />
+      )}
+      {march?.dueToday && (
+        <PlanRow
+          icon="walk"
+          title={`${WALK_LABEL[march.dueToday.kind]} · ${march.dueToday.km} km`}
+          detail="Plan de marcha · toca para registrarla"
+          onPress={() => router.push({ pathname: '/caminata', params: { kind: march.dueToday!.kind, km: String(march.dueToday!.km) } })}
+        />
+      )}
+      {day?.status === 'done' && routine && !stretched && (
+        <PlanRow
+          icon="body"
+          title={`Estirar · ${routineMinutes(routine)} min`}
+          detail={`${routine.title}: ${routine.subtitle.toLowerCase()}`}
+          onPress={() => router.push({ pathname: '/estirar/[rutina]', params: { rutina: routine.id } })}
+        />
+      )}
+      {deload && (
+        <PlanRow
+          icon="battery-half-outline"
+          tint={colors.info}
+          title="Baja una marcha esta semana"
+          detail="Tres de tus últimas cuatro sesiones han sido duras: haz una serie menos por ejercicio."
+        />
+      )}
+      {needsWeighIn && (
+        <PlanRow
+          icon="scale-outline"
+          title="Pésate"
+          detail={lastWeighIn ? 'Hace más de una semana de la última medición.' : 'Registra tu peso y medidas para seguir la pérdida de grasa.'}
+          onPress={() => router.push('/medicion')}
+        />
+      )}
+
+      <SectionTitle>Esta semana</SectionTitle>
+      <Card style={{ gap: space.md }}>
+        <WeekStrip days={days} onPressDay={(d) => (d.type !== 'rest' && d.date <= todayDate ? openDay(d.type, d.date) : router.push('/calendario'))} />
         {streak && streak.current > 0 && (
           <View style={styles.streak}>
             <Ionicons name="flame" size={16} color={colors.accent} />
@@ -110,131 +295,6 @@ export default function TodayScreen() {
         )}
       </Card>
 
-      {trip ? (
-        <Pressable onPress={() => router.push({ pathname: '/viaje', params: { id: String(trip.id) } })}>
-          <Card style={styles.tripCard}>
-            <Ionicons name="airplane" size={20} color={colors.info} />
-            <View style={{ flex: 1 }}>
-              <Text style={type.subtitle}>De viaje hasta el {formatShort(trip.to)}</Text>
-              <Text style={type.caption}>{gearSummary(trip.gear)} · sesiones adaptadas</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.faint} />
-          </Card>
-        </Pressable>
-      ) : null}
-
-      {day && (
-        <Card style={{ marginTop: space.lg, gap: space.md }}>
-          <View style={styles.headerRow}>
-            <View style={styles.icon}>
-              <Ionicons name={SESSION_INFO[day.type].icon as IconName} size={26} color={colors.accent} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={type.title}>{SESSION_INFO[day.type].title}</Text>
-              <Text style={type.caption}>{SESSION_INFO[day.type].subtitle}</Text>
-            </View>
-            {day.type !== 'rest' && (
-              <Pill label={STATUS_STYLE[day.status].label} color={STATUS_STYLE[day.status].color} bg={STATUS_STYLE[day.status].bg} />
-            )}
-          </View>
-
-          {kind && prescriptions && day.status !== 'done' && (
-            <View style={{ gap: space.sm }}>
-              {slots.map((s) => {
-                const ex = exerciseFor(s);
-                const p = prescriptions[s.key];
-                if (!p) return null;
-                return (
-                  <View key={s.key} style={styles.exRow}>
-                    <Text style={[type.body, { flex: 1 }]} numberOfLines={1}>
-                      {ex.name}
-                    </Text>
-                    {p.tempo > 0 && <Ionicons name="timer-outline" size={14} color={colors.info} accessibilityLabel={TEMPO_LABEL[p.tempo] ?? ''} />}
-                    <Text style={styles.exPresc}>{prescriptionShort(p, ex)}</Text>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-
-          {day.status === 'done' && (
-            <Text style={[type.body, { color: colors.success }]}>
-              ¡Hecho! {day.log?.feeling ? `Sensación: ${FEELING_LABEL[day.log.feeling]}.` : ''}
-            </Text>
-          )}
-
-          {day.type === 'rest' && (
-            <Text style={type.caption}>Hoy toca descansar. El músculo crece mientras te recuperas.</Text>
-          )}
-
-          {day.type !== 'rest' && day.status === 'pending' && (
-            <View style={{ gap: space.sm }}>
-              <Button
-                label={day.type === 'gym' ? 'Registrar gimnasio' : 'Registrar sesión'}
-                icon="checkmark-circle"
-                onPress={() => openDay(day.type, todayDate)}
-              />
-              <Button label="Hoy no" variant="ghost" onPress={skipToday} />
-            </View>
-          )}
-          {day.status === 'done' && (
-            <Button label="Editar registro" variant="secondary" icon="create-outline" onPress={() => openDay(day.type, todayDate)} />
-          )}
-          {day.status === 'missed' && <Button label="Deshacer fallo" variant="secondary" icon="arrow-undo" onPress={undoMissed} />}
-          {!day.log && (
-            <Pressable onPress={() => router.push({ pathname: '/dia', params: { date: todayDate } })} style={styles.changeDay}>
-              <Ionicons name="swap-horizontal" size={16} color={colors.muted} />
-              <Text style={type.caption}>
-                {day.overridden ? 'Día cambiado · cambiar otra vez' : 'Cambiar lo que hago hoy'}
-              </Text>
-            </Pressable>
-          )}
-          {!trip && !day.log && (
-            <Pressable onPress={() => router.push({ pathname: '/viaje', params: { date: todayDate } })} style={styles.changeDay}>
-              <Ionicons name="airplane-outline" size={16} color={colors.muted} />
-              <Text style={type.caption}>Hoy estoy fuera</Text>
-            </Pressable>
-          )}
-        </Card>
-      )}
-
-      {march?.dueToday && (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Marcha: hoy toca ${WALK_LABEL[march.dueToday.kind]} de ${march.dueToday.km} kilómetros. Registrar`}
-          onPress={() => router.push({ pathname: '/caminata', params: { kind: march.dueToday!.kind, km: String(march.dueToday!.km) } })}>
-          <Card style={{ marginTop: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 56 }}>
-            <Ionicons name="walk" size={22} color={colors.accent} />
-            <View style={{ flex: 1 }}>
-              <Text style={type.subtitle}>
-                {WALK_LABEL[march.dueToday.kind]} · {march.dueToday.km} km
-              </Text>
-              <Text style={type.caption}>Plan de marcha · toca para registrarla</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.faint} />
-          </Card>
-        </Pressable>
-      )}
-
-      {deload && (
-        <Card style={{ marginTop: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
-          <Ionicons name="battery-half-outline" size={22} color={colors.info} />
-          <Text style={[type.caption, { flex: 1 }]}>
-            Tres de tus últimas cuatro sesiones han sido duras. Esta semana baja una marcha: haz una serie menos por ejercicio y duerme bien.
-          </Text>
-        </Card>
-      )}
-
-      {needsWeighIn && (
-        <Card style={{ marginTop: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
-          <Ionicons name="scale-outline" size={22} color={colors.accent} />
-          <Text style={[type.caption, { flex: 1 }]}>
-            {lastWeighIn ? 'Hace más de una semana que no te pesas.' : 'Registra tu peso y medidas para seguir la pérdida de grasa.'}
-          </Text>
-          <Button label="Pesarme" variant="secondary" onPress={() => router.push('/medicion')} />
-        </Card>
-      )}
-
       <SectionTitle>Objetivos</SectionTitle>
       <GoalsSummary compact />
     </ScrollView>
@@ -243,18 +303,11 @@ export default function TodayScreen() {
 
 const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  icon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  changeDay: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 4 },
-  tripCard: { marginTop: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md, borderColor: colors.info },
+  round: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
+  icon: { width: 48, height: 48, borderRadius: 14, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  linkRow: { flexDirection: 'row', alignItems: 'center', minHeight: 48 },
+  planRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 64 },
   streak: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  bell: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   exRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   exPresc: { fontSize: 15, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },
 });

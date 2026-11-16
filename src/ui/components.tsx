@@ -70,6 +70,7 @@ export function Stepper({
   min = 0,
   suffix = '',
   format = (v: number) => String(v),
+  label = '',
 }: {
   value: number;
   onChange: (v: number) => void;
@@ -77,6 +78,8 @@ export function Stepper({
   min?: number;
   suffix?: string;
   format?: (v: number) => string;
+  /** Qué se está ajustando, para los lectores de pantalla ("peso", "repeticiones"…). */
+  label?: string;
 }) {
   const set = (v: number) => {
     Haptics.selectionAsync();
@@ -84,14 +87,14 @@ export function Stepper({
   };
   return (
     <View style={styles.stepper}>
-      <Pressable accessibilityLabel="Restar" onPress={() => set(value - step)} style={styles.stepBtn} hitSlop={8}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Restar ${format(step)}${suffix}${label ? ` de ${label}` : ''}`} onPress={() => set(value - step)} style={styles.stepBtn} hitSlop={8}>
         <Ionicons name="remove" size={22} color={colors.text} />
       </Pressable>
       <Text style={styles.stepValue}>
         {format(value)}
         <Text style={styles.stepSuffix}>{suffix}</Text>
       </Text>
-      <Pressable accessibilityLabel="Sumar" onPress={() => set(value + step)} style={styles.stepBtn} hitSlop={8}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Sumar ${format(step)}${suffix}${label ? ` a ${label}` : ''}`} onPress={() => set(value + step)} style={styles.stepBtn} hitSlop={8}>
         <Ionicons name="add" size={22} color={colors.text} />
       </Pressable>
     </View>
@@ -124,6 +127,44 @@ export function FeelingPicker({ value, onChange }: { value: Feeling | null; onCh
             ]}>
             <Ionicons name={f.icon} size={24} color={active ? f.color : colors.muted} />
             <Text style={[styles.feelingLabel, { color: active ? f.color : colors.muted }]}>{f.label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/** Selector de una opción entre pocas. Único en toda la app: mismo alto, misma letra y misma respuesta al tacto. */
+export function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+  label,
+}: {
+  options: readonly { id: T; label: string }[];
+  value: T | null;
+  onChange: (v: T) => void;
+  /** Qué se elige, para los lectores de pantalla. */
+  label?: string;
+}) {
+  return (
+    <View style={styles.segment} accessibilityRole="radiogroup" accessibilityLabel={label}>
+      {options.map((o) => {
+        const active = o.id === value;
+        return (
+          <Pressable
+            key={o.id}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: active }}
+            accessibilityLabel={o.label}
+            onPress={() => {
+              Haptics.selectionAsync();
+              onChange(o.id);
+            }}
+            style={[styles.segmentItem, active && { backgroundColor: colors.accent }]}>
+            <Text style={[styles.segmentLabel, active && { color: colors.onAccent }]} numberOfLines={1}>
+              {o.label}
+            </Text>
           </Pressable>
         );
       })}
@@ -183,7 +224,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: space.sm,
-    paddingVertical: 15,
+    minHeight: 50,
+    paddingVertical: 12,
     paddingHorizontal: space.lg,
     borderRadius: radius.md,
   },
@@ -210,7 +252,10 @@ const styles = StyleSheet.create({
   },
   stepValue: { fontSize: 26, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
   stepSuffix: { fontSize: 15, fontWeight: '600', color: colors.muted },
-  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  segment: { flexDirection: 'row', backgroundColor: colors.cardHigh, borderRadius: radius.md, padding: 4 },
+  segmentItem: { flex: 1, minHeight: 44, paddingHorizontal: 6, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
+  segmentLabel: { fontSize: 15, fontWeight: '700', color: colors.muted },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 48 },
   toggle: { width: 50, height: 30, borderRadius: 15, backgroundColor: colors.cardHigh, padding: 3 },
   knob: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#fff' },
   feelings: { flexDirection: 'row', gap: space.sm },

@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { DAY_SHORT, fromISODate, today, weekdayIndex } from '@/domain/dates';
+import { DAY_SHORT, formatLong, fromISODate, today, weekdayIndex } from '@/domain/dates';
 import { FEELING_LABEL } from '@/domain/progression';
 import { SESSION_INFO, type DayStatus, type DayType } from '@/domain/schedule';
 import type { PlannedDay } from '@/hooks/useWeek';
@@ -11,7 +11,7 @@ import { colors, radius, space, type } from './theme';
 export const STATUS_STYLE: Record<DayStatus, { label: string; color: string; bg: string }> = {
   done: { label: 'Hecho', color: colors.success, bg: colors.successSoft },
   missed: { label: 'Fallado', color: colors.danger, bg: colors.dangerSoft },
-  pending: { label: 'Hoy', color: colors.accent, bg: colors.accentSoft },
+  pending: { label: 'Por hacer', color: colors.accent, bg: colors.accentSoft },
   future: { label: 'Pendiente', color: colors.muted, bg: colors.cardHigh },
   rest: { label: 'Descanso', color: colors.faint, bg: colors.cardHigh },
   excused: { label: 'Viaje', color: colors.info, bg: colors.infoSoft },
@@ -20,7 +20,7 @@ export const STATUS_STYLE: Record<DayStatus, { label: string; color: string; bg:
 const TYPE_LETTER: Record<DayType, string> = { gym: 'G', A: 'A', B: 'B', C: 'C', rest: '–' };
 
 /** Tira compacta de 7 días para la pantalla Hoy. */
-export function WeekStrip({ days }: { days: PlannedDay[] }) {
+export function WeekStrip({ days, onPressDay }: { days: PlannedDay[]; onPressDay?: (d: PlannedDay) => void }) {
   const todayDate = today();
   return (
     <View style={styles.strip}>
@@ -28,7 +28,14 @@ export function WeekStrip({ days }: { days: PlannedDay[] }) {
         const s = STATUS_STYLE[d.status];
         const isToday = d.date === todayDate;
         return (
-          <View key={d.date} style={styles.stripDay}>
+          <Pressable
+            key={d.date}
+            disabled={!onPressDay}
+            onPress={() => onPressDay?.(d)}
+            accessibilityRole={onPressDay ? 'button' : undefined}
+            accessibilityLabel={`${formatLong(d.date)}: ${SESSION_INFO[d.type].title}, ${s.label.toLowerCase()}`}
+            hitSlop={{ top: 6, bottom: 6, left: 2, right: 2 }}
+            style={styles.stripDay}>
             <Text style={[styles.stripLetter, isToday && { color: colors.accent }]}>
               {DAY_SHORT[weekdayIndex(d.date)]}
             </Text>
@@ -51,7 +58,7 @@ export function WeekStrip({ days }: { days: PlannedDay[] }) {
               )}
             </View>
             <View style={[styles.stripTrip, d.trip && { backgroundColor: colors.info }]} />
-          </View>
+          </Pressable>
         );
       })}
     </View>
@@ -71,6 +78,8 @@ export function DayRow({ day, onPress, onChange }: { day: PlannedDay; onPress?: 
     <Pressable
       disabled={!onPress}
       onPress={onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={`${formatLong(day.date)}: ${info.title}${day.type !== 'rest' ? `, ${s.label.toLowerCase()}` : ''}${onPress ? '. Abrir registro' : ''}`}
       style={({ pressed }) => [styles.row, isToday && styles.rowToday, pressed && { opacity: 0.7 }]}>
       <View style={styles.rowDate}>
         <Text style={[type.overline, isToday && { color: colors.accent }]}>{DAY_SHORT[weekdayIndex(day.date)]}</Text>
@@ -92,7 +101,7 @@ export function DayRow({ day, onPress, onChange }: { day: PlannedDay; onPress?: 
       </View>
       {day.type !== 'rest' && <Pill label={s.label} color={s.color} bg={s.bg} />}
       {onChange && (
-        <Pressable accessibilityLabel="Cambiar este día" onPress={onChange} hitSlop={10} style={styles.swap}>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Cambiar lo que se hace el ${formatLong(day.date).toLowerCase()}`} onPress={onChange} style={styles.swap}>
           <Ionicons name="swap-horizontal" size={18} color={colors.muted} />
         </Pressable>
       )}
@@ -111,11 +120,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.md,
+    minHeight: 64,
     padding: space.md,
     borderRadius: radius.md,
     backgroundColor: colors.card,
   },
-  swap: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.cardHigh, alignItems: 'center', justifyContent: 'center' },
+  swap: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.cardHigh, alignItems: 'center', justifyContent: 'center' },
   rowToday: { borderWidth: 1.5, borderColor: colors.accent },
   rowDate: { width: 34, alignItems: 'center' },
   rowDay: { fontSize: 18, fontWeight: '800', color: colors.text },

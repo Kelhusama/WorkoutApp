@@ -1,13 +1,14 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { DAY_SHORT, fromISODate, today, type ISODate } from '@/domain/dates';
+import { DAY_SHORT, formatLong, fromISODate, today, type ISODate } from '@/domain/dates';
+import { SESSION_INFO } from '@/domain/schedule';
 import type { DayType } from '@/domain/schedule';
 import type { PlannedDay } from '@/hooks/useWeek';
 import { colors, radius, space } from './theme';
 import { STATUS_STYLE } from './week';
 
-const TYPE_LABEL: Record<DayType, string> = { gym: 'Gym', A: 'A', B: 'B', C: 'C', rest: '' };
+const TYPE_LABEL: Record<DayType, string> = { gym: 'Gim', A: 'A', B: 'B', C: 'C', rest: '' };
 
 /** Cuadrícula mensual: `days` debe empezar en lunes y cubrir semanas completas. */
 export function MonthGrid({
@@ -49,7 +50,9 @@ export function MonthGrid({
                 key={d.date}
                 onPress={() => onSelect(d.date)}
                 onLongPress={onLongPress ? () => onLongPress(d.date) : undefined}
-                accessibilityLabel={`${d.date}: ${s.label}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSel }}
+                accessibilityLabel={`${formatLong(d.date)}: ${SESSION_INFO[d.type].title}${d.type !== 'rest' ? `, ${s.label.toLowerCase()}` : ''}${d.trip ? ', de viaje' : ''}`}
                 style={[
                   styles.cell,
                   { backgroundColor: d.type === 'rest' ? 'transparent' : s.bg, opacity: inMonth ? 1 : 0.3 },

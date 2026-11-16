@@ -24,8 +24,8 @@ export function RolePicker({ value, onChange, compact = false }: { value: Role; 
               Haptics.selectionAsync();
               onChange(r);
             }}
-            style={[styles.item, compact && { paddingVertical: 8 }, active && { backgroundColor: r === 'rest' ? colors.border : colors.accent }]}>
-            <Ionicons name={ROLE_INFO[r].icon as IconName} size={compact ? 16 : 20} color={active ? (r === 'rest' ? colors.text : colors.onAccent) : colors.muted} />
+            style={[styles.item, compact && { paddingVertical: 0, minHeight: 44 }, active && { backgroundColor: r === 'rest' ? colors.border : colors.accent }]}>
+            <Ionicons name={ROLE_INFO[r].icon as IconName} size={compact ? 18 : 20} color={active ? (r === 'rest' ? colors.text : colors.onAccent) : colors.muted} />
             {!compact && <Text style={[styles.label, active && { color: r === 'rest' ? colors.text : colors.onAccent }]}>{ROLE_INFO[r].label}</Text>}
           </Pressable>
         );

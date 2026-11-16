@@ -73,7 +73,7 @@ export function RemindersSettings() {
 
       {denied && (
         <Text style={[type.caption, { color: colors.danger }]}>
-          El móvil no permite notificaciones a esta app. Actívalas en Ajustes de Android → Aplicaciones → Expo Go (o la app) → Notificaciones.
+          El móvil no deja que esta app envíe notificaciones. Actívalas en los ajustes del teléfono, en el apartado de notificaciones de la app.
         </Text>
       )}
     </Card>
@@ -85,8 +85,8 @@ const styles = StyleSheet.create({
   toggle: { width: 50, height: 30, borderRadius: 15, backgroundColor: colors.cardHigh, padding: 3 },
   knob: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#fff' },
   btn: {
-    width: 36,
-    height: 36,
+    width: 48,
+    height: 48,
     borderRadius: radius.sm,
     backgroundColor: colors.cardHigh,
     alignItems: 'center',
