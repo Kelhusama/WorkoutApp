@@ -84,7 +84,7 @@ export default function ExerciseScreen() {
                   accessibilityState={{ selected: metric === m }}
                   onPress={() => setMetric(m)}
                   style={[styles.segmentItem, metric === m && { backgroundColor: colors.accent }]}>
-                  <Text style={[styles.segmentLabel, metric === m && { color: '#fff' }]}>{label}</Text>
+                  <Text style={[styles.segmentLabel, metric === m && { color: colors.onAccent }]}>{label}</Text>
                 </Pressable>
               ))}
             </View>

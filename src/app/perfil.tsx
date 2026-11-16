@@ -83,7 +83,7 @@ export default function ProfileScreen() {
             accessibilityState={{ selected: sex === id }}
             onPress={() => setSex(id)}
             style={[styles.segmentItem, sex === id && { backgroundColor: colors.accent }]}>
-            <Text style={[styles.segmentLabel, sex === id && { color: '#fff' }]}>{label}</Text>
+            <Text style={[styles.segmentLabel, sex === id && { color: colors.onAccent }]}>{label}</Text>
           </Pressable>
         ))}
       </View>

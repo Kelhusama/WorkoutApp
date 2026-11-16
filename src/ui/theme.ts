@@ -6,9 +6,13 @@ export const colors = {
   cardHigh: '#1F2228',
   border: '#2A2E36',
   text: '#F2F3F5',
-  muted: '#8B909A',
-  faint: '#5A5F69',
+  // Texto secundario y terciario: contraste WCAG AA sobre los tres fondos (≥ 4,5:1).
+  muted: '#A3A8B2',
+  faint: '#858A95',
   accent: '#FF6B35',
+  /** Texto e iconos sobre el color de acento (el blanco no llega a 3:1). */
+  onAccent: '#0E0F12',
+  warn: '#F5B83D',
   accentSoft: 'rgba(255, 107, 53, 0.14)',
   success: '#3DDC97',
   successSoft: 'rgba(61, 220, 151, 0.14)',

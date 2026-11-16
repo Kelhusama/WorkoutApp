@@ -5,7 +5,7 @@ import { Card } from './components';
 import { colors, space, type } from './theme';
 
 const SCALE_MAX = 24;
-const TONE = { low: colors.info, good: colors.success, warn: '#F5B83D' } as const;
+const TONE = { low: colors.info, good: colors.success, warn: colors.warn } as const;
 const pct = (v: number) => `${Math.min(100, (v / SCALE_MAX) * 100)}%` as const;
 const fmt = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1).replace('.', ','));
 

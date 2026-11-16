@@ -9,7 +9,7 @@ import { colors, type } from './theme';
 export const TONE_COLOR: Record<Tone, string> = {
   low: colors.info,
   good: colors.success,
-  warn: '#F5B83D',
+  warn: colors.warn,
   bad: colors.danger,
 };
 

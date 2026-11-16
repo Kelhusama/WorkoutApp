@@ -21,6 +21,7 @@ export function ExerciseCard({ slot, target, values, onChange }: Props) {
   const ex = exerciseFor(slot);
   const step = ex.measure === 'time' ? 5 : 1;
   const [showHow, setShowHow] = useState(false);
+  const hasExtra = values.length > target.sets;
 
   const setValue = (i: number, v: number) => {
     Haptics.selectionAsync();
@@ -84,19 +85,19 @@ export function ExerciseCard({ slot, target, values, onChange }: Props) {
                 Serie {i + 1}
                 {extra ? ' (extra)' : ''}
               </Text>
-              <Pressable accessibilityLabel={`Restar en serie ${i + 1}`} onPress={() => setValue(i, v - step)} style={styles.stepBtn} hitSlop={6}>
+              <Pressable accessibilityLabel={`Restar en serie ${i + 1}`} onPress={() => setValue(i, v - step)} style={styles.stepBtn}>
                 <Ionicons name="remove" size={20} color={colors.text} />
               </Pressable>
               <Text style={[styles.setValue, { color: hit ? colors.text : colors.danger }]}>{amountText(v, ex, true)}</Text>
-              <Pressable accessibilityLabel={`Sumar en serie ${i + 1}`} onPress={() => setValue(i, v + step)} style={styles.stepBtn} hitSlop={6}>
+              <Pressable accessibilityLabel={`Sumar en serie ${i + 1}`} onPress={() => setValue(i, v + step)} style={styles.stepBtn}>
                 <Ionicons name="add" size={20} color={colors.text} />
               </Pressable>
               {extra ? (
-                <Pressable accessibilityLabel="Quitar serie" onPress={() => onChange(values.filter((_, j) => j !== i))} hitSlop={8}>
+                <Pressable accessibilityLabel={`Quitar la serie ${i + 1}`} onPress={() => onChange(values.filter((_, j) => j !== i))} hitSlop={8} style={styles.trash}>
                   <Ionicons name="trash-outline" size={18} color={colors.faint} />
                 </Pressable>
               ) : (
-                <View style={{ width: 18 }} />
+                hasExtra && <View style={{ width: 32 }} />
               )}
             </View>
           );
@@ -139,13 +140,14 @@ const styles = StyleSheet.create({
   setRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   setLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: colors.text },
   stepBtn: {
-    width: 38,
-    height: 38,
+    width: 48,
+    height: 48,
     borderRadius: radius.sm,
     backgroundColor: colors.cardHigh,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  setValue: { width: 70, textAlign: 'center', fontSize: 17, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  trash: { width: 32, height: 48, alignItems: 'flex-end', justifyContent: 'center' },
+  setValue: { width: 58, textAlign: 'center', fontSize: 17, fontWeight: '800', fontVariant: ['tabular-nums'] },
   addSet: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
 });

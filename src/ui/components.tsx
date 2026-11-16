@@ -25,7 +25,7 @@ export function Button({
   icon?: IconName;
   disabled?: boolean;
 }) {
-  const fg = variant === 'primary' ? '#fff' : variant === 'secondary' ? colors.text : colors.muted;
+  const fg = variant === 'primary' ? colors.onAccent : variant === 'secondary' ? colors.text : colors.muted;
   return (
     <Pressable
       accessibilityRole="button"

@@ -101,7 +101,7 @@ export default function PhotosScreen() {
               setBeforeId(null);
             }}
             style={[styles.segmentItem, pose === p.id && { backgroundColor: colors.accent }]}>
-            <Text style={[styles.segmentLabel, pose === p.id && { color: '#fff' }]}>{p.label}</Text>
+            <Text style={[styles.segmentLabel, pose === p.id && { color: colors.onAccent }]}>{p.label}</Text>
           </Pressable>
         ))}
       </View>

@@ -41,7 +41,7 @@ function Segmented<T extends string>({ options, value, onChange }: { options: { 
             accessibilityState={{ selected: active }}
             onPress={() => onChange(o.id)}
             style={[styles.segmentItem, active && { backgroundColor: colors.accent }]}>
-            <Text style={[styles.segmentLabel, active && { color: '#fff' }]}>{o.label}</Text>
+            <Text style={[styles.segmentLabel, active && { color: colors.onAccent }]}>{o.label}</Text>
           </Pressable>
         );
       })}
