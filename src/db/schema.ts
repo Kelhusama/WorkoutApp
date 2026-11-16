@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 10;
+const LATEST = 11;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -188,6 +188,28 @@ export async function migrate(db: SQLiteDatabase) {
       CREATE INDEX IF NOT EXISTS idx_stretch_log_date ON stretch_log (date);
     `);
     version = 10;
+  }
+
+  if (version === 10) {
+    // Flexibilidad: sesiones del programa por niveles y resultados de los tests mensuales.
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS flex_session (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        level INTEGER NOT NULL CHECK (level IN (1,2,3)),
+        seconds INTEGER NOT NULL CHECK (seconds > 0),
+        exercises TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_flex_session_date ON flex_session (date);
+      CREATE TABLE IF NOT EXISTS flex_test (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        test_id TEXT NOT NULL,
+        value REAL NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_flex_test_date ON flex_test (date);
+    `);
+    version = 11;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);
