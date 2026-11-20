@@ -68,10 +68,10 @@ Las apps que puntúan el cuerpo se asocian con preocupación por la imagen corpo
 
 ## 5. Propuesta para Forja
 
-### Fase A · Sin visión, funciona ya en Expo Go
-1. **Foto guiada**: al hacer la foto, la anterior aparece semitransparente encima de la cámara para repetir el encuadre, con el protocolo en pantalla.
-2. **Panel «Cómo voy»** con los objetivos de la tabla: cintura/altura, ritmo de peso, brazo y pecho con cinta, y fuerza. Cada uno con su estado y una recomendación en una frase.
-3. **Aviso mensual** de cinta y fotos el mismo día.
+### Fase A · Sin visión, funciona ya en Expo Go ✅ (hecha el 20/11/2026, sin probar en el móvil)
+1. **Foto guiada** (`src/ui/GuidedCamera.tsx`, con `expo-camera`): al hacer la foto, la anterior aparece semitransparente encima de la cámara para repetir el encuadre, con el protocolo en pantalla, temporizador de 5 o 10 s y cambio de cámara.
+2. **Panel «Cómo voy»** en la pestaña Cuerpo (`src/domain/physique.ts`): cintura/altura, ritmo de peso, brazo y pecho con cinta. Cada uno con su estado y una recomendación en una frase. La fuerza la sigue el entrenador.
+3. **Aviso mensual** en la pantalla Hoy cuando hace más de 30 días de la última cinta o de las últimas fotos.
 
 ### Fase B · Con visión, cuando haya APK
 4. **Alineación automática**: detectar hombros y caderas y cuadrar escala y posición entre fechas; comparador con cortinilla y superposición.

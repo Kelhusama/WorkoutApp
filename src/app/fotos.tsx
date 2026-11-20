@@ -10,6 +10,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { addPhoto, deletePhoto, getPhotos, type PhotoPose, type ProgressPhoto } from '@/db/stats';
 import { formatShort, fromISODate, today } from '@/domain/dates';
 import { Button, Card, SectionTitle, Segmented } from '@/ui/components';
+import { GuidedCamera } from '@/ui/GuidedCamera';
 import { colors, radius, space, type } from '@/ui/theme';
 
 const POSES: readonly { id: PhotoPose; label: string }[] = [
@@ -35,6 +36,7 @@ export default function PhotosScreen() {
   const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
   const [beforeId, setBeforeId] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
+  const [camera, setCamera] = useState(false);
 
   const load = useCallback(() => getPhotos(db).then(setPhotos), [db]);
   useEffect(() => {
@@ -46,20 +48,17 @@ export default function PhotosScreen() {
   const before = list.find((p) => p.id === beforeId) ?? list[0];
   const canCompare = list.length >= 2 && before && latest && before.id !== latest.id;
 
-  const add = async (source: 'camera' | 'library') => {
+  /** Guarda una foto: la que llega de la cámara guiada o, si no se indica, una elegida de la galería. */
+  const add = async (shotUri?: string) => {
     try {
       setBusy(true);
-      if (source === 'camera') {
-        const perm = await ImagePicker.requestCameraPermissionsAsync();
-        if (!perm.granted) {
-          Alert.alert('Sin permiso de cámara', 'Actívalo en los ajustes del móvil o elige la foto de la galería.');
-          return;
-        }
+      let source = shotUri;
+      if (!source) {
+        const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images' as const], quality: 0.7 });
+        if (result.canceled) return;
+        source = result.assets[0].uri;
       }
-      const options = { mediaTypes: ['images' as const], quality: 0.7 };
-      const result = source === 'camera' ? await ImagePicker.launchCameraAsync(options) : await ImagePicker.launchImageLibraryAsync(options);
-      if (result.canceled) return;
-      const uri = await keepCopy(result.assets[0].uri, pose);
+      const uri = await keepCopy(source, pose);
       await addPhoto(db, { date: today(), pose, uri });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await load();
@@ -120,7 +119,7 @@ export default function PhotosScreen() {
         <Card>
           <Text style={type.caption}>
             {list.length === 0
-              ? 'Aún no hay fotos de esta postura. Hazlas siempre igual: misma luz, mismo sitio y a la misma hora.'
+              ? 'Aún no hay fotos de esta postura. Hazlas siempre igual: por la mañana, sin haber entrenado, con la misma luz, la misma ropa y el móvil en el mismo sitio.'
               : 'Con una segunda foto podrás comparar el antes y el ahora.'}
           </Text>
         </Card>
@@ -128,10 +127,10 @@ export default function PhotosScreen() {
 
       <View style={{ flexDirection: 'row', gap: space.sm }}>
         <View style={{ flex: 1 }}>
-          <Button label="Hacer foto" icon="camera" onPress={() => add('camera')} disabled={busy} />
+          <Button label="Hacer foto" icon="camera" onPress={() => setCamera(true)} disabled={busy} />
         </View>
         <View style={{ flex: 1 }}>
-          <Button label="De la galería" variant="secondary" icon="images" onPress={() => add('library')} disabled={busy} />
+          <Button label="De la galería" variant="secondary" icon="images" onPress={() => add()} disabled={busy} />
         </View>
       </View>
 
@@ -161,6 +160,15 @@ export default function PhotosScreen() {
           </Text>
         </>
       )}
+      <GuidedCamera
+        visible={camera}
+        ghostUri={latest?.uri}
+        onClose={() => setCamera(false)}
+        onShot={(uri) => {
+          setCamera(false);
+          add(uri);
+        }}
+      />
     </ScrollView>
   );
 }

@@ -8,7 +8,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getBodyLog } from '@/db/body';
 import { deleteLog, getDoneSessions, getPrescriptions, markMissed } from '@/db/repo';
 import { extraKind, readiness, type Readiness } from '@/domain/coach';
-import { getRecentFeelings } from '@/db/stats';
+import { getPhotos, getRecentFeelings } from '@/db/stats';
+import { monthlyCheck } from '@/domain/physique';
 import { stretchedOn } from '@/db/stretch';
 import { addDays, formatLong, formatShort, today as getToday, weekdayIndex } from '@/domain/dates';
 import { prescriptionShort } from '@/domain/format';
@@ -72,6 +73,8 @@ export default function TodayScreen() {
   const [prescriptions, setPrescriptions] = useState<Record<string, Prescription> | null>(null);
   const [lastWeighIn, setLastWeighIn] = useState<string | null | undefined>(undefined);
   const [deload, setDeload] = useState(false);
+  // Revisión mensual de cinta y fotos.
+  const [monthly, setMonthly] = useState<{ due: boolean; detail: string } | null>(null);
   const [stretched, setStretched] = useState(true);
   const [showExercises, setShowExercises] = useState(false);
   // Sesión extra en día de descanso: cuál propone el entrenador y si conviene que sea ligera.
@@ -90,7 +93,11 @@ export default function TodayScreen() {
   useFocusEffect(
     useCallback(() => {
       if (slots.length) getPrescriptions(db, slots).then(setPrescriptions);
-      getBodyLog(db).then((log) => setLastWeighIn(log.length ? log[log.length - 1].date : null));
+      getBodyLog(db).then(async (log) => {
+        setLastWeighIn(log.length ? log[log.length - 1].date : null);
+        const photos = await getPhotos(db);
+        setMonthly(monthlyCheck(log, photos.map((p) => p.date), todayDate));
+      });
       getRecentFeelings(db).then((f) => setDeload(needsDeload(f)));
       if (kind) stretchedOn(db, todayDate, routineAfter(kind)).then(setStretched);
       getDoneSessions(db, addDays(todayDate, -30)).then((done) => setExtra({ kind: extraKind(done), ready: readiness(done, todayDate) }));
@@ -263,6 +270,14 @@ export default function TodayScreen() {
           title={`De viaje hasta el ${formatShort(trip.to)}`}
           detail={`${gearSummary(trip.gear)} · sesiones adaptadas`}
           onPress={() => router.push({ pathname: '/viaje', params: { id: String(trip.id) } })}
+        />
+      )}
+      {monthly?.due && (
+        <PlanRow
+          icon="body"
+          title="Toca revisión mensual"
+          detail={monthly.detail}
+          onPress={() => router.push('/cuerpo')}
         />
       )}
       {march?.dueToday && (

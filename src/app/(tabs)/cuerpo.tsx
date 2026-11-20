@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { INDICATORS, formatValue, rangeFor, seriesFor, targets, type BodyEntry } from '@/domain/body';
 import { formatShort } from '@/domain/dates';
 import { trendRatePerWeek, trendWeight } from '@/domain/insights';
+import { howAmIDoing, type Verdict } from '@/domain/physique';
 import { useBody } from '@/hooks/useBody';
 import { Button, Card, Pill, SectionTitle } from '@/ui/components';
 import { LineChart, TONE_COLOR } from '@/ui/LineChart';
@@ -27,6 +28,14 @@ function Delta({ now, before, unit, lowerIsBetter = true }: { now?: number | nul
   );
 }
 
+const VERDICT: Record<Verdict, { icon: keyof typeof Ionicons.glyphMap; color: string; label: string }> = {
+  bien: { icon: 'checkmark-circle', color: colors.success, label: 'Bien' },
+  neutro: { icon: 'remove-circle', color: colors.muted, label: 'Sin cambio' },
+  atencion: { icon: 'alert-circle', color: colors.warn, label: 'Atención' },
+  mal: { icon: 'close-circle', color: colors.danger, label: 'A corregir' },
+  sin_datos: { icon: 'help-circle-outline', color: colors.faint, label: 'Faltan datos' },
+};
+
 const MEASURES: { key: keyof BodyEntry; label: string; lowerIsBetter: boolean }[] = [
   { key: 'waist', label: 'Cintura', lowerIsBetter: true },
   { key: 'neck', label: 'Cuello', lowerIsBetter: true },
@@ -42,6 +51,7 @@ export default function BodyScreen() {
   const trend = trendWeight(entries);
   const trendNow = trend.length ? trend[trend.length - 1].value : 0;
   const rate = trendRatePerWeek(trend);
+  const checks = howAmIDoing(profile, entries);
 
   return (
     <ScrollView
@@ -105,6 +115,29 @@ export default function BodyScreen() {
           <Text style={type.caption}>Aún no hay mediciones. Pésate una vez por semana, por la mañana y en ayunas.</Text>
         )}
         <Button label="Registrar medición" icon="scale-outline" onPress={() => router.push('/medicion')} />
+      </Card>
+
+      <SectionTitle>Cómo voy</SectionTitle>
+      <Card style={{ gap: space.md }}>
+        {checks.map((c) => {
+          const v = VERDICT[c.verdict];
+          return (
+            <View key={c.id} style={{ flexDirection: 'row', gap: space.md }} accessible accessibilityLabel={`${c.title}. ${v.label}. ${c.value ?? ''}. ${c.advice}`}>
+              <Ionicons name={v.icon} size={22} color={v.color} style={{ marginTop: 2 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={type.subtitle}>
+                  {c.title}
+                  {c.value ? <Text style={{ color: v.color }}> · {c.value}</Text> : null}
+                </Text>
+                <Text style={type.caption}>{c.advice}</Text>
+              </View>
+            </View>
+          );
+        })}
+        <Text style={[type.caption, { color: colors.faint }]}>
+          Cinta y fotos, una vez al mes y el mismo día. La fuerza la sigue el entrenador en Progreso.
+        </Text>
+        <Button label="Fotos de progreso" variant="secondary" icon="images-outline" onPress={() => router.push('/fotos')} />
       </Card>
 
       {entries.length > 1 && (

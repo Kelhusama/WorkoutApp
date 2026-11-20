@@ -36,6 +36,9 @@ Para probar: `npx expo start` en la carpeta del proyecto y escanear el QR con Ex
 | [ ] | Entrenador: sesión ligera | Cualquier sesión de casa → «¿Cómo llegas hoy?» → Cansado | Que quite la pierna y un tercio de las series, y que al guardar no cambie nada del plan |
 | [ ] | Entrenador: el porqué de cada cambio | Al guardar una sesión | Que cada ejercicio diga qué cambia y por qué, y que tenga sentido con lo que contestaste |
 | [ ] | Entrenador: sesión extra | Hoy, en un día de descanso | Que proponga una sesión, se pueda hacer y el día quede como hecho |
+| [ ] | Foto guiada | Progreso → Fotos → Hacer foto | Que pida permiso, se vea la foto anterior encima, funcione el temporizador y la foto se guarde |
+| [ ] | Cómo voy | Cuerpo | Que cada objetivo tenga sentido con tus medidas y diga qué falta si no hay datos |
+| [ ] | Aviso mensual | Hoy | Que aparezca «Toca revisión mensual» si hace más de un mes de la cinta o las fotos |
 | [ ] | Aspecto general | Todas las pantallas | Textos cortados, botones difíciles de pulsar, el teclado tapando campos |
 
 ## Solo con la app instalada (APK)
