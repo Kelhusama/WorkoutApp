@@ -6,7 +6,8 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getPrescriptions, getSessionLog, getSessionSets, getTripOn, saveHomeSession, type SlotChange } from '@/db/repo';
+import { getPrescriptions, getSessionLog, getSessionReserves, getSessionSets, getTripOn, saveHomeSession, type SlotChange } from '@/db/repo';
+import type { Reserve } from '@/domain/coach';
 import { getBests } from '@/db/stats';
 import { formatLong, today as getToday } from '@/domain/dates';
 import { EXERCISES } from '@/domain/exercises';
@@ -35,6 +36,7 @@ export default function SessionScreen() {
 
   const [targets, setTargets] = useState<Record<string, Prescription> | null>(null);
   const [values, setValues] = useState<Record<string, number[]>>({});
+  const [reserves, setReserves] = useState<Record<string, Reserve>>({});
   const [feeling, setFeeling] = useState<Feeling | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -57,6 +59,7 @@ export default function SessionScreen() {
       setTravelling(!!trip);
       setTargets(t);
       setValues(initial);
+      setReserves(log?.status === 'done' ? await getSessionReserves(db, log.id) : {});
       if (log?.status === 'done') {
         setEditing(true);
         setFeeling(log.feeling);
@@ -68,7 +71,7 @@ export default function SessionScreen() {
     if (!feeling) return;
     setSaving(true);
     try {
-      const results = slots.map((s) => ({ slotKey: s.key, exerciseId: s.exerciseId, values: values[s.key] ?? [] }));
+      const results = slots.map((s) => ({ slotKey: s.key, exerciseId: s.exerciseId, values: values[s.key] ?? [], reserve: reserves[s.key] ?? null }));
       // Marcas anteriores a hoy, para saber si esta sesión bate algún récord.
       const before = await getBests(db, date);
       const result = await saveHomeSession(db, date, kind, feeling, results, slots);
@@ -192,6 +195,11 @@ export default function SessionScreen() {
             setDirty(true);
             setValues((prev) => ({ ...prev, [s.key]: v }));
           }}
+          reserve={reserves[s.key] ?? null}
+          onReserve={(r) => {
+            setDirty(true);
+            setReserves((prev) => ({ ...prev, [s.key]: r }));
+          }}
         />
       ))}
 
@@ -203,6 +211,11 @@ export default function SessionScreen() {
           setFeeling(v);
         }}
       />
+      {slots.some((s) => reserves[s.key] === undefined) && (
+        <Text style={type.caption}>
+          Si contestas lo que te quedaba en cada ejercicio, el entrenador afina mejor. Puedes guardar sin hacerlo.
+        </Text>
+      )}
       <Text style={type.caption}>
         {feeling ? 'Con «Fácil» la app sube la dificultad; con «Dura» la mantiene.' : 'Elige cómo ha ido para poder guardar: con «Fácil» sube la dificultad y con «Dura» se mantiene.'}
       </Text>

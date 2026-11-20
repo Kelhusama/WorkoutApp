@@ -15,6 +15,7 @@ const TABLES = [
   'prescription',
   'session_log',
   'set_log',
+  'effort_log',
   'test_log',
   'body_log',
   'walk_log',

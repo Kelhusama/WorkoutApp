@@ -31,6 +31,8 @@ Para probar: `npx expo start` en la carpeta del proyecto y escanear el QR con Ex
 | [ ] | Dibujos de los estiramientos de brazos y espalda | Entrenar → Estiramientos → rutinas tras la sesión | Que se entienda cada postura |
 | [ ] | Teclado «Siguiente» | Registrar medición y Registrar caminata | Que salte al campo siguiente sin cerrarse y el último lo cierre |
 | [ ] | Tocar las gráficas | Cuerpo, Progreso, Marcha | Que al tocar o arrastrar se vea la fecha y el valor del punto, y que la pantalla siga deslizando bien |
+| [ ] | Entrenador: lo que quedaba | Cualquier sesión de casa, debajo de las series | Que la pregunta se entienda, se pueda guardar sin contestar y al editar la sesión siga marcada |
+| [ ] | Entrenador: tu nivel real | Progreso → Ejercicios → un ejercicio | Que el nivel, la tendencia y la gráfica tengan sentido con lo que has hecho |
 | [ ] | Aspecto general | Todas las pantallas | Textos cortados, botones difíciles de pulsar, el teclado tapando campos |
 
 ## Solo con la app instalada (APK)

@@ -1,6 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import type { Point } from '@/domain/body';
+import type { Reserve } from '@/domain/coach';
 import type { ISODate } from '@/domain/dates';
 import type { Feeling } from '@/domain/progression';
 import type { Bests, SessionSets } from '@/domain/stats';
@@ -22,6 +23,18 @@ export async function getExerciseHistory(db: SQLiteDatabase, exerciseId: string)
     else out.push({ date: r.date, values: [r.value] });
   }
   return out;
+}
+
+/** Reserva apuntada de un ejercicio en cada fecha (si un día se hizo en dos huecos, la menor). */
+export async function getExerciseReserves(db: SQLiteDatabase, exerciseId: string): Promise<Map<ISODate, Reserve>> {
+  const rows = await db.getAllAsync<{ date: ISODate; reserve: Reserve }>(
+    `SELECT s.date AS date, MIN(e.reserve) AS reserve
+       FROM effort_log e JOIN session_log s ON s.id = e.session_id
+      WHERE e.exercise_id = ? AND s.status = 'done'
+      GROUP BY s.date`,
+    exerciseId,
+  );
+  return new Map(rows.map((r) => [r.date, r.reserve]));
 }
 
 /** Mejores marcas de cada ejercicio, sin contar la fecha indicada (la sesión que se está guardando). */

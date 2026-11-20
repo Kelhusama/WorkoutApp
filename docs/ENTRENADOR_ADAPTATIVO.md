@@ -98,7 +98,18 @@ Hoy la app progresa con una escalera fija (`src/domain/progression.ts`): repetic
 - El estado del modelo se guarda como JSON en una tabla nueva de SQLite y entra en la copia de seguridad. Como el registro completo ya está guardado, el modelo se puede recalcular desde cero.
 - Orden: capa 1 y 2 juntas (ya dan valor visible) → capa 3 → capa 4 → experimento de la red.
 
-## 5. Decisiones abiertas
-1. ¿Núcleo con Kalman, reglas y bandido, con la red como experimento (recomendado), o red neuronal en el centro aunque rinda peor?
-2. ¿Te parece bien apuntar las repeticiones que te quedaban (un toque por ejercicio)?
-3. ¿El entrenador decide solo, o propone y tú aceptas cada cambio?
+## 5. Decisiones (20/11/2026)
+1. **Enfoque**: núcleo con Kalman, reglas y bandido; la red neuronal, como experimento con examen. (No hubo objeción al enfoque recomendado; se puede cambiar.)
+2. **Se apunta lo que quedaba** en la última serie de cada ejercicio.
+3. **El entrenador cambia el plan solo**, explicando cada cambio.
+4. **Prioridad: tren superior.** Cuando haya que elegir (tiempo, fatiga, variantes), manda el tren superior.
+5. **La semana puede tener más sesiones de las previstas.** El entrenador debe contar con sesiones extra y con días de fatiga.
+
+## 6. Estado
+- ✅ **Capa 1** (20/11/2026): pregunta «¿cuántas más habrías podido hacer?» en cada ejercicio de las sesiones de casa (opcional); tabla `effort_log`, incluida en la copia de seguridad.
+- ✅ **Capa 2** (20/11/2026): `src/domain/coach.ts`, filtro de Kalman de nivel y ritmo por ejercicio. Se ve en la ficha de cada ejercicio como «Tu nivel real», con margen, tendencia y previsión con horquilla de fechas.
+- **Pendiente, por orden**:
+  1. Llevar el nivel real a los objetivos (dominadas, flexiones, banca) y a la pantalla Hoy, y pedir la reserva también en el gimnasio.
+  2. **Capa 3**: reglas que usan la reserva y el nivel para cambiar el plan; descarga cuando hay fatiga; sesiones extra (qué hacer en una cuarta o quinta sesión de la semana, con el tren superior primero).
+  3. **Capa 4**: probar variantes por bloques de 4 semanas.
+  4. Experimento de la red neuronal contra el filtro.

@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
+import type { Reserve } from '@/domain/coach';
 import { addDays, today as getToday, weekdayIndex, weekStart, type ISODate } from '@/domain/dates';
 import {
   isCompleted,
@@ -262,6 +263,15 @@ export async function getSessionLog(db: SQLiteDatabase, date: ISODate, kind: Log
   );
 }
 
+/** Reserva apuntada en cada ejercicio de una sesión ya guardada. */
+export async function getSessionReserves(db: SQLiteDatabase, sessionId: number): Promise<Record<string, Reserve>> {
+  const rows = await db.getAllAsync<{ slot_key: string; reserve: Reserve }>(
+    'SELECT slot_key, reserve FROM effort_log WHERE session_id = ?',
+    sessionId,
+  );
+  return Object.fromEntries(rows.map((r) => [r.slot_key, r.reserve]));
+}
+
 /** Valores registrados por ejercicio de una sesión ya guardada. */
 export async function getSessionSets(db: SQLiteDatabase, sessionId: number): Promise<Record<string, number[]>> {
   const rows = await db.getAllAsync<{ slot_key: string; set_index: number; value: number }>(
@@ -291,6 +301,8 @@ export interface SlotResult {
   slotKey: string;
   exerciseId: string;
   values: number[];
+  /** Repeticiones que quedaban en la última serie, si se apuntó. */
+  reserve?: Reserve | null;
 }
 
 export interface SlotChange {
@@ -347,6 +359,15 @@ export async function saveHomeSession(
           target.reps,
           r.values[i],
           target.tempo,
+        );
+      }
+      if (r.reserve != null) {
+        await tx.runAsync(
+          'INSERT INTO effort_log (session_id, slot_key, exercise_id, reserve) VALUES (?, ?, ?, ?)',
+          sessionId,
+          r.slotKey,
+          r.exerciseId,
+          r.reserve,
         );
       }
       if (alreadyDone) continue;

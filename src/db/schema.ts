@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 11;
+const LATEST = 12;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -210,6 +210,21 @@ export async function migrate(db: SQLiteDatabase) {
       CREATE INDEX IF NOT EXISTS idx_flex_test_date ON flex_test (date);
     `);
     version = 11;
+  }
+
+  if (version === 11) {
+    // Entrenador adaptativo: repeticiones que quedaban en la última serie de cada ejercicio.
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS effort_log (
+        session_id INTEGER NOT NULL REFERENCES session_log(id) ON DELETE CASCADE,
+        slot_key TEXT NOT NULL,
+        exercise_id TEXT NOT NULL,
+        reserve INTEGER NOT NULL CHECK (reserve IN (0,1,2)),
+        PRIMARY KEY (session_id, slot_key)
+      );
+      CREATE INDEX IF NOT EXISTS idx_effort_log_exercise ON effort_log (exercise_id);
+    `);
+    version = 12;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);

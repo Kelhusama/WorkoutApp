@@ -4,8 +4,9 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { getExerciseHistory } from '@/db/stats';
-import { formatShort } from '@/domain/dates';
+import { getExerciseHistory, getExerciseReserves } from '@/db/stats';
+import { capacity, fitStrength, projectWindow, trendText, type Observation, type Reserve } from '@/domain/coach';
+import { formatLong, formatShort, today, type ISODate } from '@/domain/dates';
 import { EXERCISES } from '@/domain/exercises';
 import { amountText } from '@/domain/format';
 import { exerciseStats, seriesOf, type SessionSets } from '@/domain/stats';
@@ -22,10 +23,12 @@ export default function ExerciseScreen() {
   const ex = EXERCISES[id];
   const [history, setHistory] = useState<SessionSets[]>([]);
   const [metric, setMetric] = useState<Metric>('best');
+  const [reserves, setReserves] = useState<Map<ISODate, Reserve>>(new Map());
 
   useFocusEffect(
     useCallback(() => {
       getExerciseHistory(db, id).then(setHistory);
+      getExerciseReserves(db, id).then(setReserves);
     }, [db, id]),
   );
 
@@ -33,6 +36,14 @@ export default function ExerciseScreen() {
   const stats = exerciseStats(history);
   const unit = ex.measure === 'time' ? ' s' : '';
   const perArm = ex.perArm ? ` por ${ex.side ?? 'brazo'}` : '';
+  // Entrenador: nivel real estimado a partir de las series y de lo que quedaba en la última.
+  const timed = ex.measure === 'time';
+  const strength = fitStrength(
+    history.map((h) => capacity(h.date, h.values, reserves.get(h.date) ?? null, timed ? 5 : 1)).filter((o): o is Observation => o !== null),
+  );
+  const round = (v: number) => String(Math.round(v * 10) / 10).replace('.', ',');
+  const goalValue = stats && strength && strength.trend === 'mejorando' ? Math.ceil((strength.level * 1.25) / (timed ? 5 : 1)) * (timed ? 5 : 1) : null;
+  const eta = strength && goalValue ? projectWindow(strength, goalValue, today()) : null;
 
   return (
     <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: space.xxl, gap: space.md }}>
@@ -68,6 +79,35 @@ export default function ExerciseScreen() {
               <Text style={[type.caption, { color: colors.faint }]}>Última {formatShort(stats.lastDate)}</Text>
             </Card>
           </View>
+
+          {strength && (
+            <>
+              <SectionTitle>Tu nivel real</SectionTitle>
+              <Card style={{ gap: space.sm }}>
+                <Text style={styles.tileValue}>
+                  {round(strength.level)}
+                  {timed ? ' s' : ' repeticiones'}
+                  <Text style={type.caption}> ± {round(strength.levelSd)}</Text>
+                </Text>
+                <Text style={type.caption}>
+                  Lo que harías hoy en una serie a tope{perArm}, quitando el efecto de los días buenos y malos.
+                </Text>
+                <Text style={type.body}>{trendText(strength, timed ? 'segundos' : 'repeticiones')}</Text>
+                {eta && goalValue && (
+                  <Text style={type.caption}>
+                    A este ritmo llegarías a {goalValue}
+                    {timed ? ' s' : ''} {eta.to ? `entre el ${formatLong(eta.from).toLowerCase()} y el ${formatLong(eta.to).toLowerCase()}` : `no antes del ${formatLong(eta.from).toLowerCase()}`}.
+                  </Text>
+                )}
+                {strength.n >= 2 && <LineChart points={strength.series} height={150} format={round} />}
+                {reserves.size === 0 && (
+                  <Text style={type.caption}>
+                    Apunta en cada sesión cuántas te quedaban en la última serie y esta estimación será más precisa.
+                  </Text>
+                )}
+              </Card>
+            </>
+          )}
 
           <SectionTitle>Evolución</SectionTitle>
           <Card style={{ gap: space.md }}>

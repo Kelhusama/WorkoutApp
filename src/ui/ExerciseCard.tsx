@@ -3,11 +3,12 @@ import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { RESERVE_OPTIONS, type Reserve } from '@/domain/coach';
 import { amountText, prescriptionText } from '@/domain/format';
 import { TEMPO_LABEL, type Prescription } from '@/domain/progression';
 import { exerciseFor, type Slot } from '@/domain/templates';
 import { ExerciseFigure } from '@/illustrations/ExerciseFigure';
-import { Card } from './components';
+import { Card, Segmented } from './components';
 import { colors, radius, space, type } from './theme';
 
 interface Props {
@@ -15,9 +16,12 @@ interface Props {
   target: Prescription;
   values: number[];
   onChange: (values: number[]) => void;
+  /** Lo que quedaba en la última serie; `null` si aún no se ha contestado. */
+  reserve: Reserve | null;
+  onReserve: (r: Reserve) => void;
 }
 
-export function ExerciseCard({ slot, target, values, onChange }: Props) {
+export function ExerciseCard({ slot, target, values, onChange, reserve, onReserve }: Props) {
   const ex = exerciseFor(slot);
   const step = ex.measure === 'time' ? 5 : 1;
   const [showHow, setShowHow] = useState(false);
@@ -107,6 +111,17 @@ export function ExerciseCard({ slot, target, values, onChange }: Props) {
           <Text style={type.caption}>Añadir una serie</Text>
         </Pressable>
       </View>
+      <View style={{ gap: space.sm }}>
+        <Text style={type.overline}>
+          {ex.measure === 'time' ? 'En la última serie, ¿cuánto más habrías aguantado?' : 'En la última serie, ¿cuántas más habrías podido hacer?'}
+        </Text>
+        <Segmented
+          label="Lo que te quedaba en la última serie"
+          options={ex.measure === 'time' ? TIME_OPTIONS : RESERVE_OPTIONS}
+          value={reserve === null ? null : (String(reserve) as `${Reserve}`)}
+          onChange={(v) => onReserve(Number(v) as Reserve)}
+        />
+      </View>
       {values.slice(0, target.sets).some((v) => v < target.reps) && (
         <Text style={[type.caption, { color: colors.danger }]}>
           Alguna serie se quedó corta: la próxima vez este ejercicio se mantiene igual.
@@ -115,6 +130,13 @@ export function ExerciseCard({ slot, target, values, onChange }: Props) {
     </Card>
   );
 }
+
+/** La misma pregunta para los ejercicios por tiempo. */
+const TIME_OPTIONS: typeof RESERVE_OPTIONS = [
+  { id: '0', label: 'Nada' },
+  { id: '1', label: 'Un poco' },
+  { id: '2', label: 'Bastante' },
+];
 
 const styles = StyleSheet.create({
   tempo: {
