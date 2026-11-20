@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { EVENT_NAME, todayPlan } from '@/domain/event';
+import { eventName, todayPlan } from '@/domain/event';
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState, type ReactNode } from 'react';
@@ -92,7 +92,7 @@ export default function TrainScreen() {
       </View>
 
       {trial.phase !== 'pasado' && (
-        <Area icon="trophy" title={EVENT_NAME} status={trial.phase === 'dia' ? 'Hoy' : `${trial.daysLeft} días`} onPress={() => router.push('/prueba')}>
+        <Area icon="trophy" title={eventName()} status={trial.phase === 'dia' ? 'Hoy' : `${trial.daysLeft} días`} onPress={() => router.push('/prueba')}>
           <Text style={type.body}>
             {trial.week ? (
               <>

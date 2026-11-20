@@ -10,6 +10,33 @@ import { addDays, fromISODate, weekdayIndex, type ISODate } from './dates';
 
 export const EVENT_DATE: ISODate = '2027-01-16';
 export const EVENT_NAME = 'Prueba del 16 de enero';
+
+/**
+ * Fecha y objetivos vigentes. Arrancan con los de partida y se sustituyen al abrir la app
+ * por lo que el usuario haya guardado (ver `loadEventConfig`). Las funciones de este archivo
+ * los usan cuando no se les pasa otra fecha.
+ */
+export const eventConfig: { date: ISODate; targets: Record<'dominada' | 'peso_muerto', number> } = {
+  date: EVENT_DATE,
+  targets: { dominada: 12, peso_muerto: 100 },
+};
+
+export function setEventConfig(c: { date?: ISODate; targets?: Partial<Record<'dominada' | 'peso_muerto', number>> }) {
+  if (c.date) eventConfig.date = c.date;
+  if (c.targets) Object.assign(eventConfig.targets, c.targets);
+}
+
+/** «Prueba del 16 de enero», con la fecha vigente. */
+export function eventName(): string {
+  const d = fromISODate(eventConfig.date);
+  const month = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][d.getMonth()];
+  return `Prueba del ${d.getDate()} de ${month}`;
+}
+
+/** Kilos objetivo vigentes de un levantamiento. */
+export function targetOf(lift: 'dominada' | 'peso_muerto'): number {
+  return eventConfig.targets[lift];
+}
 /** Repeticiones de la prueba. */
 export const EVENT_REPS = 3;
 
@@ -130,14 +157,14 @@ const TEMPLATE: Record<number, { phase: Phase; title: string; doses: Record<Lift
     title: 'Buscar el tope',
     doses: {
       dominada: d(3, 4, 3, 6, 'Busca el lastre más alto con el que salen tres limpias: será tu peso de la prueba.'),
-      peso_muerto: d(1, 2, 3, 97.5, 'Dos series de tres. Si van sobradas, prueba una serie con 100 kg.'),
+      peso_muerto: d(1, 2, 3, 97.5, 'Dos series de tres. Si van sobradas, prueba una serie con el peso de la prueba.'),
     },
   },
   1: {
     phase: 'descarga',
     title: 'Descarga',
     doses: {
-      dominada: d(2, 3, 2, 4, 'Mitad de trabajo, con algo menos de lastre que tu tope. Último día, el miércoles 13; el 14 y el 15, descanso.'),
+      dominada: d(2, 3, 2, 4, 'Mitad de trabajo, con algo menos de lastre que tu tope. Los dos días anteriores a la prueba, descanso.'),
       peso_muerto: d(1, 2, 2, 85, 'Solo para mantener el gesto. Hazlo a principios de semana.'),
     },
   },
@@ -146,18 +173,25 @@ const TEMPLATE: Record<number, { phase: Phase; title: string; doses: Record<Lift
 const days = (a: ISODate, b: ISODate) => Math.round((Date.parse(b) - Date.parse(a)) / 86_400_000);
 
 /** Semanas que faltan en una fecha: 1 en los siete días anteriores a la prueba, 2 en los siete de antes… */
-export function weeksLeftOn(date: ISODate, eventDate: ISODate = EVENT_DATE): number {
+export function weeksLeftOn(date: ISODate, eventDate: ISODate = eventConfig.date): number {
   return Math.ceil(days(date, eventDate) / 7);
 }
 
 /** El plan entero, de la primera semana a la última. Cada semana acaba el día de la semana anterior al de la prueba. */
-export function buildPlan(eventDate: ISODate = EVENT_DATE): WeekPlan[] {
-  return [8, 7, 6, 5, 4, 3, 2, 1].map((w) => ({
-    weeksLeft: w,
-    from: addDays(eventDate, -7 * w),
-    to: addDays(eventDate, -7 * (w - 1) - 1),
-    ...TEMPLATE[w],
-  }));
+export function buildPlan(eventDate: ISODate = eventConfig.date): WeekPlan[] {
+  // Los kilos de peso muerto de la plantilla están pensados para 100 kg: se escalan si el objetivo es otro.
+  const scale = eventConfig.targets.peso_muerto / 100;
+  return [8, 7, 6, 5, 4, 3, 2, 1].map((w) => {
+    const t = TEMPLATE[w];
+    const deadlift = { ...t.doses.peso_muerto, weight: Math.round((t.doses.peso_muerto.weight * scale) / 2.5) * 2.5 };
+    return {
+      weeksLeft: w,
+      from: addDays(eventDate, -7 * w),
+      to: addDays(eventDate, -7 * (w - 1) - 1),
+      ...t,
+      doses: { ...t.doses, peso_muerto: deadlift },
+    };
+  });
 }
 
 export interface TrialLog {
@@ -179,7 +213,7 @@ export interface Today {
   week: WeekPlan | null;
 }
 
-export function todayPlan(today: ISODate, eventDate: ISODate = EVENT_DATE): Today {
+export function todayPlan(today: ISODate, eventDate: ISODate = eventConfig.date): Today {
   const daysLeft = days(today, eventDate);
   if (daysLeft < 0) return { phase: 'pasado', daysLeft, week: null };
   if (daysLeft === 0) return { phase: 'dia', daysLeft, week: null };
@@ -264,7 +298,7 @@ export function doseText(lift: Lift, dose: Dose): string {
 const PULLUP_WEEKDAYS: Record<number, readonly number[]> = { 4: [0, 1, 3, 4], 3: [0, 2, 4], 2: [0, 2], 1: [0] };
 
 /** ¿Tocan dominadas ese día según el plan? */
-export function isPullupDay(date: ISODate, eventDate: ISODate = EVENT_DATE): boolean {
+export function isPullupDay(date: ISODate, eventDate: ISODate = eventConfig.date): boolean {
   const week = todayPlan(date, eventDate).week;
   if (!week) return false;
   return (PULLUP_WEEKDAYS[week.doses.dominada.days] ?? []).includes(weekdayIndex(date));
@@ -361,7 +395,7 @@ export function isElbowCareDay(date: ISODate): boolean {
 export const TRIAL_COVERS: readonly string[] = ['A.dominadas', 'A.negativas', 'C.dominadas'];
 
 /** Quita de una sesión de casa lo que ya hace el plan, si está activo y la prueba aún no ha pasado. */
-export function withoutTrialWork<T extends { key: string }>(slots: readonly T[], active: boolean, date: ISODate, eventDate: ISODate = EVENT_DATE): T[] {
+export function withoutTrialWork<T extends { key: string }>(slots: readonly T[], active: boolean, date: ISODate, eventDate: ISODate = eventConfig.date): T[] {
   if (!active || !todayPlan(date, eventDate).week) return [...slots];
   return slots.filter((s) => !TRIAL_COVERS.includes(s.key));
 }
@@ -371,7 +405,7 @@ export function withoutTrialWork<T extends { key: string }>(slots: readonly T[],
  * el esfuerzo entre músculos y dan un respiro a los codos. En la descarga, solo el de la prueba.
  * Con tres días por semana, el del medio alterna supino y neutro de una semana a otra.
  */
-export function gripFor(date: ISODate, eventDate: ISODate = EVENT_DATE): Grip | null {
+export function gripFor(date: ISODate, eventDate: ISODate = eventConfig.date): Grip | null {
   if (!isPullupDay(date, eventDate)) return null;
   const week = todayPlan(date, eventDate).week!;
   const days = PULLUP_WEEKDAYS[week.doses.dominada.days] ?? [];

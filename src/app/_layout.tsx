@@ -2,13 +2,22 @@ import { Stack, ThemeProvider } from 'expo-router';
 import { SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
 
+import type { SQLiteDatabase } from 'expo-sqlite';
+
+import { loadEventConfig } from '@/db/event';
 import { DB_NAME, migrate } from '@/db/schema';
 import { ReminderSync } from '@/notifications/ReminderSync';
 import { colors, navTheme } from '@/ui/theme';
 
+/** Prepara la base de datos y carga la fecha y los objetivos de la prueba antes de pintar nada. */
+async function init(db: SQLiteDatabase) {
+  await migrate(db);
+  await loadEventConfig(db);
+}
+
 export default function RootLayout() {
   return (
-    <SQLiteProvider databaseName={DB_NAME} onInit={migrate}>
+    <SQLiteProvider databaseName={DB_NAME} onInit={init}>
       <ThemeProvider value={navTheme}>
         <StatusBar style="light" />
         <ReminderSync />
@@ -39,7 +48,7 @@ export default function RootLayout() {
           <Stack.Screen name="estiramientos" options={{ title: 'Estiramientos' }} />
           <Stack.Screen name="estirar/[rutina]" options={{ title: 'Estirar' }} />
           <Stack.Screen name="revision" options={{ title: 'Revisión semanal' }} />
-          <Stack.Screen name="prueba" options={{ title: 'Prueba del 16 de enero' }} />
+          <Stack.Screen name="prueba" options={{ title: 'La prueba' }} />
           <Stack.Screen name="dominadas" options={{ title: 'Dominadas' }} />
         </Stack>
       </ThemeProvider>

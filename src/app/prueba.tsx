@@ -5,14 +5,15 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { addTrialLog, deleteTrialLog, getLastBodyWeight, getTrialLogs, type SavedTrialLog } from '@/db/event';
+import { addTrialLog, deleteTrialLog, getLastBodyWeight, getTrialLogs, saveEventConfig, type SavedTrialLog } from '@/db/event';
 import { getReminderSettings, getTrialActive, saveTrialActive } from '@/db/settings';
 import { ensurePermission, syncReminders } from '@/notifications/reminders';
 import { RESERVE_OPTIONS, type Reserve } from '@/domain/coach';
-import { formatLong, formatShort, today as getToday } from '@/domain/dates';
+import { addDays, formatLong, formatShort, today as getToday } from '@/domain/dates';
 import {
   ASSUMED_BODY_KG,
-  EVENT_DATE,
+  eventConfig,
+  targetOf,
   EVENT_REPS,
   LIFTS,
   LIFT_INFO,
@@ -56,6 +57,8 @@ export default function TrialScreen() {
   const [active, setActive] = useState(false);
   const [times, setTimes] = useState<string[]>([]);
   const [denied, setDenied] = useState(false);
+  // Cambiar la fecha o los objetivos: borrador hasta que se guarda.
+  const [setup, setSetup] = useState<{ date: string; dominada: number; peso_muerto: number } | null>(null);
 
   const load = useCallback(async () => {
     setLogs(await getTrialLogs(db));
@@ -108,7 +111,7 @@ export default function TrialScreen() {
   return (
     <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: space.xxl }} keyboardShouldPersistTaps="handled">
       <Card style={{ gap: space.sm }}>
-        <Text style={type.caption}>{formatLong(EVENT_DATE)}</Text>
+        <Text style={type.caption}>{formatLong(eventConfig.date)}</Text>
         <Text style={type.hero}>
           {now.phase === 'dia' ? 'Hoy es el día' : now.phase === 'pasado' ? 'Prueba hecha' : `Faltan ${now.daysLeft} días`}
         </Text>
@@ -147,7 +150,8 @@ export default function TrialScreen() {
         const series = logs
           .filter((l) => l.lift === lift && l.reps > 0)
           .map((l) => ({ date: l.date, value: lift === 'dominada' ? estimate3RM(bodyKg + l.weight, l.reps) - bodyKg : estimate3RM(l.weight, l.reps) }));
-        const reached = level >= info.target;
+        const target = targetOf(lift);
+        const reached = level >= target;
         const editing = draft?.lift === lift;
         return (
           <View key={lift} style={{ gap: space.md }}>
@@ -155,7 +159,7 @@ export default function TrialScreen() {
             <Card style={{ gap: space.sm }}>
               <View style={styles.row}>
                 <Text style={[type.caption, { flex: 1 }]}>
-                  Objetivo: {EVENT_REPS} repeticiones con {kg(info.target)} {info.unit}
+                  Objetivo: {EVENT_REPS} repeticiones con {kg(target)} {info.unit}
                 </Text>
                 {reached && <Pill label="A tu alcance" color={colors.success} bg={colors.successSoft} />}
               </View>
@@ -163,7 +167,7 @@ export default function TrialScreen() {
                 {level <= 0 && lift === 'dominada' ? 'Sin lastre' : `${kg(level)} ${info.unit}`}
                 <Text style={type.caption}> · donde estás hoy, a {EVENT_REPS}</Text>
               </Text>
-              <ProgressBar value={Math.max(0, Math.min(1, level / info.target))} color={reached ? colors.success : colors.accent} />
+              <ProgressBar value={Math.max(0, Math.min(1, level / target))} color={reached ? colors.success : colors.accent} />
               <Text style={type.caption}>
                 Estimado a partir de tu mejor sesión de las últimas tres semanas
                 {lift === 'dominada' ? ` y de tu peso (${body ? `${kg(body)} kg` : `${ASSUMED_BODY_KG} kg supuestos: apunta tu peso en Cuerpo`})` : ''}. No es una medida.
@@ -251,6 +255,65 @@ export default function TrialScreen() {
           </View>
         );
       })}
+
+      <SectionTitle>Fecha y objetivos</SectionTitle>
+      <Card style={{ gap: space.sm }}>
+        {!setup ? (
+          <>
+            <Text style={type.body}>
+              {formatLong(eventConfig.date)} · dominadas con {kg(targetOf('dominada'))} kg · peso muerto con {kg(targetOf('peso_muerto'))} kg
+            </Text>
+            <Button
+              label="Cambiar fecha u objetivos"
+              variant="secondary"
+              icon="create-outline"
+              onPress={() => setSetup({ date: eventConfig.date, dominada: targetOf('dominada'), peso_muerto: targetOf('peso_muerto') })}
+            />
+          </>
+        ) : (
+          <>
+            <Text style={type.subtitle}>{formatLong(setup.date)}</Text>
+            <View style={{ flexDirection: 'row', gap: space.sm }}>
+              {([-7, -1, 1, 7] as const).map((n) => (
+                <View key={n} style={{ flex: 1 }}>
+                  <Button
+                    label={`${n > 0 ? '+' : '−'}${Math.abs(n) === 7 ? '1 sem' : '1 día'}`}
+                    variant="secondary"
+                    onPress={() => setSetup({ ...setup, date: addDays(setup.date, n) })}
+                  />
+                </View>
+              ))}
+            </View>
+            {setup.date <= today && <Text style={[type.caption, { color: colors.danger }]}>La fecha tiene que ser posterior a hoy.</Text>}
+            <Text style={type.caption}>Lastre objetivo en dominadas</Text>
+            <Stepper label="lastre objetivo" value={setup.dominada} onChange={(v) => setSetup({ ...setup, dominada: v })} min={1} suffix=" kg" format={kg} />
+            <Text style={type.caption}>Peso objetivo en peso muerto</Text>
+            <Stepper label="peso objetivo" value={setup.peso_muerto} onChange={(v) => setSetup({ ...setup, peso_muerto: v })} step={2.5} min={40} suffix=" kg" format={kg} />
+            <Text style={type.caption}>
+              El plan se recalcula hacia atrás desde la nueva fecha, y los kilos de peso muerto se ajustan al nuevo objetivo. Lo ya apuntado se conserva.
+            </Text>
+            <View style={{ flexDirection: 'row', gap: space.sm }}>
+              <View style={{ flex: 1 }}>
+                <Button label="Cancelar" variant="secondary" onPress={() => setSetup(null)} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Button
+                  label="Guardar"
+                  icon="checkmark-circle"
+                  disabled={setup.date <= today}
+                  onPress={async () => {
+                    await saveEventConfig(db, setup);
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    setSetup(null);
+                    syncReminders(db);
+                    load();
+                  }}
+                />
+              </View>
+            </View>
+          </>
+        )}
+      </Card>
 
       <SectionTitle>El plan entero</SectionTitle>
       <Card style={{ gap: space.sm }}>

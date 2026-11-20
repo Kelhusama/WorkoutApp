@@ -16,7 +16,7 @@ import { monthlyCheck } from '@/domain/physique';
 import { stretchedOn } from '@/db/stretch';
 import { addDays, formatLong, formatShort, today as getToday, weekStart, weekdayIndex } from '@/domain/dates';
 import { getTrialLogs } from '@/db/event';
-import { EVENT_NAME, GRIP_INFO, LIFTS, TEST_GRIP, gripFor, doneThisWeek, doseText, isPullupDay, withoutTrialWork, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
+import { eventName, GRIP_INFO, LIFTS, TEST_GRIP, gripFor, doneThisWeek, doseText, isPullupDay, withoutTrialWork, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
 import { prescriptionShort } from '@/domain/format';
 import { needsDeload } from '@/domain/gymTools';
 import { WALK_LABEL } from '@/domain/march';
@@ -200,7 +200,7 @@ export default function TodayScreen() {
           return (
             <PlanRow
               icon="trophy"
-              title={`${EVENT_NAME} · faltan ${trial.daysLeft} días`}
+              title={`${eventName()} · faltan ${trial.daysLeft} días`}
               detail={
                 left.length === 0
                   ? 'Todo lo de esta semana está hecho.'

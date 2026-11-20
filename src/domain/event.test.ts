@@ -159,3 +159,22 @@ test('agarres: el de la prueba se repite más y los otros reparten', async () =>
   // En la descarga, solo el de la prueba.
   assert.equal(gripsText(plan[7]), 'lunes prono y miércoles prono');
 });
+
+test('fecha y objetivos se pueden cambiar: el plan, los días y el nombre se mueven con ellos', async () => {
+  const { eventConfig, setEventConfig, eventName, targetOf, buildPlan: build, todayPlan: at, isPullupDay } = await import('./event');
+  const before = { date: eventConfig.date, targets: { ...eventConfig.targets } };
+  try {
+    setEventConfig({ date: '2027-02-06', targets: { peso_muerto: 110, dominada: 8 } });
+    assert.equal(eventName(), 'Prueba del 6 de febrero');
+    assert.deepEqual([targetOf('peso_muerto'), targetOf('dominada')], [110, 8]);
+    const plan = build();
+    assert.deepEqual([plan[0].from, plan[7].to], ['2026-12-12', '2027-02-05']);
+    // Los kilos de peso muerto se escalan con el objetivo, redondeados a 2,5.
+    assert.deepEqual(plan.slice(0, 7).map((w) => w.doses.peso_muerto.weight), [87.5, 92.5, 97.5, 100, 102.5, 105, 107.5]);
+    assert.equal(at('2027-01-16').phase, 'fuerza');
+    assert.equal(isPullupDay('2027-02-01'), true); // lunes de la semana de descarga
+  } finally {
+    setEventConfig(before);
+  }
+  assert.equal(eventName(), 'Prueba del 16 de enero');
+});
