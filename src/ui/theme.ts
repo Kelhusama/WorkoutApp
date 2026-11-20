@@ -5,15 +5,15 @@ import { DarkTheme } from 'expo-router';
  * El amarillo es la acción principal y los logros; el azul, lo estructural y lo informativo.
  */
 export const colors = {
-  bg: '#0B1B2B',
-  card: '#11263B',
+  bg: '#14304C',
+  card: '#1C3F61',
   // Campos y controles: un paso de azul que se distingue de la tarjeta.
-  cardHigh: '#1B3653',
-  border: '#27425F',
+  cardHigh: '#285278',
+  border: '#3A6690',
   text: '#F4F6F8',
   // Texto secundario y terciario: contraste WCAG AA sobre los tres fondos (≥ 4,5:1).
-  muted: '#AEBDCC',
-  faint: '#93A6BA',
+  muted: '#C3D0DD',
+  faint: '#B8C7D6',
   accent: '#FFCC00',
   /** Texto e iconos sobre el amarillo. */
   onAccent: '#0B1B2B',
@@ -22,8 +22,8 @@ export const colors = {
   accentSoft: 'rgba(255, 204, 0, 0.14)',
   success: '#4ADE9A',
   successSoft: 'rgba(74, 222, 154, 0.14)',
-  danger: '#FF6B6B',
-  dangerSoft: 'rgba(255, 107, 107, 0.14)',
+  danger: '#FF8A8A',
+  dangerSoft: 'rgba(255, 138, 138, 0.16)',
   info: '#6DB3EE',
   infoSoft: 'rgba(63, 143, 210, 0.2)',
 } as const;
