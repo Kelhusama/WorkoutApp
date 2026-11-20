@@ -294,3 +294,28 @@ export function goalWindow(points: readonly { date: ISODate; value: number }[], 
   const state = fitStrength(sorted.map((p) => ({ date: p.date, value: p.value, noise: Math.max(1, p.value * 0.05) })));
   return state ? projectWindow(state, target, today) : null;
 }
+
+// ---------- Lo que se trabaja en el gimnasio ----------
+
+export type GymWork = 'tiron' | 'empuje' | 'pierna';
+export const GYM_WORK: readonly { id: GymWork; label: string }[] = [
+  { id: 'tiron', label: 'Tirón' },
+  { id: 'empuje', label: 'Empuje' },
+  { id: 'pierna', label: 'Pierna' },
+];
+
+export function parseGymWork(s: string | null | undefined): GymWork[] {
+  return (s ?? '').split(',').filter((w): w is GymWork => w === 'tiron' || w === 'empuje' || w === 'pierna');
+}
+
+/**
+ * Aviso antes de unas dominadas si ayer o hoy ya hubo tirón en el gimnasio: son los mismos músculos
+ * y los mismos codos. `gymDays`: días de gimnasio hechos, con lo que se trabajó.
+ */
+export function pullWarning(gymDays: readonly { date: ISODate; work: readonly GymWork[] }[], today: ISODate): string | null {
+  const hit = gymDays.find((g) => g.work.includes('tiron') && (g.date === today || g.date === addDays(today, -1)));
+  if (!hit) return null;
+  return hit.date === today
+    ? 'Hoy ya has hecho tirón en el gimnasio: haz las dominadas dejando una repetición más de margen, o pásalas a mañana.'
+    : 'Ayer hiciste tirón en el gimnasio: hoy deja una repetición más de margen en cada serie.';
+}

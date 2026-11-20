@@ -52,6 +52,9 @@ Para probar: `npx expo start` en la carpeta del proyecto y escanear el QR con Ex
 | [ ] | Prueba del 16 de enero | Entrenar → Prueba del 16 de enero | Que se entienda qué toca esta semana, se pueda apuntar una sesión, cuente los días hechos y aparezca la fila en Hoy |
 | [ ] | Dominadas guiadas | Entrenar → Prueba del 16 de enero → Empezar la sesión guiada | Que el descanso cuente y vibre al acabar (también con la pantalla apagada), que se apunte sola y lleve a los estiramientos |
 | [ ] | Avisos de dominadas | Prueba del 16 de enero → Plan activo | Que pida permiso, lleguen a las horas configuradas los días que toca y dejen de llegar al apuntar la sesión |
+| [ ] | Prueba: cambiar fecha u objetivos | Entrenar → la prueba → Fecha y objetivos | Que al guardar cambien la cuenta atrás, el plan y el nombre en Hoy y Entrenar |
+| [ ] | Colgarse | Al final de la sesión guiada de dominadas | Que proponga qué hacer, se apunte y aparezca la marca en el apartado de la prueba |
+| [ ] | Gimnasio: qué has trabajado | Registro de gimnasio | Que se puedan marcar varias y, si marcas tirón, al día siguiente lo avise la sesión de dominadas |
 | [ ] | Aspecto general | Todas las pantallas | Textos cortados, botones difíciles de pulsar, el teclado tapando campos |
 
 ## Solo con la app instalada (APK)

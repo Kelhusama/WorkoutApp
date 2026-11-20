@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getLastBench, getSessionLog, saveGymSession } from '@/db/repo';
 import { getBenchSeries } from '@/db/stats';
 import { syncReminders } from '@/notifications/reminders';
-import { RESERVE_OPTIONS, benchAdvice, type BenchAdvice, type Reserve } from '@/domain/coach';
+import { GYM_WORK, RESERVE_OPTIONS, benchAdvice, parseGymWork, type BenchAdvice, type GymWork, type Reserve } from '@/domain/coach';
 import { formatLong, formatShort, today as getToday } from '@/domain/dates';
 import { BAR_KG, platesPerSide, warmupSets } from '@/domain/gymTools';
 import type { Feeling } from '@/domain/progression';
@@ -32,6 +32,8 @@ export default function GymScreen() {
   const [reps, setReps] = useState(5);
   const [last, setLast] = useState<{ date: string; w: number; r: number } | null>(null);
   const [reserve, setReserve] = useState<Reserve | null>(null);
+  // Qué se ha trabajado hoy: sirve para no cargar los mismos músculos al día siguiente.
+  const [work, setWork] = useState<GymWork[]>([]);
   // Lo que propone el entrenador para hoy, según el último día de banca.
   const [advice, setAdvice] = useState<BenchAdvice | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -51,6 +53,7 @@ export default function GymScreen() {
       }
       if (existing?.status === 'done') {
         setFeeling(existing.feeling);
+        setWork(parseGymWork(existing.gym_work));
         if (existing.bench_weight) {
           setDidBench(true);
           setWeight(existing.bench_weight);
@@ -66,7 +69,7 @@ export default function GymScreen() {
     // Mejor 1RM estimado de otros días, para avisar si hoy se bate.
     const previous = (await getBenchSeries(db)).filter((p) => p.date !== date).map((p) => p.value);
     const best = previous.length ? Math.max(...previous) : null;
-    await saveGymSession(db, date, feeling, didBench ? { weight, reps, reserve } : null);
+    await saveGymSession(db, date, feeling, didBench ? { weight, reps, reserve } : null, work);
     if (didBench && best !== null && estimate1RM(weight, reps) > best) {
       Alert.alert('¡Récord de banca!', `1RM estimado: ${fmtKg(estimate1RM(weight, reps))} kg (antes ${fmtKg(best)} kg).`);
     }
@@ -92,6 +95,34 @@ export default function GymScreen() {
           setFeeling(v);
         }}
       />
+
+      <SectionTitle>¿Qué has trabajado?</SectionTitle>
+      <Card style={{ gap: space.sm }}>
+        <View style={styles.works}>
+          {GYM_WORK.map((w) => {
+            const on = work.includes(w.id);
+            return (
+              <Pressable
+                key={w.id}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: on }}
+                accessibilityLabel={w.label}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setDirty(true);
+                  setWork(on ? work.filter((x) => x !== w.id) : [...work, w.id]);
+                }}
+                style={[styles.work, on && { backgroundColor: colors.accent, borderColor: colors.accent }]}>
+                <Ionicons name={on ? 'checkmark-circle' : 'ellipse-outline'} size={18} color={on ? colors.onAccent : colors.muted} />
+                <Text style={[styles.workLabel, on && { color: colors.onAccent }]}>{w.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Text style={type.caption}>
+          Opcional. Tirón son jalones, remos y dominadas; empuje, banca, press y fondos. Si marcas tirón, mañana te avisaré antes de las dominadas.
+        </Text>
+      </Card>
 
       <SectionTitle>Press de banca</SectionTitle>
       <Card style={{ gap: space.md }}>
@@ -188,6 +219,20 @@ export default function GymScreen() {
 }
 
 const styles = StyleSheet.create({
+  works: { flexDirection: 'row', gap: space.sm },
+  work: {
+    flex: 1,
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.cardHigh,
+  },
+  workLabel: { fontSize: 14, fontWeight: '700', color: colors.muted },
   e1rm: {
     flexDirection: 'row',
     alignItems: 'center',

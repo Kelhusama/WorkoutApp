@@ -45,7 +45,10 @@ No hay ensayos serios sobre programas de dominadas de este tipo: es práctica de
 - **Las dominadas mandan** (revisión de coherencia, 20/11/2026): en Hoy y en Entrenar la prueba va lo primero; los días de dominadas solo avisan de las dominadas, no de la sesión de casa; si ese día hay sesión de casa, se abre en ligera; y con el plan activo no se propone sesión extra salvo que la semana esté marcada como «Más».
 - **Agarres** (20/11/2026): cada día de dominadas tiene el suyo. Con cuatro días: lunes prono, martes supino, jueves neutro y viernes prono. Con tres: prono, supino o neutro (alternan por semanas) y prono. En la descarga, solo prono. El prono se da por hecho como agarre de la prueba (`TEST_GRIP`); **pendiente de confirmar con el usuario**. El agarre se puede cambiar en la sesión guiada y se guarda con cada sesión.
 - **Sesión de casa con el plan activo**: la sesión enfocada pasa a ser tres flexiones (estrictas, inclinadas y en pica) y tres ejercicios con la mancuerna (curl, martillo y press), sin dominadas.
-- La fecha (16/01/2027) y los objetivos están fijos en el código; no se pueden cambiar desde la app.
+- **Fecha y objetivos editables** desde el apartado («Cambiar fecha u objetivos»): el plan se recalcula hacia atrás desde la nueva fecha y los kilos de peso muerto se escalan con el objetivo. Los días de dominadas están pensados para una prueba en sábado.
+- **Colgarse** con progresión propia al final de la sesión guiada: intento al máximo si no hay marca o el último día de dominadas de la semana; el resto, dos series a tres cuartos de la mejor marca de las últimas cuatro semanas (tabla `hang_log`).
+- **Gimnasio**: se puede marcar qué se trabajó (tirón, empuje, pierna). Si ayer u hoy hubo tirón, la sesión de dominadas lo avisa.
+- **Menos ruido**: con el plan activo, Hoy no pide el test de flexiones ni la revisión mensual. Siguen el aviso de pesarse (hace falta para calcular el lastre) y el de descarga.
 
 ## Riesgos
 

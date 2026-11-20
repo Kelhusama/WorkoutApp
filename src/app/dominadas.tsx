@@ -8,8 +8,9 @@ import { ScrollView, StyleSheet, Text, Vibration, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { addHangLog, addTrialLog, getHangLogs, getTrialLogs } from '@/db/event';
-import { RESERVE_OPTIONS, type Reserve } from '@/domain/coach';
-import { today as getToday } from '@/domain/dates';
+import { getGymWork } from '@/db/repo';
+import { RESERVE_OPTIONS, pullWarning, type Reserve } from '@/domain/coach';
+import { addDays, today as getToday } from '@/domain/dates';
 import {
   ELBOW_CARE,
   GRIP_INFO,
@@ -61,6 +62,8 @@ export default function PullupSession() {
   const [hang, setHang] = useState<HangDose | null>(null);
   const [hangSeconds, setHangSeconds] = useState(30);
   const [hangSaved, setHangSaved] = useState(false);
+  // Aviso si ayer u hoy ya hubo tirón en el gimnasio.
+  const [warning, setWarning] = useState<string | null>(null);
   const allowLeave = useUnsavedGuard(done > 0 && step !== 'hecho', 'la sesión de dominadas');
 
   useEffect(() => {
@@ -69,6 +72,7 @@ export default function PullupSession() {
       const d = week ? prescription('dominada', week, await getTrialLogs(db)) : null;
       setDose(d);
       if (d) setReps(d.reps);
+      setWarning(pullWarning(await getGymWork(db, addDays(today, -2)), today));
       const h = hangDose(await getHangLogs(db), today);
       setHang(h);
       if (!h.max) setHangSeconds(h.seconds);
@@ -149,6 +153,13 @@ export default function PullupSession() {
         <Text style={styles.dose}>{doseText('dominada', dose)}</Text>
         <Text style={type.caption}>{dose.note}</Text>
       </Card>
+
+      {warning && (
+        <Card style={{ flexDirection: 'row', gap: space.md, borderColor: colors.warn }}>
+          <Ionicons name="alert-circle" size={20} color={colors.warn} style={{ marginTop: 2 }} />
+          <Text style={[type.caption, { flex: 1, color: colors.text }]}>{warning}</Text>
+        </Card>
+      )}
 
       <Card style={{ gap: space.sm }}>
         <Text style={type.subtitle}>Agarre de hoy: {GRIP_INFO[grip].label.toLowerCase()}</Text>

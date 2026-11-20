@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 20;
+const LATEST = 21;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -332,6 +332,15 @@ export async function migrate(db: SQLiteDatabase) {
       );
     `);
     version = 20;
+  }
+
+  if (version === 20) {
+    // Qué se trabajó en el gimnasio (tirón, empuje, pierna), para medir la carga real.
+    const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(session_log)');
+    if (!cols.some((c) => c.name === 'gym_work')) {
+      await db.execAsync('ALTER TABLE session_log ADD COLUMN gym_work TEXT');
+    }
+    version = 21;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);

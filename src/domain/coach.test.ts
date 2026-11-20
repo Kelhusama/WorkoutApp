@@ -169,3 +169,18 @@ test('semana marcada: suave siempre ligera; fuerte aguanta más, pero dos duras 
   assert.equal(readiness([...three, s('2026-11-17'), s('2026-11-16')], today, 'mas').light, true);
   assert.equal(readiness([s('2026-11-19', 'dura'), s('2026-11-20', 'dura')], today, 'mas').light, true);
 });
+
+test('gimnasio: lo trabajado se lee bien y avisa antes de las dominadas si hubo tirón', async () => {
+  const { parseGymWork, pullWarning } = await import('./coach');
+  assert.deepEqual(parseGymWork('tiron,pierna'), ['tiron', 'pierna']);
+  assert.deepEqual(parseGymWork('algo raro,empuje'), ['empuje']);
+  assert.deepEqual(parseGymWork(null), []);
+  const days = [
+    { date: '2026-11-22', work: ['tiron' as const] },
+    { date: '2026-11-25', work: ['empuje' as const, 'pierna' as const] },
+  ];
+  assert.match(pullWarning(days, '2026-11-23')!, /Ayer hiciste tirón/);
+  assert.match(pullWarning(days, '2026-11-22')!, /Hoy ya has hecho tirón/);
+  assert.equal(pullWarning(days, '2026-11-24'), null);
+  assert.equal(pullWarning(days, '2026-11-26'), null); // empuje y pierna no chocan con las dominadas
+});

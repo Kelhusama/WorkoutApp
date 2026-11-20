@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { PLATEAU_DAYS, PLATEAU_SESSIONS, capacity, isPlateau, plateauAction, type DoneSession, type Observation, type Reserve } from '@/domain/coach';
+import { PLATEAU_DAYS, PLATEAU_SESSIONS, capacity, isPlateau, parseGymWork, plateauAction, type GymWork, type DoneSession, type Observation, type Reserve } from '@/domain/coach';
 import { applyVariant, type Variant } from '@/domain/bandit';
 import { EXERCISES } from '@/domain/exercises';
 import { addDays, today as getToday, weekdayIndex, weekStart, type ISODate } from '@/domain/dates';
@@ -45,6 +45,8 @@ export interface SessionLog {
   bench_reserve: Reserve | null;
   /** 1 si fue la sesión de casa enfocada en los objetivos. */
   focus: number;
+  /** Lo trabajado en el gimnasio, separado por comas: tiron, empuje, pierna. */
+  gym_work: string | null;
 }
 
 const now = () => new Date().toISOString();
@@ -271,7 +273,7 @@ export async function getPrescriptions(db: SQLiteDatabase, slots: readonly Slot[
 
 export async function getLogsBetween(db: SQLiteDatabase, from: ISODate, to: ISODate) {
   return db.getAllAsync<SessionLog>(
-    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve, focus FROM session_log WHERE date BETWEEN ? AND ? ORDER BY date',
+    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve, focus, gym_work FROM session_log WHERE date BETWEEN ? AND ? ORDER BY date',
     from,
     to,
   );
@@ -279,14 +281,14 @@ export async function getLogsBetween(db: SQLiteDatabase, from: ISODate, to: ISOD
 
 export async function getRecentLogs(db: SQLiteDatabase, limit = 20) {
   return db.getAllAsync<SessionLog>(
-    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve, focus FROM session_log ORDER BY date DESC, id DESC LIMIT ?',
+    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve, focus, gym_work FROM session_log ORDER BY date DESC, id DESC LIMIT ?',
     limit,
   );
 }
 
 export async function getSessionLog(db: SQLiteDatabase, date: ISODate, kind: LogKind) {
   return db.getFirstAsync<SessionLog>(
-    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve, focus FROM session_log WHERE date = ? AND kind = ?',
+    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve, focus, gym_work FROM session_log WHERE date = ? AND kind = ?',
     date,
     kind,
   );
@@ -528,19 +530,32 @@ export async function saveGymSession(
   date: ISODate,
   feeling: Feeling,
   bench: { weight: number; reps: number; reserve?: Reserve | null } | null,
+  /** Lo trabajado ese día: tirón, empuje, pierna. */
+  work: readonly GymWork[] = [],
 ) {
   await db.runAsync(
-    `INSERT INTO session_log (date, kind, status, feeling, bench_weight, bench_reps, bench_reserve, created_at)
-     VALUES (?, 'gym', 'done', ?, ?, ?, ?, ?)
+    `INSERT INTO session_log (date, kind, status, feeling, bench_weight, bench_reps, bench_reserve, gym_work, created_at)
+     VALUES (?, 'gym', 'done', ?, ?, ?, ?, ?, ?)
      ON CONFLICT(date, kind) DO UPDATE SET status = 'done', feeling = excluded.feeling,
-       bench_weight = excluded.bench_weight, bench_reps = excluded.bench_reps, bench_reserve = excluded.bench_reserve`,
+       bench_weight = excluded.bench_weight, bench_reps = excluded.bench_reps, bench_reserve = excluded.bench_reserve,
+       gym_work = excluded.gym_work`,
     date,
     feeling,
     bench?.weight ?? null,
     bench?.reps ?? null,
     bench?.reserve ?? null,
+    work.length ? work.join(',') : null,
     now(),
   );
+}
+
+/** Días de gimnasio hechos desde una fecha, con lo que se trabajó en cada uno. */
+export async function getGymWork(db: SQLiteDatabase, from: ISODate): Promise<{ date: ISODate; work: GymWork[] }[]> {
+  const rows = await db.getAllAsync<{ date: ISODate; gym_work: string | null }>(
+    "SELECT date, gym_work FROM session_log WHERE kind = 'gym' AND status = 'done' AND date >= ? ORDER BY date",
+    from,
+  );
+  return rows.map((r) => ({ date: r.date, work: parseGymWork(r.gym_work) }));
 }
 
 // ---------- Objetivos ----------
