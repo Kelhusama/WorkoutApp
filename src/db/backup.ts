@@ -19,6 +19,8 @@ const TABLES = [
   'body_log',
   'walk_log',
   'stretch_log',
+  'flex_session',
+  'flex_test',
 ] as const;
 
 type Row = Record<string, string | number | null>;
