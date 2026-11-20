@@ -22,6 +22,7 @@ const TABLES = [
   'stretch_log',
   'flex_session',
   'flex_test',
+  'coach_block',
 ] as const;
 
 type Row = Record<string, string | number | null>;

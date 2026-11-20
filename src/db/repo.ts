@@ -1,6 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { PLATEAU_DAYS, PLATEAU_SESSIONS, capacity, fitStrength, isPlateau, plateauAction, type DoneSession, type Observation, type Reserve } from '@/domain/coach';
+import { applyVariant, type Variant } from '@/domain/bandit';
 import { EXERCISES } from '@/domain/exercises';
 import { addDays, today as getToday, weekdayIndex, weekStart, type ISODate } from '@/domain/dates';
 import {
@@ -340,6 +341,8 @@ export async function saveHomeSession(
   sessionSlots: readonly Slot[],
   /** Sesión ligera: se guarda, pero no sube ni baja nada. */
   light = false,
+  /** Variante del bloque de prueba en los ejercicios afectados: cambia lo que se pide hoy, no el plan. */
+  variants: Record<string, Variant> = {},
 ): Promise<SlotChange[]> {
   const prescriptions = await getPrescriptions(db, sessionSlots);
   const slots = new Map(sessionSlots.map((s) => [s.key, s]));
@@ -364,9 +367,11 @@ export async function saveHomeSession(
     );
 
     for (const r of results) {
-      const target = prescriptions[r.slotKey];
+      const plan = prescriptions[r.slotKey];
       const slot = slots.get(r.slotKey);
-      if (!target || !slot) continue;
+      if (!plan || !slot) continue;
+      // Lo que se pidió hoy: el plan, pasado por la variante del bloque si la hay.
+      const target = applyVariant(plan, slot, variants[r.slotKey] ?? 'base');
       for (let i = 0; i < r.values.length; i++) {
         await tx.runAsync(
           'INSERT INTO set_log (session_id, slot_key, exercise_id, set_index, target, value, tempo) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -404,10 +409,11 @@ export async function saveHomeSession(
         );
         if (prev.length > 0 && prev[0].target === target.reps && prev.some((p) => p.value < p.target)) misses = 2;
       }
-      let result = progress(target, slot, { completed, feeling, reserve: r.reserve ?? null, misses, light });
+      // El resultado de hoy mueve el plan de fondo, no la versión de la variante.
+      let result = progress(plan, slot, { completed, feeling, reserve: r.reserve ?? null, misses, light });
 
       // Meseta: semanas pidiendo lo mismo sin que el nivel real mejore. Entonces decide el entrenador.
-      if (result.change === 'none' && !light) {
+      if (result.change === 'none' && !light && target === plan) {
         // Cuántas sesiones seguidas (las más recientes) se ha pedido exactamente lo mismo, y desde cuándo.
         const past = await tx.getAllAsync<{ date: ISODate; target: number; tempo: number; n: number }>(
           `SELECT s.date AS date, MIN(l.target) AS target, MIN(l.tempo) AS tempo, COUNT(*) AS n

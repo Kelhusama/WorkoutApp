@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 14;
+const LATEST = 15;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -243,6 +243,22 @@ export async function migrate(db: SQLiteDatabase) {
       await db.execAsync('ALTER TABLE session_log ADD COLUMN bench_reserve INTEGER');
     }
     version = 14;
+  }
+
+  if (version === 14) {
+    // Entrenador, capa 4: bloques de prueba entre un test y el siguiente, cada uno con su variante.
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS coach_block (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        goal TEXT NOT NULL CHECK (goal IN ('dominadas','flexiones')),
+        variant TEXT NOT NULL CHECK (variant IN ('base','cortas','largas')),
+        start_date TEXT NOT NULL,
+        start_value REAL NOT NULL,
+        end_date TEXT,
+        end_value REAL
+      );
+    `);
+    version = 15;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);

@@ -7,6 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getBodyLog } from '@/db/body';
 import { deleteLog, getDoneSessions, getPrescriptions, markMissed } from '@/db/repo';
+import { getSlotVariants } from '@/db/coach';
+import { applyVariant } from '@/domain/bandit';
 import { extraKind, readiness, type Readiness } from '@/domain/coach';
 import { getPhotos, getRecentFeelings } from '@/db/stats';
 import { monthlyCheck } from '@/domain/physique';
@@ -92,7 +94,12 @@ export default function TodayScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (slots.length) getPrescriptions(db, slots).then(setPrescriptions);
+      if (slots.length) {
+        // Lo que se verá en la sesión: el plan, pasado por el bloque de prueba del entrenador si lo hay.
+        Promise.all([getPrescriptions(db, slots), gear ? Promise.resolve({} as Awaited<ReturnType<typeof getSlotVariants>>) : getSlotVariants(db)]).then(([p, v]) =>
+          setPrescriptions(Object.fromEntries(slots.map((s) => [s.key, applyVariant(p[s.key], s, v[s.key] ?? 'base')]))),
+        );
+      }
       getBodyLog(db).then(async (log) => {
         setLastWeighIn(log.length ? log[log.length - 1].date : null);
         const photos = await getPhotos(db);
@@ -101,7 +108,7 @@ export default function TodayScreen() {
       getRecentFeelings(db).then((f) => setDeload(needsDeload(f)));
       if (kind) stretchedOn(db, todayDate, routineAfter(kind)).then(setStretched);
       getDoneSessions(db, addDays(todayDate, -30)).then((done) => setExtra({ kind: extraKind(done), ready: readiness(done, todayDate) }));
-    }, [db, slots, kind, todayDate]),
+    }, [db, slots, kind, todayDate, gear]),
   );
 
   const needsWeighIn = lastWeighIn === null || (lastWeighIn != null && lastWeighIn <= addDays(todayDate, -7));

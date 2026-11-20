@@ -118,8 +118,16 @@ Hoy la app progresa con una escalera fija (`src/domain/progression.ts`): repetic
   - **Mesetas**: si un ejercicio lleva 21 días o más y 6 sesiones o más pidiendo lo mismo y el filtro no ve mejora real, decide el entrenador. Tren superior con margen → una serie más; tren superior al límite → baja una repetición para acumular series limpias; pierna → se deja como está (prioridad al tren superior). Cuando ya no quedan series que añadir, avisa de que toca cambiar de variante.
   - **Banca**: el gimnasio pregunta lo que quedaba en la mejor serie y propone la carga de hoy (3 de 5) en saltos de 2,5 kg: con margen sube, al límite repite, si no salieron las repeticiones afloja.
   - **Ajuste del filtro**: tardaba demasiado en ver que se había dejado de mejorar (seguía diciendo «mejorando» tras 14 sesiones planas). Ahora lo ve a las seis; a cambio, el margen del ritmo es más ancho.
+- ✅ **Capa 4** (20/11/2026; `src/domain/bandit.ts`, tabla `coach_block`):
+  - **Bloques entre tests**: cada bloque va de un test de dominadas o flexiones al siguiente (mínimo 3 semanas; se recomienda a las 4). El primer test abre el bloque con el plan normal.
+  - **Tres formas de entrenar** el ejercicio principal del objetivo: plan normal, muchas series cortas (lejos del fallo) y pocas series largas (cerca del límite). Solo cambia lo que se pide en `A.dominadas`, `C.dominadas` y `B.flexiones`; el plan de fondo sigue progresando igual.
+  - **Lo que se mide** es cuánto sube el test por semana, que no depende de la variante. No se usa el nivel estimado en las sesiones porque con series cortas saldría más bajo y la comparación sería injusta.
+  - **Elección** por muestreo de Thompson: las variantes que más rinden se repiten más, pero las poco probadas siguen teniendo opción.
+  - **Dónde se ve**: aviso en la tarjeta del ejercicio durante la sesión, y en la pantalla del test, qué se está probando y lo que ha rendido cada forma.
+  - **Limitaciones**: aprende despacio (unos 12 bloques al año por objetivo); borrar un test no deshace el cambio de bloque; de viaje el bloque no se aplica.
 - **Pendiente, por orden**:
   1. Llevar el nivel real a los objetivos (dominadas, flexiones, banca) y a la pantalla Hoy.
   2. Cambio de variante automático al agotar la escalera (hoy solo avisa) y volumen semanal total por músculo.
-  3. **Capa 4**: probar variantes por bloques de 4 semanas.
+  3. Aviso en Hoy cuando toca repetir el test (4 semanas de bloque).
+  4. ~~Capa 4~~: probar variantes por bloques de 4 semanas.
   4. Experimento de la red neuronal contra el filtro.

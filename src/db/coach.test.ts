@@ -136,3 +136,51 @@ test('banca: se guarda lo que quedaba y sirve para proponer la carga', async () 
   const latest = (await getLastBench(db))!;
   assert.equal(benchAdvice({ weight: latest.bench_weight, reps: latest.bench_reps, reserve: latest.bench_reserve }).weight, 52.5);
 });
+
+test('bloques de prueba: el test abre, deja seguir o cierra el bloque, y la sesión pide la variante sin tocar el plan', async () => {
+  const { db, slots } = await setup();
+  const { advanceBlocks, getBlocks, getSlotVariants } = await import('./coach');
+  const { applyVariant } = await import('../domain/bandit');
+
+  assert.deepEqual(await advanceBlocks(db, 'dominadas', '2026-09-01', 5), { kind: 'primero', variant: 'base' });
+  assert.deepEqual(await advanceBlocks(db, 'dominadas', '2026-09-10', 5), { kind: 'pronto', daysLeft: 12 });
+  assert.equal((await getBlocks(db)).length, 1);
+  // Cuatro semanas después: se cierra con lo que subió el test y se abre el siguiente.
+  const step = await advanceBlocks(db, 'dominadas', '2026-09-29', 7, () => 0.5);
+  assert.equal(step.kind, 'cambio');
+  const blocks = await getBlocks(db, 'dominadas');
+  assert.deepEqual(blocks.map((b) => [b.variant, b.startValue, b.endValue]), [['base', 5, 7], [step.kind === 'cambio' ? step.variant : '', 7, null]]);
+  assert.equal((await getBlocks(db, 'flexiones')).length, 0);
+
+  // Se fuerza la variante para comprobar cómo se guarda una sesión con ella.
+  await db.runAsync("UPDATE coach_block SET variant = 'cortas' WHERE end_date IS NULL");
+  const variants = await getSlotVariants(db);
+  assert.deepEqual(variants, { 'A.dominadas': 'cortas', 'C.dominadas': 'cortas' });
+  const slot = slots.find((s) => s.key === 'A.dominadas')!;
+  const plan = (await getPrescriptions(db, slots))[slot.key];
+  const asked = applyVariant(plan, slot, 'cortas');
+  assert.ok(asked.sets > plan.sets && asked.reps < plan.reps);
+  const changes = await saveHomeSession(
+    db,
+    '2026-10-01',
+    'A',
+    'normal',
+    [{ slotKey: slot.key, exerciseId: slot.exerciseId, values: Array(asked.sets).fill(asked.reps), reserve: 1 }],
+    slots,
+    false,
+    variants,
+  );
+  // Completó lo que se le pidió con margen: el plan de fondo sube una repetición desde su valor, no desde el de la variante.
+  assert.equal(changes[0].change, 'reps');
+  assert.equal((await getPrescriptions(db, slots))[slot.key].reps, plan.reps + 1);
+  const logged = await db.getAllAsync<{ target: number }>("SELECT target FROM set_log WHERE slot_key = 'A.dominadas'");
+  assert.equal(logged.length, asked.sets);
+  assert.equal(logged[0].target, asked.reps);
+
+  // Los bloques van en la copia de seguridad.
+  const backup = await exportBackup(db);
+  const fresh = createTestDb();
+  await migrate(fresh);
+  await importBackup(fresh, JSON.parse(JSON.stringify(backup)));
+  assert.equal((await getBlocks(fresh)).length, 2);
+});

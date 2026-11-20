@@ -7,6 +7,8 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDoneSessions, getPrescriptions, getSessionLog, getSessionReserves, getSessionSets, getTripOn, saveHomeSession, type SlotChange } from '@/db/repo';
+import { getSlotVariants } from '@/db/coach';
+import { VARIANT_INFO, applyVariant, type Variant } from '@/domain/bandit';
 import { lightSets, readiness, type Readiness, type Reserve } from '@/domain/coach';
 import { getBests } from '@/db/stats';
 import { addDays, formatLong, today as getToday } from '@/domain/dates';
@@ -40,6 +42,8 @@ export default function SessionScreen() {
   // Sesión ligera: sin bloque de pierna y con menos series; no mueve el plan.
   const [light, setLight] = useState(false);
   const [advice, setAdvice] = useState<Readiness | null>(null);
+  // Bloque de prueba del entrenador: cambia lo que se pide en dominadas o flexiones.
+  const [variants, setVariants] = useState<Record<string, Variant>>({});
   const [feeling, setFeeling] = useState<Feeling | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -53,7 +57,12 @@ export default function SessionScreen() {
       // De viaje, los ejercicios se adaptan al material disponible ese día.
       const trip = await getTripOn(db, date);
       const slots = sessionSlots(kind, trip?.gear);
-      const t = await getPrescriptions(db, slots);
+      const base = await getPrescriptions(db, slots);
+      // De viaje los ejercicios son otros y el bloque no se aplica.
+      const blockVariants = trip ? {} : await getSlotVariants(db);
+      const t: Record<string, Prescription> = {};
+      for (const s of slots) t[s.key] = applyVariant(base[s.key], s, blockVariants[s.key] ?? 'base');
+      setVariants(blockVariants);
       const log = await getSessionLog(db, date, kind);
       const saved = log?.status === 'done' ? await getSessionSets(db, log.id) : {};
       const ready = readiness(await getDoneSessions(db, addDays(date, -30)), date);
@@ -96,7 +105,7 @@ export default function SessionScreen() {
       const results = activeSlots.map((s) => ({ slotKey: s.key, exerciseId: s.exerciseId, values: values[s.key] ?? [], reserve: reserves[s.key] ?? null }));
       // Marcas anteriores a hoy, para saber si esta sesión bate algún récord.
       const before = await getBests(db, date);
-      const result = await saveHomeSession(db, date, kind, feeling, results, activeSlots, light);
+      const result = await saveHomeSession(db, date, kind, feeling, results, activeSlots, light, variants);
       setRecords(detectRecords(before, results));
       setDirty(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -233,6 +242,7 @@ export default function SessionScreen() {
           key={s.key}
           slot={s}
           target={targetOf(s.key)}
+          blockNote={variants[s.key] && variants[s.key] !== 'base' ? `Bloque de prueba · ${VARIANT_INFO[variants[s.key]].label}. ${VARIANT_INFO[variants[s.key]].detail} Hasta tu próximo test.` : undefined}
           values={values[s.key] ?? []}
           onChange={(v) => {
             setDirty(true);

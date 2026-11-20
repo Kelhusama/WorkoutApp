@@ -306,7 +306,7 @@ Qué hay de cierto en la «IA» de las apps de fuerza, qué dice la ciencia y un
 Qué se puede medir de verdad con las fotos de progreso, objetivos con respaldo y propuesta en dos fases: [VISION_FOTOS.md](VISION_FOTOS.md). Hecha la fase A (foto guiada, panel «Cómo voy» y aviso mensual, sin visión). La fase B (alinear fotos y medir hombros/cintura) espera al APK.
 
 ## Para seguir (por orden)
-0. **Entrenador adaptativo**: nivel real en los objetivos y en Hoy, cambio de variante automático y capa 4 (probar variantes por bloques). Hecha la capa 3: el plan cambia según lo que quedaba, sesión ligera, sesión extra, mesetas y carga de banca.
+0. **Entrenador adaptativo**: nivel real en los objetivos y en Hoy, cambio de variante automático, aviso de test y el experimento de la red neuronal. Hechas las capas 1 a 4: reserva, nivel real, plan que cambia solo, sesión ligera y extra, mesetas, carga de banca y bloques de prueba entre tests.
 1. **Usabilidad que queda**: tipografía propia.
 2. **Pantalla de inicio** con la pintadera (se configura al preparar el APK).
 3. **Flexibilidad, retoques**: la sesión de nivel 3 dura 23–26 min (el objetivo eran 10–15) y no hay forma de borrar una sesión apuntada por error.

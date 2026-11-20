@@ -41,6 +41,7 @@ Para probar: `npx expo start` en la carpeta del proyecto y escanear el QR con Ex
 | [ ] | Aviso mensual | Hoy | Que aparezca «Toca revisión mensual» si hace más de un mes de la cinta o las fotos |
 | [ ] | Entrenador: banca | Hoy, un día de gimnasio | Que proponga la carga con su motivo, pregunte lo que quedaba y la próxima vez lo tenga en cuenta |
 | [ ] | Entrenador: mesetas | Al guardar una sesión tras semanas con lo mismo | Solo se ve con semanas de uso: que añada una serie arriba y lo explique |
+| [ ] | Entrenador: bloques de prueba | Objetivos → test de dominadas o flexiones | Que el primer test abra un bloque, que explique qué se está probando y, a las 4 semanas, que el siguiente test lo cierre y elija otro |
 | [ ] | Aspecto general | Todas las pantallas | Textos cortados, botones difíciles de pulsar, el teclado tapando campos |
 
 ## Solo con la app instalada (APK)
