@@ -71,21 +71,18 @@ export default function ProgressScreen() {
       <Text style={[type.hero, { marginTop: 2 }]}>Cómo vas</Text>
 
       <View style={styles.tiles}>
-        <Card style={styles.tile}>
-          <Ionicons name="flame" size={20} color={colors.accent} />
+        <View style={styles.tile}>
           <Text style={styles.tileValue}>{streak?.weeks ?? 0}</Text>
           <Text style={type.caption}>{streak?.weeks === 1 ? 'Semana cumplida' : 'Semanas cumplidas'}</Text>
-        </Card>
-        <Card style={styles.tile}>
-          <Ionicons name="trophy" size={20} color={colors.accent} />
+        </View>
+        <View style={styles.tile}>
           <Text style={styles.tileValue}>{streak?.bestWeeks ?? 0}</Text>
           <Text style={type.caption}>Mejor racha</Text>
-        </Card>
-        <Card style={styles.tile}>
-          <Ionicons name="checkmark-done" size={20} color={colors.accent} />
+        </View>
+        <View style={styles.tile}>
           <Text style={styles.tileValue}>{pct === null ? '—' : `${pct}%`}</Text>
-          <Text style={type.caption}>Últimas 4 semanas</Text>
-        </Card>
+          <Text style={type.caption}>Cumplido en 4 semanas</Text>
+        </View>
       </View>
       <Text style={[type.caption, { marginTop: space.sm }]}>
         Una semana se cumple si entrenas y fallas como mucho una sesión: ese es tu comodín
@@ -97,14 +94,16 @@ export default function ProgressScreen() {
         accessibilityLabel="Revisión de la semana. Abrir"
         onPress={() => router.push('/revision')}
         style={({ pressed }) => [{ marginTop: space.md }, pressed && { opacity: 0.7 }]}>
-        <Card style={styles.review}>
+        <View style={[styles.review, styles.reviewRow]}>
           <Ionicons name="clipboard-outline" size={24} color={colors.accent} />
           <View style={{ flex: 1 }}>
             <Text style={type.subtitle}>Revisión de la semana</Text>
-            <Text style={type.caption}>Qué has hecho, qué récords has batido y un foco para la siguiente</Text>
+            <Text style={type.caption} numberOfLines={1}>
+              Lo hecho, los récords y el próximo foco
+            </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.faint} />
-        </Card>
+        </View>
       </Pressable>
 
       <SectionTitle>Objetivos</SectionTitle>
@@ -213,8 +212,10 @@ export default function ProgressScreen() {
 }
 
 const styles = StyleSheet.create({
+  reviewRow: { paddingVertical: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.border },
   tiles: { flexDirection: 'row', gap: space.sm, marginTop: space.lg },
-  tile: { flex: 1, gap: 2, padding: space.md },
+  // Cifras sin caja, separadas por una línea fina a la izquierda.
+  tile: { flex: 1, gap: 2, paddingLeft: space.md, borderLeftWidth: 2, borderLeftColor: colors.accent },
   tileValue: { fontSize: 26, ...font.display, color: colors.text, fontVariant: ['tabular-nums'], marginTop: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.md, minHeight: 56 },
   review: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 64 },

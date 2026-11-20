@@ -2,6 +2,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Polygon } from 'react-native-svg';
 
 import { getBenchSeries, getTestSeries } from '@/db/stats';
 import type { Point } from '@/domain/body';
@@ -128,17 +129,23 @@ export function GoalsSummary({ compact = false }: { compact?: boolean }) {
             <ProgressBar value={goalProgress(g, c.value)} color={reached ? colors.success : colors.accent} />
             <Text style={type.caption}>
               {reached ? '¡Meta conseguida!' : next ? `Próximo hito: ${next}${g.unit}` : ''}
-              {!c.measured ? ' · punto de partida' : c.when ? ` · mejor marca el ${formatShort(c.when)}` : ''}
+              {!c.measured ? ' (punto de partida)' : c.when ? ` (mejor marca, el ${formatShort(c.when)})` : ''}
             </Text>
             <View style={styles.milestones}>
-              {g.milestones.map((m) => (
-                <Pill
-                  key={m}
-                  label={`${m}${g.unit}`}
-                  color={c.value >= m ? colors.success : colors.muted}
-                  bg={c.value >= m ? colors.successSoft : colors.cardHigh}
-                />
-              ))}
+              {g.milestones.map((m) => {
+                const got = c.value >= m;
+                return (
+                  <View key={m} style={styles.milestone} accessible accessibilityLabel={`Hito de ${m}${g.unit}: ${got ? 'conseguido' : 'pendiente'}`}>
+                    <Svg width={14} height={14} viewBox="0 0 14 14">
+                      <Polygon points="0,14 14,14 14,0" fill={got ? colors.accent : 'none'} stroke={got ? colors.accent : colors.faint} strokeWidth={1.5} />
+                    </Svg>
+                    <Text style={[type.caption, got && { color: colors.text }]}>
+                      {m}
+                      {g.unit}
+                    </Text>
+                  </View>
+                );
+              })}
             </View>
             {!reached && (
               <Text style={[type.caption, c.projection.status === 'en_camino' && { color: colors.text }]}>{projectionText(g, c.projection)}</Text>
@@ -170,5 +177,6 @@ const styles = StyleSheet.create({
   value: { fontSize: 20, ...font.display, color: colors.text, fontVariant: ['tabular-nums'] },
   valueSmall: { fontSize: 16, ...font.w800, color: colors.text, fontVariant: ['tabular-nums'] },
   target: { fontSize: 14, ...font.w600, color: colors.muted },
-  milestones: { flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' },
+  milestones: { flexDirection: 'row', gap: space.lg, flexWrap: 'wrap' },
+  milestone: { flexDirection: 'row', alignItems: 'center', gap: 6 },
 });

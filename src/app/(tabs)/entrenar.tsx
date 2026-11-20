@@ -25,6 +25,7 @@ function Area({
   children,
   onPress,
   soon,
+  featured,
 }: {
   icon: IconName;
   title: string;
@@ -32,6 +33,8 @@ function Area({
   children: ReactNode;
   onPress?: () => void;
   soon?: boolean;
+  /** Lo más importante ahora mismo: es la única que va en tarjeta. */
+  featured?: boolean;
 }) {
   return (
     <Pressable
@@ -40,17 +43,31 @@ function Area({
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={`${title}${soon ? ', próximamente' : ''}`}
       style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
-      <Card style={[styles.area, soon && { opacity: 0.6 }]}>
-        <View style={styles.head}>
-          <View style={styles.icon}>
-            <Ionicons name={icon} size={24} color={colors.accent} />
+      {featured ? (
+        <Card style={[styles.area, { borderColor: colors.accent }]}>
+          <View style={styles.head}>
+            <View style={styles.icon}>
+              <Ionicons name={icon} size={24} color={colors.accent} />
+            </View>
+            <Text style={[type.title, { flex: 1 }]}>{title}</Text>
+            {status && <Pill label={status} />}
+            {onPress && <Ionicons name="chevron-forward" size={18} color={colors.faint} />}
           </View>
-          <Text style={[type.title, { flex: 1 }]}>{title}</Text>
-          {status && <Pill label={status} />}
-          {onPress && <Ionicons name="chevron-forward" size={18} color={colors.faint} />}
+          {children}
+        </Card>
+      ) : (
+        <View style={[styles.row, soon && { opacity: 0.6 }]}>
+          <Ionicons name={icon} size={24} color={colors.accent} style={{ marginTop: 2 }} />
+          <View style={{ flex: 1, gap: 2 }}>
+            <View style={styles.head}>
+              <Text style={[type.title, { flex: 1, fontSize: 18 }]}>{title}</Text>
+              {status && <Pill label={status} />}
+            </View>
+            {children}
+          </View>
+          {onPress && <Ionicons name="chevron-forward" size={18} color={colors.faint} style={{ marginTop: 4 }} />}
         </View>
-        {children}
-      </Card>
+      )}
     </Pressable>
   );
 }
@@ -92,7 +109,7 @@ export default function TrainScreen() {
       </View>
 
       {trial.phase !== 'pasado' && (
-        <Area icon="trophy" title={eventName()} status={trial.phase === 'dia' ? 'Hoy' : `${trial.daysLeft} días`} onPress={() => router.push('/prueba')}>
+        <Area featured icon="trophy" title={eventName()} status={trial.phase === 'dia' ? 'Hoy' : `${trial.daysLeft} días`} onPress={() => router.push('/prueba')}>
           <Text style={type.body}>
             {trial.week ? (
               <>
@@ -187,6 +204,15 @@ export default function TrainScreen() {
 
 const styles = StyleSheet.create({
   area: { gap: space.sm },
+  // Fila sin caja: una línea fina la separa de la siguiente.
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: space.md,
+    paddingVertical: space.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
   head: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   icon: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
   strong: { color: colors.text, ...font.w700 },

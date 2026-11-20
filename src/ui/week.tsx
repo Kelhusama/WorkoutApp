@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Polygon } from 'react-native-svg';
 
 import { DAY_SHORT, formatLong, fromISODate, today, weekdayIndex } from '@/domain/dates';
 import { FEELING_LABEL } from '@/domain/progression';
@@ -46,7 +47,11 @@ export function WeekStrip({ days, onPressDay }: { days: PlannedDay[]; onPressDay
                 isToday && { borderColor: colors.accent, borderWidth: 2 },
               ]}>
               {d.status === 'done' ? (
-                <Ionicons name="checkmark" size={16} color={colors.success} />
+                // Día cumplido: la celda entera en los dos tonos del icono.
+                <Svg width={38} height={38} viewBox="0 0 38 38" accessibilityElementsHidden>
+                  <Polygon points="0,0 38,0 0,38" fill={colors.accent} />
+                  <Polygon points="38,0 38,38 0,38" fill={colors.text} />
+                </Svg>
               ) : d.status === 'missed' ? (
                 <Ionicons name="close" size={16} color={colors.danger} />
               ) : d.status === 'excused' ? (
@@ -113,7 +118,8 @@ const styles = StyleSheet.create({
   strip: { flexDirection: 'row', justifyContent: 'space-between' },
   stripDay: { alignItems: 'center', gap: 6 },
   stripLetter: { fontSize: 12, ...font.w700, color: colors.muted },
-  stripDot: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
+  // Celda cuadrada, como las de la pintadera; el recorte hace que los triángulos sigan las esquinas.
+  stripDot: { width: 38, height: 38, borderRadius: 9, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   stripType: { fontSize: 14, ...font.w800 },
   stripTrip: { width: 14, height: 3, borderRadius: 2 },
   row: {

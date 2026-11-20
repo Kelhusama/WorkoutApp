@@ -118,7 +118,7 @@ export default function BodyScreen() {
       </Card>
 
       <SectionTitle>Cómo voy</SectionTitle>
-      <Card style={{ gap: space.md }}>
+      <View style={{ gap: space.md }}>
         {checks.map((c) => {
           const v = VERDICT[c.verdict];
           return (
@@ -138,7 +138,7 @@ export default function BodyScreen() {
           Cinta y fotos, una vez al mes y el mismo día. La fuerza la sigue el entrenador en Progreso.
         </Text>
         <Button label="Fotos de progreso" variant="secondary" icon="images-outline" onPress={() => router.push('/fotos')} />
-      </Card>
+      </View>
 
       {entries.length > 1 && (
         <>
