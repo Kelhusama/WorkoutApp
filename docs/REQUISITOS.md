@@ -286,9 +286,9 @@ La investigación con dosis, rutinas, tests, plan de marcha y fuentes está en [
    - Gráficas: km semanales, tirada más larga frente a 50 km, ritmo; semáforo de preparación y tiempo previsto.
    - Lista de comprobación del día de la marcha.
    - Ajuste de la fuerza de pierna en semanas pico.
-5. **Icono**: opciones geométricas con motivos canarios generadas (Teide facetado, siete barras, archipiélago, pintadera, espiral, drago, Teide y barra, Teide de líneas). Pendiente de elegir.
+5. **Icono** ✅ (20/11/2026): pintadera en la gama «Bandera» (amarillo, blanco y azul de la bandera canaria sobre azul noche). Los archivos de `assets/` se generan con `node scripts/icono.js`. En Expo Go no se ve: aparece al instalar el APK.
 
-Por decidir: si «abductores» es la cara interna del muslo (aductores), qué sede y fecha de la Marcha del Mamut, y qué icono.
+Por decidir: si «abductores» es la cara interna del muslo (aductores), y qué sede y fecha de la Marcha del Mamut.
 
 ## Tendencias (16/11/2026)
 
@@ -300,8 +300,8 @@ Revisión de lo que hacen ahora las apps líderes, con 12 ideas priorizadas y lo
 - Lista de lo que falta probar en el móvil: [PRUEBAS.md](PRUEBAS.md).
 
 ## Para seguir (por orden)
-1. **Icono**: pintadera; falta elegir la gama de color.
-2. **Usabilidad que queda**: tipografía propia.
+1. **Usabilidad que queda**: tipografía propia.
+2. **Pantalla de inicio** con la pintadera (se configura al preparar el APK).
 3. **Flexibilidad, retoques**: la sesión de nivel 3 dura 23–26 min (el objetivo eran 10–15) y no hay forma de borrar una sesión apuntada por error.
 4. **Estiramientos, dosis**: solo los aductores llegan a 5 min por semana; valorar subir isquios y cadera.
 5. **Con el APK**: fusionar la rama `google-drive`, leer la captura eligiendo la imagen y GPS en las caminatas.
@@ -312,7 +312,8 @@ Revisión de lo que hacen ahora las apps líderes, con 12 ideas priorizadas y lo
 - [ ] **Probar «Pegar datos de la captura»** en el móvil y avisar si algún valor sale mal o falta.
 - [ ] **Cuenta gratuita de Expo** (expo.dev), para compilar el APK en la nube.
 - [ ] **Nombre definitivo** de la app («Forja» es provisional).
-- [ ] Elegir **icono**, y **sede y fecha** de la Marcha del Mamut.
+- [x] ~~Elegir icono~~: pintadera, gama Bandera (20/11/2026).
+- [ ] Elegir **sede y fecha** de la Marcha del Mamut.
 - [ ] Confirmar si es viable hacer **press de banca 3×5 al final del gimnasio** cuando no toque.
 - [ ] (Opcional) Pedir la **copia de datos de la cuenta Huawei** para importar el historial de peso.
 
@@ -326,7 +327,7 @@ Revisión de lo que hacen ahora las apps líderes, con 12 ideas priorizadas y lo
 4. ~~Modo viaje~~ ✅ hecho (16/11/2026).
 5. ~~Seguimiento de ejercicios: gráficas, récords, racha y fotos~~ ✅ hecho (16/11/2026).
 6. **Copia en Google Drive** con inicio de sesión de Google (sección 9).
-7. **Icono y pantalla de inicio** propios (ahora son los de la plantilla de Expo).
+7. ~~Icono propio~~ ✅ hecho (20/11/2026). Falta la pantalla de inicio.
 8. **Ideas de apps libres** (tabla anterior), empezando por el temporizador de descanso y el RIR por serie.
 9. (Opcional) **Importar la exportación de Huawei** para cargar el historial de peso.
 
