@@ -13,7 +13,7 @@ import { formatLong, today } from '@/domain/dates';
 import { SCALE_FIELD_LABEL, parseScaleText } from '@/domain/scaleText';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Button, Card, SectionTitle } from '@/ui/components';
-import { NumberField, numberToText, parseNumber } from '@/ui/NumberField';
+import { NumberField, numberToText, parseNumber, useFieldChain } from '@/ui/NumberField';
 import { colors, space, type } from '@/ui/theme';
 
 type Field = Exclude<keyof BodyEntry, 'date'>;
@@ -112,6 +112,8 @@ export default function MeasurementScreen() {
     (p): p is string => p !== null,
   );
   const valid = problems.length === 0;
+  // El teclado salta de un campo al siguiente en el orden en que se ven.
+  const chain = useFieldChain<Field>(['weight', ...(showScale ? SCALE.map((s) => s.key) : []), ...tape.map((t) => t.key)]);
 
   const pasteCapture = async () => {
     const reading = parseScaleText(await Clipboard.getStringAsync(), today());
@@ -193,7 +195,7 @@ export default function MeasurementScreen() {
         </Card>
 
         <Card style={{ gap: space.lg }}>
-          <NumberField label={WEIGHT.label} unit={WEIGHT.unit} value={f.weight ?? ''} onChange={set('weight')} placeholder="80,0" />
+          <NumberField label={WEIGHT.label} unit={WEIGHT.unit} value={f.weight ?? ''} onChange={set('weight')} placeholder="80,0" {...chain('weight')} />
         </Card>
 
         <Pressable
@@ -209,7 +211,7 @@ export default function MeasurementScreen() {
           <Card style={{ gap: space.lg }}>
             <Text style={type.caption}>Cópialos de Huawei Salud → Peso → la medición de ese día. Deja vacío lo que no tengas.</Text>
             {SCALE.map((s) => (
-              <NumberField key={s.key} label={s.label} unit={s.unit} value={f[s.key] ?? ''} onChange={set(s.key)} decimal={s.decimal ?? true} />
+              <NumberField key={s.key} label={s.label} unit={s.unit} value={f[s.key] ?? ''} onChange={set(s.key)} decimal={s.decimal ?? true} {...chain(s.key)} />
             ))}
             <Text style={type.caption}>Si apuntas el % de grasa y la masa libre de grasa, se usan en vez de las fórmulas.</Text>
           </Card>
@@ -218,7 +220,7 @@ export default function MeasurementScreen() {
         <SectionTitle>Medidas con cinta (opcionales)</SectionTitle>
         <Card style={{ gap: space.lg }}>
           {tape.map((t) => (
-            <NumberField key={t.key} label={t.label} hint={t.hint} unit={t.unit} value={f[t.key] ?? ''} onChange={set(t.key)} />
+            <NumberField key={t.key} label={t.label} hint={t.hint} unit={t.unit} value={f[t.key] ?? ''} onChange={set(t.key)} {...chain(t.key)} />
           ))}
         </Card>
         <Text style={type.caption}>Con cintura y cuello se calcula el % de grasa aunque no tengas báscula.</Text>

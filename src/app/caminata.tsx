@@ -10,7 +10,7 @@ import { addDays, formatLong, today, type ISODate } from '@/domain/dates';
 import { WALK_LABEL, formatPace, type WalkKind } from '@/domain/march';
 import { KIND_LABEL, stepAt } from '@/domain/marchPlan';
 import { Button, Card, SectionTitle, Stepper } from '@/ui/components';
-import { NumberField, numberToText, parseNumber } from '@/ui/NumberField';
+import { NumberField, numberToText, parseNumber, useFieldChain } from '@/ui/NumberField';
 import { colors, radius, space, type } from '@/ui/theme';
 
 const KINDS: WalkKind[] = ['suave', 'cuestas', 'larga', 'extra', 'libre'];
@@ -91,6 +91,8 @@ export default function WalkScreen() {
       },
     ]);
 
+  const chain = useFieldChain(['km', 'hours', 'mins', 'elevation', 'pack'] as const);
+
   return (
     <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: space.xxl }} keyboardShouldPersistTaps="handled">
       <Stack.Screen options={{ title: id === undefined ? 'Registrar caminata' : 'Editar caminata' }} />
@@ -125,10 +127,10 @@ export default function WalkScreen() {
       </View>
 
       <Card style={{ gap: space.lg }}>
-        <NumberField label="Distancia" unit="km" value={km} onChange={setKm} placeholder="10,0" />
+        <NumberField label="Distancia" unit="km" value={km} onChange={setKm} placeholder="10,0" {...chain('km')} />
         <View style={{ gap: space.sm }}>
-          <NumberField label="Tiempo" hint="Horas" unit="h" value={hours} onChange={setHours} placeholder="2" decimal={false} />
-          <NumberField label="" hint="Minutos" unit="min" value={mins} onChange={setMins} placeholder="15" decimal={false} />
+          <NumberField label="Tiempo" hint="Horas" unit="h" value={hours} onChange={setHours} placeholder="2" decimal={false} {...chain('hours')} />
+          <NumberField label="" hint="Minutos" unit="min" value={mins} onChange={setMins} placeholder="15" decimal={false} {...chain('mins')} />
         </View>
         {kmValue !== null && kmValue > 0 && minutes > 0 && (
           <Text style={type.caption}>
@@ -140,8 +142,8 @@ export default function WalkScreen() {
 
       <SectionTitle>Opcional</SectionTitle>
       <Card style={{ gap: space.lg }}>
-        <NumberField label="Desnivel positivo" unit="m" value={elevation} onChange={setElevation} decimal={false} />
-        <NumberField label="Peso de la mochila" unit="kg" value={pack} onChange={setPack} />
+        <NumberField label="Desnivel positivo" unit="m" value={elevation} onChange={setElevation} decimal={false} {...chain('elevation')} />
+        <NumberField label="Peso de la mochila" unit="kg" value={pack} onChange={setPack} {...chain('pack')} />
         <View style={{ gap: space.sm }}>
           <Text style={type.subtitle}>Esfuerzo</Text>
           <Text style={type.caption}>1 = paseo · 5 = cómodo pero se nota · 10 = al límite</Text>

@@ -262,14 +262,14 @@ Revisadas: wger, Liftosaur, LiftLog (Expo/React Native), Flexify, FitoTrack, MyF
 
 La investigación con dosis, rutinas, tests, plan de marcha y fuentes está en [INVESTIGACION.md](INVESTIGACION.md). Se construye punto por punto:
 
-1. **Menú** ✅: pestaña «Entrenar» con Fuerza, Marcha, Estiramientos y Flexibilidad (las dos últimas, aún como «Pronto»). Barra: Hoy · Entrenar · Calendario · Cuerpo · Progreso.
+1. **Menú** ✅: pestaña «Entrenar» con Fuerza, Marcha, Estiramientos y Flexibilidad. Barra: Hoy · Entrenar · Calendario · Cuerpo · Progreso.
 2. **Estiramientos** ✅ (16/11/2026)
    - Cuatro rutinas: tren inferior (10 min, 9 estiramientos, 3 min de aductores) y una de unos 5 min tras cada sesión A, B y C, que incluye un estiramiento de la zona de pierna trabajada.
    - **Modo guiado**: un estiramiento cada vez, 5 s para colocarse, cuenta atrás de 30 o 60 s, cambio de lado, vibración, voz opcional y pantalla siempre encendida. Se puede pausar, saltar o terminar; solo cuenta lo que se ha mantenido.
    - Se ofrece al guardar una sesión («Estirar ahora») y desde *Entrenar → Estiramientos*.
    - **Gráficas**: minutos de la semana por zona frente a la franja de 5–10 min, días y minutos de la semana, y evolución semanal.
-   - Dibujos: los 9 de tren inferior y el cuelgue. **Pendiente**: dibujos de los 11 estiramientos de tren superior (ahora solo llevan texto).
-3. **Flexibilidad**
+   - Dibujos ✅ (20/11/2026): los 21 estiramientos tienen dibujo animado; el brazo cruzado y el trapecio, en vista frontal.
+3. **Flexibilidad** ✅ (20/11/2026): pantallas *Flexibilidad*, sesión guiada y *Test de flexibilidad* (`src/domain/flexibility.ts`).
    - Programa de 10–15 min, 3–5 días por semana, en tres niveles; sube de nivel con ≥80 % de sesiones en 4 semanas.
    - Seis tests mensuales (dedos-suelo, rodilla a la pared, apertura sentado, rascado de espalda, elevación de pierna recta, sentadilla profunda) con gráfica cada uno.
    - Hitos: tocar el suelo con las palmas, sentadilla profunda 2 min, apertura +20 cm.
@@ -300,10 +300,10 @@ Revisión de lo que hacen ahora las apps líderes, con 12 ideas priorizadas y lo
 - Lista de lo que falta probar en el móvil: [PRUEBAS.md](PRUEBAS.md).
 
 ## Para seguir (por orden)
-1. **Flexibilidad**: en construcción en la rama `flexibilidad` (programa por niveles y seis tests mensuales). Falta revisarla y fusionarla.
-2. **Dibujos** de los 11 estiramientos de tren superior.
-3. **Icono**: pintadera; falta elegir la gama de color.
-4. **Usabilidad que queda**: encadenar los campos numéricos, tipografía propia y tocar un punto de la gráfica.
+1. **Icono**: pintadera; falta elegir la gama de color.
+2. **Usabilidad que queda**: tipografía propia.
+3. **Flexibilidad, retoques**: la sesión de nivel 3 dura 23–26 min (el objetivo eran 10–15) y no hay forma de borrar una sesión apuntada por error.
+4. **Estiramientos, dosis**: solo los aductores llegan a 5 min por semana; valorar subir isquios y cadera.
 5. **Con el APK**: fusionar la rama `google-drive`, leer la captura eligiendo la imagen y GPS en las caminatas.
 
 ## Debes (lo que tiene que hacer el usuario)

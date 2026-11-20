@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import Svg, { Circle, Line, Polyline, Rect, Text as SvgText } from 'react-native-svg';
 
 import type { Point, Range, Tone } from '@/domain/body';
-import { formatShort } from '@/domain/dates';
+import { formatLong, formatShort } from '@/domain/dates';
 import { colors, type } from './theme';
 
 export const TONE_COLOR: Record<Tone, string> = {
@@ -31,6 +31,7 @@ export function LineChart({
   ghost?: Point[];
 }) {
   const [width, setWidth] = useState(0);
+  const [picked, setPicked] = useState<number | null>(null);
   if (points.length === 0) {
     return <Text style={type.caption}>Aún no hay datos para dibujar la gráfica.</Text>;
   }
@@ -51,6 +52,16 @@ export function LineChart({
   const x = (i: number) => padL + (points.length === 1 ? w / 2 : (i / (points.length - 1)) * w);
   const y = (v: number) => padT + (1 - (v - lo) / (hi - lo)) * h;
 
+  // Punto elegido con el dedo; si los datos cambian y ya no existe, se olvida.
+  const sel = !compact && picked !== null && picked < points.length ? picked : null;
+  const pick = (touchX: number) => {
+    if (points.length < 2) return setPicked(0);
+    const i = Math.round(((touchX - padL) / w) * (points.length - 1));
+    setPicked(Math.min(points.length - 1, Math.max(0, i)));
+  };
+  const step = (d: number) => setPicked(Math.min(points.length - 1, Math.max(0, (sel ?? points.length - 1) + d)));
+  const shown = points[sel ?? points.length - 1];
+
   const bands: { y0: number; y1: number; color: string }[] = [];
   let prev = -Infinity;
   for (const r of ranges ?? []) {
@@ -61,7 +72,23 @@ export function LineChart({
   }
 
   return (
-    <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)} style={{ height }}>
+    <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+      <View
+        style={{ height }}
+        {...(compact
+          ? {}
+          : {
+              // Tocar o arrastrar el dedo por la gráfica elige el punto más cercano.
+              onStartShouldSetResponder: () => true,
+              onResponderGrant: (e) => pick(e.nativeEvent.locationX),
+              onResponderMove: (e) => pick(e.nativeEvent.locationX),
+              accessible: true,
+              accessibilityRole: 'adjustable' as const,
+              accessibilityLabel: 'Gráfica de evolución',
+              accessibilityValue: { text: `${formatLong(shown.date)}: ${format(shown.value)}` },
+              accessibilityActions: [{ name: 'increment' as const }, { name: 'decrement' as const }],
+              onAccessibilityAction: (e) => step(e.nativeEvent.actionName === 'increment' ? 1 : -1),
+            })}>
       {width > 0 && (
         <Svg width={width} height={height}>
           {bands.map((b, i) => (
@@ -88,7 +115,13 @@ export function LineChart({
           {compact && (
             <Circle cx={x(points.length - 1)} cy={y(points[points.length - 1].value)} r={3} fill={colors.accent} />
           )}
-          {!compact && (
+          {sel !== null && (
+            <>
+              <Line x1={x(sel)} y1={padT} x2={x(sel)} y2={height - padB} stroke={colors.muted} strokeDasharray="3 3" />
+              <Circle cx={x(sel)} cy={y(points[sel].value)} r={6.5} fill={colors.bg} stroke={colors.accent} strokeWidth={2.5} />
+            </>
+          )}
+          {!compact && sel === null && (
             <SvgText
               x={Math.min(x(points.length - 1), padL + w - 2)}
               y={Math.max(14, y(points[points.length - 1].value) - 9)}
@@ -113,6 +146,16 @@ export function LineChart({
             </>
           )}
         </Svg>
+      )}
+      </View>
+      {!compact && (
+        <Text style={[type.caption, sel !== null && { color: colors.text }]} accessibilityLiveRegion="polite">
+          {sel !== null
+            ? `${formatLong(points[sel].date)}: ${format(points[sel].value)}${ghost?.[sel] ? ` · sin suavizar ${format(ghost[sel].value)}` : ''}`
+            : points.length > 1
+              ? 'Toca la gráfica para ver el valor de cada punto.'
+              : formatLong(points[0].date)}
+        </Text>
       )}
     </View>
   );

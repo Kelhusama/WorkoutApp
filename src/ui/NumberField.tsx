@@ -1,3 +1,4 @@
+import { useRef, type ComponentRef } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { colors, radius, space, type } from './theme';
@@ -12,6 +13,25 @@ export function parseNumber(s: string): number | null {
 
 export const numberToText = (n: number | null | undefined) => (n == null ? '' : String(n).replace('.', ','));
 
+type Input = ComponentRef<typeof TextInput>;
+
+/**
+ * Encadena campos: la tecla «Siguiente» del teclado salta al próximo de la lista
+ * y el último muestra «Hecho». Uso: `<NumberField {...chain('peso')} />`.
+ */
+export function useFieldChain<K extends string>(order: readonly K[]) {
+  const refs = useRef<Partial<Record<K, Input | null>>>({});
+  return (key: K) => {
+    const next = order[order.indexOf(key) + 1];
+    return {
+      inputRef: (el: Input | null) => {
+        refs.current[key] = el;
+      },
+      onNext: next ? () => refs.current[next]?.focus() : undefined,
+    };
+  };
+}
+
 export function NumberField({
   label,
   hint,
@@ -20,6 +40,8 @@ export function NumberField({
   onChange,
   placeholder,
   decimal = true,
+  inputRef,
+  onNext,
 }: {
   label: string;
   hint?: string;
@@ -28,6 +50,9 @@ export function NumberField({
   onChange: (v: string) => void;
   placeholder?: string;
   decimal?: boolean;
+  inputRef?: (el: Input | null) => void;
+  /** Si se indica, el teclado ofrece «Siguiente» y no se cierra al pulsarlo. */
+  onNext?: () => void;
 }) {
   return (
     <View style={styles.row}>
@@ -37,6 +62,10 @@ export function NumberField({
       </View>
       <View style={styles.inputWrap}>
         <TextInput
+          ref={inputRef}
+          returnKeyType={onNext ? 'next' : 'done'}
+          submitBehavior={onNext ? 'submit' : 'blurAndSubmit'}
+          onSubmitEditing={onNext}
           value={value}
           onChangeText={onChange}
           keyboardType={decimal ? 'decimal-pad' : 'number-pad'}
