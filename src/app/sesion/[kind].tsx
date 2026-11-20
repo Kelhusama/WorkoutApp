@@ -8,7 +8,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDoneSessions, getPrescriptions, getSessionLog, getSlotStages, getSessionReserves, getSessionSets, getTripOn, saveHomeSession, type SlotChange } from '@/db/repo';
 import { getSlotVariants } from '@/db/coach';
-import { getWeekLoad } from '@/db/settings';
+import { getTrialActive, getWeekLoad } from '@/db/settings';
+import { withoutTrialWork } from '@/domain/event';
 import { VARIANT_INFO, applyVariant, type Variant } from '@/domain/bandit';
 import { lightSets, readiness, type Readiness, type Reserve } from '@/domain/coach';
 import { getBests } from '@/db/stats';
@@ -38,6 +39,8 @@ export default function SessionScreen() {
   const [travelling, setTravelling] = useState(false);
   // Sesión enfocada: solo los ejercicios de los objetivos (semanas con uno o dos días de casa).
   const [focus, setFocus] = useState(false);
+  // El plan de la prueba ha quitado las dominadas de esta sesión.
+  const [trialOn, setTrialOn] = useState(false);
 
   const [targets, setTargets] = useState<Record<string, Prescription> | null>(null);
   const [values, setValues] = useState<Record<string, number[]>>({});
@@ -64,7 +67,10 @@ export default function SessionScreen() {
       const log = await getSessionLog(db, date, kind);
       // Al editar se respeta cómo se guardó; de viaje mandan los ejercicios adaptados.
       const isFocus = !trip && (log?.status === 'done' ? log.focus === 1 : params.focus === '1');
-      const slots = sessionSlots(kind, trip?.gear, isFocus);
+      // Con el plan de la prueba activo, las dominadas ya se hacen allí. Una sesión ya guardada se abre como se hizo.
+      const trialOn = log?.status !== 'done' && !trip && (await getTrialActive(db));
+      const slots = withoutTrialWork(sessionSlots(kind, trip?.gear, isFocus), trialOn, date);
+      setTrialOn(trialOn && slots.length < sessionSlots(kind, null, isFocus).length);
       setFocus(isFocus);
       const base = await getPrescriptions(db, slots);
       // De viaje los ejercicios son otros y el bloque no se aplica.
@@ -221,6 +227,11 @@ export default function SessionScreen() {
             ? 'Editando un registro guardado.'
             : 'Está precargado lo planificado: corrige solo las series que no salieron así.'}
         </Text>
+        {trialOn && (
+          <Text style={[type.caption, { color: colors.info, marginTop: 4 }]}>
+            <Ionicons name="trophy" size={12} color={colors.info} /> Sin dominadas: ya las haces en el plan de la prueba del 16 de enero.
+          </Text>
+        )}
         {travelling && (
           <Text style={[type.caption, { color: colors.info, marginTop: 4 }]}>
             <Ionicons name="airplane" size={12} color={colors.info} /> Modo viaje: ejercicios adaptados a lo que tienes a mano.

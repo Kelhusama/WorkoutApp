@@ -123,11 +123,11 @@ export default function TrialScreen() {
 
       {now.week && (
         <Card style={{ gap: space.sm }}>
-          <ToggleRow title="Plan activo" detail="Avisos los días de dominadas, hasta que las apuntes" value={active} onChange={toggle} />
+          <ToggleRow title="Plan activo" detail="Avisos los días de dominadas y sin dominadas repetidas en casa" value={active} onChange={toggle} />
           <Text style={type.caption}>
             {active
-              ? `Esta semana tocan dominadas el ${pullupDaysText(now.week)}. Avisos a las ${times.join(', ')}; las horas se cambian en Perfil y avisos.`
-              : `Al activarlo, te avisaré el ${pullupDaysText(now.week)}, hasta tres veces al día mientras no las hayas apuntado.`}
+              ? `Esta semana tocan dominadas el ${pullupDaysText(now.week)}. Avisos a las ${times.join(', ')}; las horas se cambian en Perfil y avisos. Mientras esté activo, tus sesiones de casa no traen dominadas: ya las haces aquí.`
+              : `Al activarlo, te avisaré el ${pullupDaysText(now.week)}, hasta tres veces al día mientras no las hayas apuntado, y quitaré las dominadas de tus sesiones de casa para no cargar los codos por los dos lados.`}
           </Text>
           {denied && (
             <Text style={[type.caption, { color: colors.danger }]}>No hay permiso para mostrar avisos. Actívalo en los ajustes del móvil y vuelve a encenderlo.</Text>

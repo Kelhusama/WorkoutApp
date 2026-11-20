@@ -333,3 +333,16 @@ export function isElbowCareDay(date: ISODate): boolean {
   const wd = weekdayIndex(date);
   return wd === 4 || wd === (days.includes(1) ? 1 : 2);
 }
+
+/**
+ * Ejercicios de las sesiones de casa que el plan de la prueba ya cubre de sobra. Mientras el plan
+ * esté activo no se piden por los dos lados: los codos no aguantan dominadas en el plan y además
+ * en casa. Se quedan las flexiones, el curl y el resto.
+ */
+export const TRIAL_COVERS: readonly string[] = ['A.dominadas', 'A.negativas', 'C.dominadas'];
+
+/** Quita de una sesión de casa lo que ya hace el plan, si está activo y la prueba aún no ha pasado. */
+export function withoutTrialWork<T extends { key: string }>(slots: readonly T[], active: boolean, date: ISODate, eventDate: ISODate = EVENT_DATE): T[] {
+  if (!active || !todayPlan(date, eventDate).week) return [...slots];
+  return slots.filter((s) => !TRIAL_COVERS.includes(s.key));
+}

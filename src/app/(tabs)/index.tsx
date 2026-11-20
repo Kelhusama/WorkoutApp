@@ -10,13 +10,13 @@ import { deleteLog, getDoneSessions, getPrescriptions, markMissed } from '@/db/r
 import { getBlocks, getSlotVariants } from '@/db/coach';
 import { applyVariant, testsDue, type TestDue } from '@/domain/bandit';
 import { WEEK_LOAD_INFO, extraKind, readiness, type Readiness, type WeekLoad } from '@/domain/coach';
-import { getWeekLoad, saveWeekLoad } from '@/db/settings';
+import { getTrialActive, getWeekLoad, saveWeekLoad } from '@/db/settings';
 import { getPhotos, getRecentFeelings } from '@/db/stats';
 import { monthlyCheck } from '@/domain/physique';
 import { stretchedOn } from '@/db/stretch';
 import { addDays, formatLong, formatShort, today as getToday, weekStart, weekdayIndex } from '@/domain/dates';
 import { getTrialLogs } from '@/db/event';
-import { EVENT_NAME, LIFTS, doneThisWeek, doseText, isPullupDay, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
+import { EVENT_NAME, LIFTS, doneThisWeek, doseText, isPullupDay, withoutTrialWork, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
 import { prescriptionShort } from '@/domain/format';
 import { needsDeload } from '@/domain/gymTools';
 import { WALK_LABEL } from '@/domain/march';
@@ -88,6 +88,7 @@ export default function TodayScreen() {
   const [weekLoad, setWeekLoad] = useState<WeekLoad>('normal');
   // Sesiones apuntadas para la prueba del 16 de enero.
   const [trialLogs, setTrialLogs] = useState<TrialLog[]>([]);
+  const [trialActive, setTrialActive] = useState(false);
   const [stretched, setStretched] = useState(true);
   const [showExercises, setShowExercises] = useState(false);
   // Sesión extra en día de descanso: cuál propone el entrenador y si conviene que sea ligera.
@@ -100,8 +101,11 @@ export default function TodayScreen() {
   const gear = trip?.gear;
   // De viaje los ejercicios se adaptan al material disponible.
   const slots = useMemo(
-    () => (kind ? sessionSlots(kind, gear ? { mochila: gear.mochila, mesa: gear.mesa, gimnasio: gear.gimnasio } : null, focus) : []),
-    [kind, focus, gear?.mochila, gear?.mesa, gear?.gimnasio], // eslint-disable-line react-hooks/exhaustive-deps
+    () =>
+      kind
+        ? withoutTrialWork(sessionSlots(kind, gear ? { mochila: gear.mochila, mesa: gear.mesa, gimnasio: gear.gimnasio } : null, focus), trialActive && !gear, todayDate)
+        : [],
+    [kind, focus, trialActive, todayDate, gear?.mochila, gear?.mesa, gear?.gimnasio], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   useFocusEffect(
@@ -121,6 +125,7 @@ export default function TodayScreen() {
       if (kind) stretchedOn(db, todayDate, routineAfter(kind)).then(setStretched);
       getBlocks(db).then((b) => setTests(testsDue(b, todayDate)));
       getTrialLogs(db).then(setTrialLogs);
+      getTrialActive(db).then(setTrialActive);
       (async () => {
         const load = await getWeekLoad(db, weekStart(todayDate));
         const done = await getDoneSessions(db, addDays(todayDate, -30));
@@ -332,7 +337,9 @@ export default function TodayScreen() {
           );
         })()}
       {trial.phase === 'dia' && <PlanRow icon="trophy" title="Hoy es la prueba" detail="Calienta largo y empieza con un peso que sabes que sale." onPress={() => router.push('/prueba')} />}
-      {tests.map((t) => (
+      {tests
+        .filter((t) => !(trialActive && trial.week && t.goal === 'dominadas'))
+        .map((t) => (
         <PlanRow
           key={t.goal}
           icon="stopwatch"

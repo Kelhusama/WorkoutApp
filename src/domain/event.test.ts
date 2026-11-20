@@ -129,3 +129,17 @@ test('avisos de dominadas: varios al día hasta que se apuntan', async () => {
   // Sin horas no hay avisos.
   assert.deepEqual(planTrialReminders([], [], now, '2026-11-23', 5), []);
 });
+
+test('con el plan activo, las sesiones de casa no repiten las dominadas', async () => {
+  const { withoutTrialWork } = await import('./event');
+  const { TEMPLATES, focusSlots } = await import('./templates');
+  const keys = (s: { key: string }[]) => s.map((x) => x.key);
+  const a = withoutTrialWork(TEMPLATES.A, true, '2026-11-24');
+  assert.ok(!keys(a).some((k) => k.includes('dominadas') || k.includes('negativas')));
+  assert.ok(keys(a).includes('A.curl') && keys(a).includes('A.remo'));
+  assert.deepEqual(keys(withoutTrialWork(focusSlots(), true, '2026-11-24')), ['B.flexiones', 'A.curl', 'B.inclinadas']);
+  // La sesión de empuje no cambia; sin el plan activo o pasada la prueba, tampoco cambia nada.
+  assert.deepEqual(withoutTrialWork(TEMPLATES.B, true, '2026-11-24'), TEMPLATES.B);
+  assert.deepEqual(withoutTrialWork(TEMPLATES.A, false, '2026-11-24'), TEMPLATES.A);
+  assert.deepEqual(withoutTrialWork(TEMPLATES.A, true, '2027-01-20'), TEMPLATES.A);
+});
