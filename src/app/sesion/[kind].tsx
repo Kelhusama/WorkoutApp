@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getDoneSessions, getPrescriptions, getSessionLog, getSlotStages, getSessionReserves, getSessionSets, getTripOn, saveHomeSession, type SlotChange } from '@/db/repo';
 import { getSlotVariants } from '@/db/coach';
 import { getTrialActive, getWeekLoad } from '@/db/settings';
-import { withoutTrialWork } from '@/domain/event';
+import { isPullupDay, withoutTrialWork } from '@/domain/event';
 import { VARIANT_INFO, applyVariant, type Variant } from '@/domain/bandit';
 import { lightSets, readiness, type Readiness, type Reserve } from '@/domain/coach';
 import { getBests } from '@/db/stats';
@@ -80,7 +80,11 @@ export default function SessionScreen() {
       setVariants(blockVariants);
       setStages(trip ? {} : await getSlotStages(db));
       const saved = log?.status === 'done' ? await getSessionSets(db, log.id) : {};
-      const ready = readiness(await getDoneSessions(db, addDays(date, -30)), date, await getWeekLoad(db, weekStart(date)));
+      // El día que tocan dominadas del plan, la sesión de casa pasa a segundo plano: ligera.
+      const ready: Readiness =
+        trialOn && isPullupDay(date)
+          ? { light: true, reason: 'Hoy tocan dominadas del plan: hazlas primero y deja esta sesión en ligera.' }
+          : readiness(await getDoneSessions(db, addDays(date, -30)), date, await getWeekLoad(db, weekStart(date)));
       // Al editar se respeta cómo se guardó; si no, el entrenador propone según la carga reciente.
       const startLight = log?.status === 'done' ? log.light === 1 : ready.light;
       const initial: Record<string, number[]> = {};

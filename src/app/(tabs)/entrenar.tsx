@@ -91,6 +91,21 @@ export default function TrainScreen() {
         <Text style={[type.hero, { marginTop: 2 }]}>Tus programas</Text>
       </View>
 
+      {trial.phase !== 'pasado' && (
+        <Area icon="trophy" title={EVENT_NAME} status={trial.phase === 'dia' ? 'Hoy' : `${trial.daysLeft} días`} onPress={() => router.push('/prueba')}>
+          <Text style={type.body}>
+            {trial.week ? (
+              <>
+                Semana {9 - trial.week.weeksLeft} de 8: <Text style={styles.strong}>{trial.week.title}</Text>
+              </>
+            ) : (
+              'Calienta largo y a por ello.'
+            )}
+          </Text>
+          <Text style={type.caption}>Dominadas con lastre y peso muerto, a tres repeticiones. Toca para ver qué hacer esta semana y apuntarlo.</Text>
+        </Area>
+      )}
+
       <Area
         icon="barbell"
         title="Fuerza"
@@ -106,21 +121,6 @@ export default function TrainScreen() {
           {next && next.date === todayDate ? 'Toca para registrar la sesión.' : 'Gimnasio y sesiones en casa con pierna. Toca para ver tu semana tipo.'}
         </Text>
       </Area>
-
-      {trial.phase !== 'pasado' && (
-        <Area icon="trophy" title={EVENT_NAME} status={trial.phase === 'dia' ? 'Hoy' : `${trial.daysLeft} días`} onPress={() => router.push('/prueba')}>
-          <Text style={type.body}>
-            {trial.week ? (
-              <>
-                Semana {9 - trial.week.weeksLeft} de 8: <Text style={styles.strong}>{trial.week.title}</Text>
-              </>
-            ) : (
-              'Calienta largo y a por ello.'
-            )}
-          </Text>
-          <Text style={type.caption}>Dominadas con lastre y peso muerto, a tres repeticiones. Toca para ver qué hacer esta semana y apuntarlo.</Text>
-        </Area>
-      )}
 
       <Area icon="walk" title={`Marcha de ${GOAL_KM} km`} status={state && !state.completed ? `${state.step}/${LAST_STEP}` : undefined} onPress={() => router.push('/marcha')}>
         {!state ? (

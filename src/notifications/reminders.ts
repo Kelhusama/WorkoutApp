@@ -6,7 +6,7 @@ import { loadDays } from '@/db/repo';
 import { getTrialLogs } from '@/db/event';
 import { getReminderSettings, getTrialActive } from '@/db/settings';
 import { addDays, today } from '@/domain/dates';
-import { planTrialReminders } from '@/domain/event';
+import { isPullupDay, planTrialReminders } from '@/domain/event';
 import { REMINDER_PREFIX, planReminders } from '@/domain/reminders';
 
 const CHANNEL = 'recordatorios';
@@ -62,7 +62,8 @@ async function doSync(db: SQLiteDatabase) {
   const { days } = await loadDays(db, from, addDays(from, HORIZON_DAYS - 1));
   // Avisos de sesión en casa y, si el plan de la prueba está activo, los de dominadas (a las mismas horas).
   const reminders = [
-    ...(settings.enabled ? planReminders(days, settings, now) : []),
+    // Con el plan activo, los días de dominadas solo avisan de las dominadas: van primero.
+    ...(settings.enabled ? planReminders(trialActive ? days.filter((d) => !isPullupDay(d.date)) : days, settings, now) : []),
     ...(trialActive ? planTrialReminders(await getTrialLogs(db), settings.times, now, from, HORIZON_DAYS) : []),
   ];
   for (const r of reminders) {

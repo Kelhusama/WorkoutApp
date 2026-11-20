@@ -180,6 +180,36 @@ export default function TodayScreen() {
         </Pressable>
       </View>
 
+      {/* La prueba manda: sus dominadas van antes que la sesión del día */}
+      {trial.week && isPullupDay(todayDate) && !trialLogs.some((l) => l.lift === 'dominada' && l.date === todayDate) && (
+        <PlanRow
+          icon="play-circle"
+          title="Lo primero de hoy: dominadas"
+          detail={`${doseText('dominada', trialDose('dominada', trial.week, trialLogs))} · sesión guiada de unos 20 minutos. Hazlas antes que cualquier otra cosa`}
+          onPress={() => router.push('/dominadas')}
+        />
+      )}
+      {trial.week &&
+        (() => {
+          // Lo que falta esta semana para la prueba, en una línea.
+          const left = LIFTS.map((lift) => ({ lift, dose: trialDose(lift, trial.week!, trialLogs), done: doneThisWeek(lift, trial.week!, trialLogs) })).filter(
+            (x) => x.done < x.dose.days,
+          );
+          return (
+            <PlanRow
+              icon="trophy"
+              title={`${EVENT_NAME} · faltan ${trial.daysLeft} días`}
+              detail={
+                left.length === 0
+                  ? 'Todo lo de esta semana está hecho.'
+                  : left.map((x) => `${x.lift === 'dominada' ? 'Dominadas' : 'Peso muerto'} (${x.done} de ${x.dose.days}): ${doseText(x.lift, x.dose)}`).join(' · ')
+              }
+              onPress={() => router.push('/prueba')}
+            />
+          );
+        })()}
+      {trial.phase === 'dia' && <PlanRow icon="trophy" title="Hoy es la prueba" detail="Calienta largo y empieza con un peso que sabes que sale." onPress={() => router.push('/prueba')} />}
+
       {/* Lo de hoy, con la acción principal justo debajo del título */}
       {day && info && status && (
         <Card style={{ gap: space.md }}>
@@ -195,7 +225,7 @@ export default function TodayScreen() {
           </View>
 
           {day.type === 'rest' && <Text style={type.caption}>Hoy toca descansar. El músculo crece mientras te recuperas.</Text>}
-          {(day.type === 'rest' || (day.type === 'movilidad' && weekLoad === 'mas')) && extra && weekLoad !== 'menos' && (
+          {(day.type === 'rest' || (day.type === 'movilidad' && weekLoad === 'mas')) && extra && weekLoad !== 'menos' && !(trialActive && trial.week && weekLoad !== 'mas') && (
             <>
               <Text style={type.caption}>
                 Si aun así quieres entrenar, te propongo la sesión «{SESSION_INFO[extra.kind].title}»
@@ -309,34 +339,6 @@ export default function TodayScreen() {
           onPress={() => router.push({ pathname: '/viaje', params: { id: String(trip.id) } })}
         />
       )}
-      {trial.week && isPullupDay(todayDate) && !trialLogs.some((l) => l.lift === 'dominada' && l.date === todayDate) && (
-        <PlanRow
-          icon="play-circle"
-          title="Hoy tocan dominadas"
-          detail={`${doseText('dominada', trialDose('dominada', trial.week, trialLogs))} · sesión guiada de unos 20 minutos`}
-          onPress={() => router.push('/dominadas')}
-        />
-      )}
-      {trial.week &&
-        (() => {
-          // Lo que falta esta semana para la prueba, en una línea.
-          const left = LIFTS.map((lift) => ({ lift, dose: trialDose(lift, trial.week!, trialLogs), done: doneThisWeek(lift, trial.week!, trialLogs) })).filter(
-            (x) => x.done < x.dose.days,
-          );
-          return (
-            <PlanRow
-              icon="trophy"
-              title={`${EVENT_NAME} · faltan ${trial.daysLeft} días`}
-              detail={
-                left.length === 0
-                  ? 'Todo lo de esta semana está hecho.'
-                  : left.map((x) => `${x.lift === 'dominada' ? 'Dominadas' : 'Peso muerto'} (${x.done} de ${x.dose.days}): ${doseText(x.lift, x.dose)}`).join(' · ')
-              }
-              onPress={() => router.push('/prueba')}
-            />
-          );
-        })()}
-      {trial.phase === 'dia' && <PlanRow icon="trophy" title="Hoy es la prueba" detail="Calienta largo y empieza con un peso que sabes que sale." onPress={() => router.push('/prueba')} />}
       {tests
         .filter((t) => !(trialActive && trial.week && t.goal === 'dominadas'))
         .map((t) => (
