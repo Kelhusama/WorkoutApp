@@ -54,17 +54,17 @@ export const STRETCHES: Record<string, Stretch> = Object.fromEntries(
   [
     // ---------- Tren superior ----------
     s('cuelgue_pasivo', 'Cuelgue pasivo en la barra', 'espalda', 30, false, ['Agarre con las palmas al frente', 'Hombros relajados, deja que el cuerpo cuelgue', 'Apoya las puntas de los pies si lo necesitas'], 'Balancearse', 'colgarse'),
-    s('dorsal_marco', 'Dorsal en el marco de la puerta', 'espalda', 30, true, ['Agarra el marco a la altura de la cadera', 'Lleva la cadera atrás y hacia el lado contrario', 'Nota el estirón en el costado'], 'Redondear la zona lumbar'),
-    s('biceps_pared', 'Bíceps en la pared', 'brazo', 30, true, ['Palma en la pared con el brazo atrás y el pulgar arriba', 'Gira el tronco alejándote de la mano', 'Brazo estirado'], 'Encoger el hombro'),
-    s('flexores_antebrazo', 'Flexores del antebrazo', 'brazo', 30, true, ['Brazo estirado al frente, palma hacia arriba', 'Con la otra mano, tira de los dedos hacia abajo', 'Codo recto'], 'Doblar el codo'),
-    s('brazo_cruzado', 'Brazo cruzado', 'pecho', 30, true, ['Brazo recto cruzando el pecho', 'Empuja con la otra mano por encima del codo', 'Hombro abajo'], 'Girar el tronco'),
-    s('pectoral_marco', 'Pectoral en el marco de la puerta', 'pecho', 30, true, ['Codo a 90° apoyado en el marco', 'Da un paso adelante con el pecho al frente', 'Hombros lejos de las orejas'], 'Arquear la zona lumbar'),
-    s('triceps_nuca', 'Tríceps tras la nuca', 'brazo', 30, true, ['Codo hacia el techo, mano entre los omóplatos', 'Empuja el codo con la otra mano', 'Cabeza recta'], 'Adelantar la cabeza'),
-    s('hombro_anterior', 'Hombro anterior con silla', 'pecho', 30, false, ['Sentado en el suelo, manos atrás sobre una silla o el suelo', 'Desliza la cadera hacia delante', 'Pecho abierto'], 'Subir los hombros a las orejas'),
-    s('flexores_muneca_suelo', 'Muñecas en cuadrupedia', 'brazo', 30, false, ['A cuatro patas, dedos apuntando a las rodillas', 'Lleva el peso hacia atrás poco a poco', 'Palmas pegadas al suelo'], 'Levantar las palmas'),
-    s('postura_nino', 'Postura del niño', 'espalda', 30, false, ['Glúteos hacia los talones', 'Brazos largos al frente', 'Respira hacia la espalda'], 'Forzar las rodillas'),
-    s('extensores_muneca', 'Extensores de la muñeca', 'brazo', 30, true, ['Brazo recto al frente, palma hacia abajo', 'Con la otra mano, dobla la muñeca hacia ti', 'Codo recto'], 'Doblar el codo'),
-    s('trapecio', 'Trapecio y cuello', 'espalda', 30, true, ['Lleva la oreja al hombro', 'La mano contraria apunta al suelo', 'Sin tirar de la cabeza'], 'Tirar de la cabeza con la mano'),
+    s('dorsal_marco', 'Dorsal en el marco de la puerta', 'espalda', 30, true, ['Agarra el marco a la altura de la cadera', 'Lleva la cadera atrás y hacia el lado contrario', 'Nota el estirón en el costado'], 'Redondear la zona lumbar', 'est_dorsal'),
+    s('biceps_pared', 'Bíceps en la pared', 'brazo', 30, true, ['Palma en la pared con el brazo atrás y el pulgar arriba', 'Gira el tronco alejándote de la mano', 'Brazo estirado'], 'Encoger el hombro', 'est_biceps'),
+    s('flexores_antebrazo', 'Flexores del antebrazo', 'brazo', 30, true, ['Brazo estirado al frente, palma hacia arriba', 'Con la otra mano, tira de los dedos hacia abajo', 'Codo recto'], 'Doblar el codo', 'est_flexores'),
+    s('brazo_cruzado', 'Brazo cruzado', 'pecho', 30, true, ['Brazo recto cruzando el pecho', 'Empuja con la otra mano por encima del codo', 'Hombro abajo'], 'Girar el tronco', 'est_brazo_cruzado'),
+    s('pectoral_marco', 'Pectoral en el marco de la puerta', 'pecho', 30, true, ['Codo a 90° apoyado en el marco', 'Da un paso adelante con el pecho al frente', 'Hombros lejos de las orejas'], 'Arquear la zona lumbar', 'est_pectoral'),
+    s('triceps_nuca', 'Tríceps tras la nuca', 'brazo', 30, true, ['Codo hacia el techo, mano entre los omóplatos', 'Empuja el codo con la otra mano', 'Cabeza recta'], 'Adelantar la cabeza', 'est_triceps'),
+    s('hombro_anterior', 'Hombro anterior con silla', 'pecho', 30, false, ['Sentado en el suelo, manos atrás sobre una silla o el suelo', 'Desliza la cadera hacia delante', 'Pecho abierto'], 'Subir los hombros a las orejas', 'est_hombro'),
+    s('flexores_muneca_suelo', 'Muñecas en cuadrupedia', 'brazo', 30, false, ['A cuatro patas, dedos apuntando a las rodillas', 'Lleva el peso hacia atrás poco a poco', 'Palmas pegadas al suelo'], 'Levantar las palmas', 'est_muneca_suelo'),
+    s('postura_nino', 'Postura del niño', 'espalda', 30, false, ['Glúteos hacia los talones', 'Brazos largos al frente', 'Respira hacia la espalda'], 'Forzar las rodillas', 'est_nino'),
+    s('extensores_muneca', 'Extensores de la muñeca', 'brazo', 30, true, ['Brazo recto al frente, palma hacia abajo', 'Con la otra mano, dobla la muñeca hacia ti', 'Codo recto'], 'Doblar el codo', 'est_extensores'),
+    s('trapecio', 'Trapecio y cuello', 'espalda', 30, true, ['Lleva la oreja al hombro', 'La mano contraria apunta al suelo', 'Sin tirar de la cabeza'], 'Tirar de la cabeza con la mano', 'est_trapecio'),
 
     // ---------- Tren inferior ----------
     s('mariposa', 'Mariposa', 'aductores', 60, false, ['Sentado, plantas de los pies juntas', 'Espalda larga, sin encorvarte', 'Deja caer las rodillas por su propio peso'], 'Rebotar con las rodillas', 'est_mariposa'),

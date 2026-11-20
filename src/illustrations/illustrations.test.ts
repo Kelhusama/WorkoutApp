@@ -20,7 +20,7 @@ test('cinemática inversa respeta la longitud de los huesos', () => {
 
 test('en cada postura la mano y el pie llegan a su sitio y nada atraviesa el suelo', () => {
   for (const [id, ill] of Object.entries(ILLUSTRATIONS)) {
-    if (ill.front) continue;
+    if (ill.front || ill.frontPose) continue;
     for (const pose of [ill.start, ill.end]) {
       const sk = buildSkeleton(pose, ill);
       const handErr = Math.hypot(sk.hand[0] - pose.hand[0], sk.hand[1] - pose.hand[1]);

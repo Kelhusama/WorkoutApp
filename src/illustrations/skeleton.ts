@@ -61,6 +61,19 @@ export interface Illustration {
    * Ángulo del brazo respecto a la horizontal: 90 = colgando, 0 = en cruz.
    */
   front?: { from: number; to: number };
+  /** Vista frontal con cada brazo por separado (estiramientos que no se entienden de perfil). */
+  frontPose?: { start: FrontPose; end: FrontPose };
+}
+
+export interface FrontPose {
+  /** Mano del brazo que queda a la izquierda del dibujo. */
+  left: Pt;
+  /** Mano del brazo que queda a la derecha del dibujo. */
+  right: Pt;
+  /** Inclinación de la cabeza hacia un lado, en píxeles (negativo = hacia la izquierda). */
+  tilt: number;
+  /** Lado que se estira y se resalta. */
+  accent: 'left' | 'right';
 }
 
 const rad = (d: number) => (d * Math.PI) / 180;

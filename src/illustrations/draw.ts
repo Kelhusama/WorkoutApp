@@ -1,4 +1,17 @@
-import { add, along, buildSkeleton, lerpPose, type Focus, type Illustration, type Prop, type Pt, type Skeleton } from './skeleton';
+import {
+  BONES,
+  add,
+  along,
+  buildSkeleton,
+  lerpPose,
+  solveTwoBone,
+  type Focus,
+  type FrontPose,
+  type Illustration,
+  type Prop,
+  type Pt,
+  type Skeleton,
+} from './skeleton';
 
 /**
  * Convierte un ejercicio y un instante (0 = inicio, 1 = final) en formas planas.
@@ -161,11 +174,59 @@ function frontBody(angleDeg: number, ill: Illustration, p: Palette, withHeld: bo
   return out;
 }
 
+/** Vista frontal con cada brazo en su sitio y la cabeza inclinada. */
+function frontPoseBody(pose: FrontPose, ill: Illustration, p: Palette): Shape[] {
+  const o = p.outline;
+  const has = (f: Focus) => ill.focus.includes(f);
+  const shoulders = { left: [84, 86] as Pt, right: [116, 86] as Pt };
+  const out: Shape[] = [];
+  out.push(limb([93, 130], [89, 166], 8.2, 6.4, p.near, o), limb([89, 166], [89, 196], 6, 4.4, p.near, o));
+  out.push(limb([107, 130], [111, 166], 8.2, 6.4, p.near, o), limb([111, 166], [111, 196], 6, 4.4, p.near, o));
+  out.push(limb([100, 128], [100, 92], 11.5, 13.5, p.torso, o));
+  out.push(limb(shoulders.left, shoulders.right, 8.5, 8.5, p.torso, false));
+  // Trapecio del lado que se estira: del cuello al hombro.
+  if (has('back')) out.push(limb([100, 78], shoulders[pose.accent], 4.6, 6, p.accent, false));
+  const head: Pt = [100 + pose.tilt, 62 + Math.abs(pose.tilt) * 0.35];
+  out.push(limb([100, 80], head, 4.6, 4.6, p.near, false));
+  out.push({ k: 'circle', c: head, r: 9.6, fill: p.near, outline: o });
+  // Primero el brazo que no trabaja; el resaltado va encima.
+  const order: ('left' | 'right')[] = pose.accent === 'left' ? ['right', 'left'] : ['left', 'right'];
+  for (const side of order) {
+    const accent = side === pose.accent;
+    const s = shoulders[side];
+    const arm = solveTwoBone(s, pose[side], BONES.upperArm, BONES.forearm, side === 'left' ? 1 : -1);
+    if (accent && has('shoulder')) out.push({ k: 'circle', c: s, r: 7.6, fill: p.accent, outline: o });
+    out.push(limb(s, arm.joint, 6.6, 5.4, accent && has('upperArm') ? p.accent : p.near, o));
+    out.push(limb(arm.joint, arm.end, 5, 4.1, accent && has('forearm') ? p.accent : p.near, o));
+    out.push({ k: 'circle', c: arm.end, r: 4.6, fill: p.near, outline: o });
+  }
+  return out;
+}
+
+const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+function lerpFront(a: FrontPose, b: FrontPose, t: number): FrontPose {
+  return {
+    left: [mix(a.left[0], b.left[0], t), mix(a.left[1], b.left[1], t)],
+    right: [mix(a.right[0], b.right[0], t), mix(a.right[1], b.right[1], t)],
+    tilt: mix(a.tilt, b.tilt, t),
+    accent: a.accent,
+  };
+}
+
 // ---------- Composición ----------
 
 export function drawFigure(ill: Illustration, t: number): Shape[] {
   const out: Shape[] = [{ k: 'rect', x: 0, y: 0, w: VIEW.w, h: VIEW.h, r: 18, fill: INK.panel }];
   const floor = ill.props.find((p) => p.kind === 'floor');
+
+  if (ill.frontPose) {
+    const { start, end } = ill.frontPose;
+    out.push(...props(ill.props));
+    out.push({ k: 'ellipse', c: [100, 200], rx: 34, ry: 3.5, fill: '#000000', opacity: 0.35 });
+    out.push(...frontPoseBody(start, ill, GHOST), ...frontPoseBody(end, ill, GHOST));
+    out.push(...frontPoseBody(lerpFront(start, end, t), ill, LIVE));
+    return out;
+  }
 
   if (ill.front) {
     const { from, to } = ill.front;

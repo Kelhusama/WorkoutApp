@@ -31,8 +31,8 @@ test('las rutinas solo usan estiramientos que existen, y los dibujos indicados e
   }
 });
 
-test('todos los estiramientos de tren inferior tienen dibujo', () => {
-  for (const id of ROUTINES.inferior.stretchIds) assert.ok(STRETCHES[id].figure, id);
+test('todos los estiramientos tienen dibujo', () => {
+  for (const s of Object.values(STRETCHES)) assert.ok(s.figure, s.id);
 });
 
 test('la rutina de tren inferior da 3 min de aductores y dura unos 11 min', () => {
