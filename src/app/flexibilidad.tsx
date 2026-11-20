@@ -27,7 +27,7 @@ import { formatLong } from '@/domain/dates';
 import { useFlex } from '@/hooks/useFlex';
 import { Button, Card, Pill, ProgressBar } from '@/ui/components';
 import { LineChart } from '@/ui/LineChart';
-import { colors, space, type } from '@/ui/theme';
+import { colors, space, type, font } from '@/ui/theme';
 
 /** Título de sección en minúsculas normales (sin mayúsculas forzadas). */
 function Heading({ children }: { children: ReactNode }) {
@@ -248,12 +248,12 @@ export default function FlexibilityScreen() {
 }
 
 const styles = StyleSheet.create({
-  heading: { fontSize: 17, fontWeight: '700', color: colors.text, marginTop: space.lg },
+  heading: { fontSize: 17, ...font.w700, color: colors.text, marginTop: space.lg },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  value: { fontSize: 22, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
+  value: { fontSize: 22, ...font.display, color: colors.text, fontVariant: ['tabular-nums'] },
   test: { gap: space.sm, minHeight: 64 },
   delete: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   notice: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   exercise: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  number: { width: 24, fontSize: 15, fontWeight: '700', color: colors.muted, textAlign: 'center', fontVariant: ['tabular-nums'] },
+  number: { width: 24, fontSize: 15, ...font.w700, color: colors.muted, textAlign: 'center', fontVariant: ['tabular-nums'] },
 });

@@ -7,7 +7,7 @@ import { getReminderSettings, saveReminderSettings } from '@/db/settings';
 import { DEFAULT_REMINDERS, MAX_REMINDERS_PER_DAY, shiftTime, type ReminderSettings } from '@/domain/reminders';
 import { ensurePermission, syncReminders } from '@/notifications/reminders';
 import { Card, ToggleRow } from './components';
-import { colors, radius, space, type } from './theme';
+import { colors, radius, space, type, font } from './theme';
 
 /** Ajustes de avisos: se guardan al momento y reprograman las notificaciones. */
 export function RemindersSettings() {
@@ -86,5 +86,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  time: { width: 56, textAlign: 'center', fontSize: 17, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
+  time: { width: 56, textAlign: 'center', fontSize: 17, ...font.w800, color: colors.text, fontVariant: ['tabular-nums'] },
 });

@@ -31,7 +31,7 @@ import {
 } from '@/domain/flexibility';
 import { ExerciseFigure } from '@/illustrations/ExerciseFigure';
 import { Button, Card, ProgressBar } from '@/ui/components';
-import { colors, radius, space, type } from '@/ui/theme';
+import { colors, radius, space, type, font } from '@/ui/theme';
 
 function say(text: string, enabled: boolean) {
   if (!enabled) return;
@@ -331,7 +331,7 @@ function Player({ plan }: { plan: Plan }) {
 
         <View style={{ gap: 2 }}>
           <Text style={type.title}>{name}</Text>
-          <Text style={[type.body, { color: colors.accent, fontWeight: '700' }]}>
+          <Text style={[type.body, { color: colors.accent, ...font.w700 }]}>
             {FLEX_ZONE_LABEL[exercise.zone]} · serie {step.set} de {step.sets}
             {step.side ? ` · lado ${step.side} de 2` : ''}
           </Text>
@@ -402,7 +402,7 @@ function Player({ plan }: { plan: Plan }) {
 
 const styles = StyleSheet.create({
   headerButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
-  heading: { fontSize: 17, fontWeight: '700', color: colors.text, marginTop: space.md },
+  heading: { fontSize: 17, ...font.w700, color: colors.text, marginTop: space.md },
   timer: {
     alignItems: 'center',
     gap: 2,
@@ -412,11 +412,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.border,
   },
-  phase: { fontSize: 15, fontWeight: '700', color: colors.muted },
-  time: { fontSize: 72, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'], lineHeight: 80 },
+  phase: { fontSize: 15, ...font.w700, color: colors.muted },
+  time: { fontSize: 72, ...font.display, color: colors.text, fontVariant: ['tabular-nums'], lineHeight: 80 },
   bullet: { flexDirection: 'row', gap: space.sm },
   weekRow: { flexDirection: 'row', alignItems: 'baseline', gap: space.sm },
-  weekValue: { fontSize: 28, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
+  weekValue: { fontSize: 28, ...font.display, color: colors.text, fontVariant: ['tabular-nums'] },
   doneRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   bar: {
     flexDirection: 'row',

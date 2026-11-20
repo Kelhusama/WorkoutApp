@@ -16,7 +16,7 @@ import type { Feeling } from '@/domain/progression';
 import { estimate1RM } from '@/domain/strength';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Button, Card, FeelingPicker, SectionTitle, Segmented, Stepper, ToggleRow } from '@/ui/components';
-import { colors, radius, space, type } from '@/ui/theme';
+import { colors, radius, space, type, font } from '@/ui/theme';
 
 const fmtKg = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1).replace('.', ','));
 
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.cardHigh,
   },
-  workLabel: { fontSize: 14, fontWeight: '700', color: colors.muted },
+  workLabel: { fontSize: 14, ...font.w700, color: colors.muted },
   e1rm: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -242,6 +242,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
   },
   tools: { gap: 6, padding: space.md, borderRadius: radius.md, backgroundColor: colors.cardHigh },
-  toolValue: { color: colors.text, fontWeight: '700' },
-  e1rmValue: { fontSize: 20, fontWeight: '800', color: colors.accent },
+  toolValue: { color: colors.text, ...font.w700 },
+  e1rmValue: { fontSize: 20, ...font.display, color: colors.accent },
 });

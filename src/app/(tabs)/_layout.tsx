@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router/js-tabs';
 
-import { colors } from '@/ui/theme';
+import { colors, font } from '@/ui/theme';
 
 export default function TabLayout() {
   return (
@@ -12,7 +12,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.faint,
         tabBarStyle: { backgroundColor: colors.bg, borderTopColor: colors.border },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 12, ...font.w600 },
       }}>
       <Tabs.Screen
         name="index"

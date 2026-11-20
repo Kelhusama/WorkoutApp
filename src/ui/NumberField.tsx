@@ -1,7 +1,7 @@
 import { useRef, type ComponentRef } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { colors, radius, space, type } from './theme';
+import { colors, radius, space, type, font } from './theme';
 
 /** Convierte "80,5" o "80.5" en número; vacío → null. */
 export function parseNumber(s: string): number | null {
@@ -91,6 +91,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
     minWidth: 120,
   },
-  input: { flex: 1, color: colors.text, fontSize: 20, fontWeight: '700', paddingVertical: 10, textAlign: 'right' },
-  unit: { color: colors.muted, fontSize: 14, fontWeight: '600', marginLeft: 6, minWidth: 26 },
+  input: { flex: 1, color: colors.text, fontSize: 20, ...font.w700, paddingVertical: 10, textAlign: 'right' },
+  unit: { color: colors.muted, fontSize: 14, ...font.w600, marginLeft: 6, minWidth: 26 },
 });

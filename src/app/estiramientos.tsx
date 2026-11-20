@@ -9,7 +9,7 @@ import { addDays, today, weekStart } from '@/domain/dates';
 import { ROUTINES, ROUTINE_ORDER, minutesByZone, routineMinutes, weeklyStretching, type StretchEntry } from '@/domain/stretches';
 import { Card, SectionTitle } from '@/ui/components';
 import { LineChart } from '@/ui/LineChart';
-import { colors, space, type } from '@/ui/theme';
+import { colors, space, type, font } from '@/ui/theme';
 import { ZoneBars } from '@/ui/ZoneBars';
 
 export default function StretchingScreen() {
@@ -98,5 +98,5 @@ const styles = StyleSheet.create({
   icon: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
   week: { flexDirection: 'row' },
   stat: { flex: 1, gap: 2 },
-  statValue: { fontSize: 28, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
+  statValue: { fontSize: 28, ...font.display, color: colors.text, fontVariant: ['tabular-nums'] },
 });

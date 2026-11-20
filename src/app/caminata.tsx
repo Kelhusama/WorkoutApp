@@ -11,7 +11,7 @@ import { WALK_LABEL, formatPace, type WalkKind } from '@/domain/march';
 import { KIND_LABEL, stepAt } from '@/domain/marchPlan';
 import { Button, Card, SectionTitle, Stepper } from '@/ui/components';
 import { NumberField, numberToText, parseNumber, useFieldChain } from '@/ui/NumberField';
-import { colors, radius, space, type } from '@/ui/theme';
+import { colors, radius, space, type, font } from '@/ui/theme';
 
 const KINDS: WalkKind[] = ['suave', 'cuestas', 'larga', 'extra', 'libre'];
 
@@ -134,7 +134,7 @@ export default function WalkScreen() {
         </View>
         {kmValue !== null && kmValue > 0 && minutes > 0 && (
           <Text style={type.caption}>
-            Ritmo: <Text style={{ color: colors.text, fontWeight: '700' }}>{formatPace(minutes / kmValue)}</Text> ·{' '}
+            Ritmo: <Text style={{ color: colors.text, ...font.w700 }}>{formatPace(minutes / kmValue)}</Text> ·{' '}
             {((kmValue / minutes) * 60).toFixed(1).replace('.', ',')} km/h
           </Text>
         )}
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.card,
   },
-  kindLabel: { fontSize: 14, fontWeight: '700', color: colors.muted },
+  kindLabel: { fontSize: 14, ...font.w700, color: colors.muted },
   notes: {
     minHeight: 72,
     color: colors.text,

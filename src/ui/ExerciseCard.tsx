@@ -9,7 +9,7 @@ import { TEMPO_LABEL, type Prescription } from '@/domain/progression';
 import { exerciseFor, type Slot } from '@/domain/templates';
 import { ExerciseFigure } from '@/illustrations/ExerciseFigure';
 import { Card, Segmented } from './components';
-import { colors, radius, space, type } from './theme';
+import { colors, radius, space, type, font } from './theme';
 
 interface Props {
   slot: Slot;
@@ -40,7 +40,7 @@ export function ExerciseCard({ slot, target, values, onChange, reserve, onReserv
     <Card style={{ gap: space.md }}>
       <View style={{ gap: 4 }}>
         <Text style={type.title}>{ex.name}</Text>
-        <Text style={[type.body, { color: colors.accent, fontWeight: '700' }]}>{prescriptionText(target, ex)}</Text>
+        <Text style={[type.body, { color: colors.accent, ...font.w700 }]}>{prescriptionText(target, ex)}</Text>
         <Text style={type.caption}>{ex.muscles.join(' · ')}</Text>
       </View>
 
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   bullet: { flexDirection: 'row', gap: space.sm },
   table: { gap: space.sm },
   setRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  setLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: colors.text },
+  setLabel: { flex: 1, fontSize: 15, ...font.w600, color: colors.text },
   stepBtn: {
     width: 48,
     height: 48,
@@ -186,6 +186,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   trash: { width: 32, height: 48, alignItems: 'flex-end', justifyContent: 'center' },
-  setValue: { width: 58, textAlign: 'center', fontSize: 17, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  setValue: { width: 58, textAlign: 'center', fontSize: 17, ...font.w800, fontVariant: ['tabular-nums'] },
   addSet: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
 });

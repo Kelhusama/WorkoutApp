@@ -7,7 +7,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Segmented } from './components';
-import { colors, radius, space, type } from './theme';
+import { colors, radius, space, type, font } from './theme';
 
 const TIMERS = [
   { id: '0', label: 'Ya' },
@@ -162,9 +162,9 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
   noPerm: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.md, padding: space.xl },
   top: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.md },
-  tip: { flex: 1, color: colors.text, backgroundColor: 'rgba(14,15,18,0.75)', padding: space.sm, borderRadius: radius.md, overflow: 'hidden' },
-  bottom: { position: 'absolute', bottom: 0, left: 0, right: 0, gap: space.sm, padding: space.md, backgroundColor: 'rgba(14,15,18,0.85)' },
-  round: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(38,42,50,0.9)' },
+  tip: { flex: 1, color: colors.text, backgroundColor: 'rgba(11,27,43,0.75)', padding: space.sm, borderRadius: radius.md, overflow: 'hidden' },
+  bottom: { position: 'absolute', bottom: 0, left: 0, right: 0, gap: space.sm, padding: space.md, backgroundColor: 'rgba(11,27,43,0.85)' },
+  round: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(27,54,83,0.9)' },
   count: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center' },
-  countText: { fontSize: 120, fontWeight: '800', color: '#fff', textShadowColor: '#000', textShadowRadius: 12 },
+  countText: { fontSize: 120, ...font.display, color: '#fff', textShadowColor: '#000', textShadowRadius: 12 },
 });

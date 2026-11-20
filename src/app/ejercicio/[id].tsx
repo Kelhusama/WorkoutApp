@@ -14,7 +14,7 @@ import { exerciseStats, seriesOf, type SessionSets } from '@/domain/stats';
 import { ExerciseFigure } from '@/illustrations/ExerciseFigure';
 import { Card, SectionTitle, Segmented } from '@/ui/components';
 import { LineChart } from '@/ui/LineChart';
-import { colors, space, type } from '@/ui/theme';
+import { colors, space, type, font } from '@/ui/theme';
 
 type Metric = 'best' | 'total';
 
@@ -186,7 +186,7 @@ export default function ExerciseScreen() {
 const styles = StyleSheet.create({
   tiles: { flexDirection: 'row', gap: space.sm },
   tile: { flex: 1, gap: 2, padding: space.md },
-  tileValue: { fontSize: 20, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'], marginTop: 4 },
+  tileValue: { fontSize: 20, ...font.display, color: colors.text, fontVariant: ['tabular-nums'], marginTop: 4 },
   histRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.md },
   divider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   exam: { gap: 4, paddingTop: space.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },

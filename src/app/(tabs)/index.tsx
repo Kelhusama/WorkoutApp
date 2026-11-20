@@ -32,7 +32,7 @@ import { syncReminders } from '@/notifications/reminders';
 import { Button, Card, Pill, SectionTitle, Segmented, type IconName } from '@/ui/components';
 import { GoalsSummary } from '@/ui/goals';
 import { openDay } from '@/ui/navigation';
-import { colors, space, type } from '@/ui/theme';
+import { colors, space, type, font } from '@/ui/theme';
 import { STATUS_STYLE, WeekStrip } from '@/ui/week';
 
 const LOADS: readonly { id: WeekLoad; label: string }[] = (['menos', 'normal', 'mas'] as const).map((id) => ({ id, label: WEEK_LOAD_INFO[id].label }));
@@ -433,7 +433,7 @@ export default function TodayScreen() {
             <Text style={type.caption}>
               {streak.weeks > 0 ? (
                 <>
-                  Racha: <Text style={{ color: colors.text, fontWeight: '800' }}>{streak.weeks}</Text>{' '}
+                  Racha: <Text style={{ color: colors.text, ...font.w800 }}>{streak.weeks}</Text>{' '}
                   {streak.weeks === 1 ? 'semana cumplida' : 'semanas cumplidas'}
                 </>
               ) : (
@@ -459,5 +459,5 @@ const styles = StyleSheet.create({
   planRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 64 },
   streak: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   exRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  exPresc: { fontSize: 15, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },
+  exPresc: { fontSize: 15, ...font.w700, color: colors.text, fontVariant: ['tabular-nums'] },
 });

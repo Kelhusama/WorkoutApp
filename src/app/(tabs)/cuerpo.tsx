@@ -10,7 +10,7 @@ import { howAmIDoing, type Verdict } from '@/domain/physique';
 import { useBody } from '@/hooks/useBody';
 import { Button, Card, Pill, SectionTitle } from '@/ui/components';
 import { LineChart, TONE_COLOR } from '@/ui/LineChart';
-import { colors, space, type } from '@/ui/theme';
+import { colors, space, type, font } from '@/ui/theme';
 
 const fmt = (v: number, d = 1) => v.toFixed(d).replace('.', ',');
 
@@ -20,7 +20,7 @@ function Delta({ now, before, unit, lowerIsBetter = true }: { now?: number | nul
   if (Math.abs(d) < 0.05) return <Text style={type.caption}>=</Text>;
   const good = lowerIsBetter ? d < 0 : d > 0;
   return (
-    <Text style={[type.caption, { color: good ? colors.success : colors.danger, fontWeight: '700' }]}>
+    <Text style={[type.caption, { color: good ? colors.success : colors.danger, ...font.w700 }]}>
       {d > 0 ? '+' : ''}
       {fmt(d)}
       {unit}
@@ -237,11 +237,11 @@ const styles = StyleSheet.create({
   iconBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   weightRow: { flexDirection: 'row', alignItems: 'flex-end' },
   trend: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, borderRadius: 12, backgroundColor: colors.cardHigh },
-  weight: { fontSize: 40, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
-  weightUnit: { fontSize: 18, fontWeight: '600', color: colors.muted },
+  weight: { fontSize: 40, ...font.display, color: colors.text, fontVariant: ['tabular-nums'] },
+  weightUnit: { fontSize: 18, ...font.w600, color: colors.muted },
   measures: { flexDirection: 'row', justifyContent: 'space-between' },
   measure: { alignItems: 'flex-start', gap: 2 },
   targetRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   indicator: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.md },
-  indValue: { fontSize: 22, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
+  indValue: { fontSize: 22, ...font.display, color: colors.text, fontVariant: ['tabular-nums'] },
 });

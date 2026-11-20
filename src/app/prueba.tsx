@@ -37,7 +37,7 @@ import {
 } from '@/domain/event';
 import { Button, Card, Pill, ProgressBar, SectionTitle, Segmented, Stepper, ToggleRow } from '@/ui/components';
 import { LineChart } from '@/ui/LineChart';
-import { colors, radius, space, type } from '@/ui/theme';
+import { colors, radius, space, type, font } from '@/ui/theme';
 
 /** Tamaños de disco que se pueden indicar. */
 const PLATE_SIZES = [1, 1.25, 2, 2.5, 5] as const;
@@ -136,7 +136,7 @@ export default function TrialScreen() {
         </Text>
         {now.week && (
           <Text style={type.body}>
-            Semana {9 - now.week.weeksLeft} de 8 · <Text style={{ fontWeight: '700' }}>{now.week.title}</Text>
+            Semana {9 - now.week.weeksLeft} de 8 · <Text style={{ ...font.w700 }}>{now.week.title}</Text>
           </Text>
         )}
         {now.phase === 'dia' && (
@@ -205,7 +205,7 @@ export default function TrialScreen() {
                 <Text style={type.caption}>{dose.note}</Text>
                 {lift === 'dominada' && (
                   <Text style={type.caption}>
-                    <Text style={{ fontWeight: '700', color: colors.text }}>Agarres de la semana:</Text> {gripsText(now.week)}. El prono se repite más porque
+                    <Text style={{ ...font.w700, color: colors.text }}>Agarres de la semana:</Text> {gripsText(now.week)}. El prono se repite más porque
                     es el que doy por hecho para la prueba ({GRIP_INFO[TEST_GRIP].how.split('.')[0].toLowerCase()}).
                   </Text>
                 )}
@@ -383,7 +383,7 @@ export default function TrialScreen() {
                 </Text>
                 {LIFTS.map((lift) => (
                   <Text key={lift} style={type.body}>
-                    <Text style={{ fontWeight: '700' }}>{lift === 'dominada' ? 'Dominadas' : 'Peso muerto'}:</Text> {w.doses[lift].days}{' '}
+                    <Text style={{ ...font.w700 }}>{lift === 'dominada' ? 'Dominadas' : 'Peso muerto'}:</Text> {w.doses[lift].days}{' '}
                     {w.doses[lift].days === 1 ? 'día' : 'días'}, {doseText(lift, w.doses[lift])}
                   </Text>
                 ))}
@@ -439,8 +439,8 @@ export default function TrialScreen() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  level: { fontSize: 24, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
-  dose: { fontSize: 18, fontWeight: '800', color: colors.accent },
+  level: { fontSize: 24, ...font.display, color: colors.text, fontVariant: ['tabular-nums'] },
+  dose: { fontSize: 18, ...font.w800, color: colors.accent },
   form: { gap: space.sm, paddingTop: space.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   week: { gap: 2, padding: space.md, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
   delete: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },

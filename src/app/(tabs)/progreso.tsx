@@ -17,7 +17,7 @@ import { useStreak } from '@/hooks/useStreak';
 import { Card, Pill, SectionTitle } from '@/ui/components';
 import { GoalsSummary } from '@/ui/goals';
 import { LineChart } from '@/ui/LineChart';
-import { colors, space, type } from '@/ui/theme';
+import { colors, space, type, font } from '@/ui/theme';
 import { VolumeBars } from '@/ui/VolumeBars';
 import { STATUS_STYLE } from '@/ui/week';
 
@@ -215,9 +215,9 @@ export default function ProgressScreen() {
 const styles = StyleSheet.create({
   tiles: { flexDirection: 'row', gap: space.sm, marginTop: space.lg },
   tile: { flex: 1, gap: 2, padding: space.md },
-  tileValue: { fontSize: 26, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'], marginTop: 4 },
+  tileValue: { fontSize: 26, ...font.display, color: colors.text, fontVariant: ['tabular-nums'], marginTop: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.md, minHeight: 56 },
   review: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 64 },
   divider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  date: { width: 52, fontSize: 13, fontWeight: '700', color: colors.muted },
+  date: { width: 52, fontSize: 13, ...font.w700, color: colors.muted },
 });

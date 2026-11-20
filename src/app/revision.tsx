@@ -7,7 +7,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { loadWeekReview, type WeekReviewData } from '@/db/review';
 import { addDays, formatShort, today as getToday, weekStart } from '@/domain/dates';
 import { Card, SectionTitle, type IconName } from '@/ui/components';
-import { colors, space, type } from '@/ui/theme';
+import { colors, space, type, font } from '@/ui/theme';
 import { VolumeBars } from '@/ui/VolumeBars';
 
 const num = (v: number, d = 1) => (Number.isInteger(v) ? String(v) : v.toFixed(d).replace('.', ','));
@@ -122,5 +122,5 @@ const styles = StyleSheet.create({
   focus: { gap: space.sm, borderColor: colors.accent, borderWidth: 1.5 },
   tiles: { flexDirection: 'row', gap: space.md },
   tile: { flex: 1, gap: 2, padding: space.md },
-  tileValue: { fontSize: 22, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'], marginTop: 4 },
+  tileValue: { fontSize: 22, ...font.display, color: colors.text, fontVariant: ['tabular-nums'], marginTop: 4 },
 });

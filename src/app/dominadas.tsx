@@ -33,7 +33,7 @@ import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { syncReminders } from '@/notifications/reminders';
 import { Button, Card, ProgressBar, SectionTitle, Segmented, Stepper } from '@/ui/components';
 import { cancelEnd, scheduleEnd } from '@/ui/RestTimer';
-import { colors, space, type } from '@/ui/theme';
+import { colors, space, type, font } from '@/ui/theme';
 
 type Step = 'calentar' | 'series' | 'apuntar' | 'hecho';
 
@@ -316,9 +316,9 @@ export default function PullupSession() {
 }
 
 const styles = StyleSheet.create({
-  dose: { fontSize: 18, fontWeight: '800', color: colors.accent },
+  dose: { fontSize: 18, ...font.w800, color: colors.accent },
   item: { flexDirection: 'row', gap: space.md },
-  number: { width: 22, fontSize: 15, fontWeight: '800', color: colors.accent, textAlign: 'center' },
-  clock: { fontSize: 44, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
+  number: { width: 22, fontSize: 15, ...font.w800, color: colors.accent, textAlign: 'center' },
+  clock: { fontSize: 44, ...font.display, color: colors.text, fontVariant: ['tabular-nums'] },
   buttons: { flexDirection: 'row', gap: space.sm, alignSelf: 'stretch' },
 });

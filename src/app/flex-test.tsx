@@ -19,7 +19,7 @@ import {
 } from '@/domain/flexibility';
 import { Button, Card } from '@/ui/components';
 import { LineChart } from '@/ui/LineChart';
-import { colors, radius, space, type } from '@/ui/theme';
+import { colors, radius, space, type, font } from '@/ui/theme';
 
 type Saved = FlexResult & { id: number };
 
@@ -216,12 +216,12 @@ export default function FlexTestScreen() {
 }
 
 const styles = StyleSheet.create({
-  heading: { fontSize: 17, fontWeight: '700', color: colors.text, marginTop: space.md },
+  heading: { fontSize: 17, ...font.w700, color: colors.text, marginTop: space.md },
   step: { flexDirection: 'row', gap: space.md },
-  stepNumber: { width: 20, fontSize: 15, fontWeight: '700', color: colors.accent, textAlign: 'center', fontVariant: ['tabular-nums'] },
+  stepNumber: { width: 20, fontSize: 15, ...font.w700, color: colors.accent, textAlign: 'center', fontVariant: ['tabular-nums'] },
   segmented: { flexDirection: 'row', gap: space.xs, backgroundColor: colors.cardHigh, borderRadius: radius.md, padding: space.xs },
   segment: { flex: 1, minHeight: 48, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.sm, paddingVertical: space.xs },
-  segmentLabel: { fontSize: 14, fontWeight: '700', textAlign: 'center' },
+  segmentLabel: { fontSize: 14, ...font.w700, textAlign: 'center' },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -230,10 +230,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.lg,
     minHeight: 64,
   },
-  input: { flex: 1, minHeight: 56, color: colors.text, fontSize: 32, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  unit: { color: colors.muted, fontSize: 16, fontWeight: '600', marginLeft: space.sm },
+  input: { flex: 1, minHeight: 56, color: colors.text, fontSize: 32, ...font.display, fontVariant: ['tabular-nums'] },
+  unit: { color: colors.muted, fontSize: 16, ...font.w600, marginLeft: space.sm },
   reason: { fontSize: 14, color: colors.muted },
   result: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 48 },
-  resultValue: { fontSize: 16, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },
+  resultValue: { fontSize: 16, ...font.w700, color: colors.text, fontVariant: ['tabular-nums'] },
   trash: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
 });

@@ -5,7 +5,7 @@ import { DAY_SHORT, formatLong, fromISODate, today, type ISODate } from '@/domai
 import { SESSION_INFO } from '@/domain/schedule';
 import type { DayType } from '@/domain/schedule';
 import type { PlannedDay } from '@/hooks/useWeek';
-import { colors, radius, space } from './theme';
+import { colors, radius, space, font } from './theme';
 import { STATUS_STYLE } from './week';
 
 const TYPE_LABEL: Record<DayType, string> = { gym: 'Gim', A: 'A', B: 'B', C: 'C', movilidad: 'Mov', rest: '' };
@@ -81,7 +81,7 @@ export function MonthGrid({
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 6 },
-  head: { flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '700', color: colors.muted },
+  head: { flex: 1, textAlign: 'center', fontSize: 12, ...font.w700, color: colors.muted },
   cell: {
     flex: 1,
     aspectRatio: 0.85,
@@ -92,8 +92,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'transparent',
   },
-  num: { fontSize: 14, fontWeight: '700', color: colors.text },
-  type: { fontSize: 10, fontWeight: '800', minHeight: 14 },
+  num: { fontSize: 14, ...font.w700, color: colors.text },
+  type: { fontSize: 10, ...font.w800, minHeight: 14 },
   trip: { position: 'absolute', bottom: 3, width: 14, height: 3, borderRadius: 2, backgroundColor: colors.info },
 });
 

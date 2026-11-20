@@ -6,7 +6,7 @@ import { formatShort } from '@/domain/dates';
 import { useBody } from '@/hooks/useBody';
 import { Card, Pill, SectionTitle } from '@/ui/components';
 import { LineChart, TONE_COLOR } from '@/ui/LineChart';
-import { colors, space, type } from '@/ui/theme';
+import { colors, space, type, font } from '@/ui/theme';
 
 function rangeText(ranges: Range[], i: number, fmt: (v: number) => string) {
   const r = ranges[i];
@@ -100,7 +100,7 @@ export default function IndicatorScreen() {
 }
 
 const styles = StyleSheet.create({
-  value: { fontSize: 36, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
+  value: { fontSize: 36, ...font.display, color: colors.text, fontVariant: ['tabular-nums'] },
   rangeRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.sm, borderRadius: 8 },
   dot: { width: 10, height: 10, borderRadius: 5 },
   histRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.md },

@@ -13,7 +13,7 @@ import { today } from '@/domain/dates';
 import { PREP_SECONDS, ROUTINES, STRETCHES, ZONE_LABEL, ZONE_ORDER, minutesByZone, routineSteps, type RoutineId } from '@/domain/stretches';
 import { ExerciseFigure } from '@/illustrations/ExerciseFigure';
 import { Button, Card, ProgressBar, SectionTitle } from '@/ui/components';
-import { colors, radius, space, type } from '@/ui/theme';
+import { colors, radius, space, type, font } from '@/ui/theme';
 
 type Phase = 'prep' | 'hold';
 
@@ -201,7 +201,7 @@ export default function StretchPlayer() {
 
         <View style={{ gap: 2 }}>
           <Text style={type.title}>{stretch.name}</Text>
-          <Text style={[type.body, { color: colors.accent, fontWeight: '700' }]}>
+          <Text style={[type.body, { color: colors.accent, ...font.w700 }]}>
             {ZONE_LABEL[stretch.zone]}
             {step.side ? ` · lado ${step.side} de 2` : ''}
           </Text>
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.border,
   },
-  time: { fontSize: 72, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'], lineHeight: 80 },
+  time: { fontSize: 72, ...font.display, color: colors.text, fontVariant: ['tabular-nums'], lineHeight: 80 },
   bullet: { flexDirection: 'row', gap: space.sm },
   zoneRow: { flexDirection: 'row', alignItems: 'center' },
   bar: {

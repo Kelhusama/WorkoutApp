@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { GROUP_LABEL, GROUP_ORDER, HYPERTROPHY_RANGE, LOWER_GROUPS, volumeVerdict, type MuscleGroup } from '@/domain/volume';
 import { Card } from './components';
-import { colors, space, type } from './theme';
+import { colors, space, type, font } from './theme';
 
 const SCALE_MAX = 24;
 const TONE = { low: colors.info, good: colors.success, warn: colors.warn } as const;
@@ -46,7 +46,7 @@ export function VolumeBars({ volume }: { volume: Record<MuscleGroup, number> }) 
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'baseline', gap: space.sm },
-  value: { width: 40, textAlign: 'right', fontSize: 16, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
+  value: { width: 40, textAlign: 'right', fontSize: 16, ...font.w800, color: colors.text, fontVariant: ['tabular-nums'] },
   track: { height: 10, borderRadius: 5, backgroundColor: colors.cardHigh, overflow: 'hidden' },
   zone: { position: 'absolute', top: 0, bottom: 0, backgroundColor: colors.successSoft },
   fill: { height: '100%', borderRadius: 5 },

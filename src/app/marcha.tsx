@@ -27,7 +27,7 @@ import {
 import { useMarch } from '@/hooks/useMarch';
 import { Button, Card, Pill, ProgressBar, SectionTitle, Stepper } from '@/ui/components';
 import { LineChart } from '@/ui/LineChart';
-import { colors, space, type } from '@/ui/theme';
+import { colors, space, type, font } from '@/ui/theme';
 
 const LIGHT: Record<Readiness, { color: string; title: string; text: string }> = {
   verde: { color: colors.success, title: 'Listo para los 50 km', text: 'Has hecho una tirada de 35 km o más y un fin de semana doble en el último mes.' },
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   rowTop: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   divider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   light: { width: 14, height: 14, borderRadius: 7 },
-  strong: { color: colors.text, fontWeight: '700' },
+  strong: { color: colors.text, ...font.w700 },
   planRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.sm, borderRadius: 8 },
-  planN: { width: 24, textAlign: 'center', fontSize: 15, fontWeight: '800', color: colors.muted },
+  planN: { width: 24, textAlign: 'center', fontSize: 15, ...font.w800, color: colors.muted },
 });

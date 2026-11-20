@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import type { Feeling } from '@/domain/progression';
-import { colors, radius, space, type } from './theme';
+import { colors, radius, space, type, font } from './theme';
 
 export type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -229,9 +229,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.lg,
     borderRadius: radius.md,
   },
-  buttonLabel: { fontSize: 16, fontWeight: '700' },
+  buttonLabel: { fontSize: 16, ...font.w700 },
   pill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill, alignSelf: 'flex-start' },
-  pillLabel: { fontSize: 12, fontWeight: '700' },
+  pillLabel: { fontSize: 12, ...font.w700 },
   track: { height: 8, borderRadius: 4, backgroundColor: colors.cardHigh, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 4 },
   stepper: {
@@ -250,11 +250,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepValue: { fontSize: 26, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
-  stepSuffix: { fontSize: 15, fontWeight: '600', color: colors.muted },
+  stepValue: { fontSize: 26, ...font.display, color: colors.text, fontVariant: ['tabular-nums'] },
+  stepSuffix: { fontSize: 15, ...font.w600, color: colors.muted },
   segment: { flexDirection: 'row', backgroundColor: colors.cardHigh, borderRadius: radius.md, padding: 4 },
   segmentItem: { flex: 1, minHeight: 44, paddingHorizontal: 6, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
-  segmentLabel: { fontSize: 15, fontWeight: '700', color: colors.muted },
+  segmentLabel: { fontSize: 15, ...font.w700, color: colors.muted },
   toggleRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 48 },
   toggle: { width: 50, height: 30, borderRadius: 15, backgroundColor: colors.cardHigh, padding: 3 },
   knob: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#fff' },
@@ -267,5 +267,5 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1.5,
   },
-  feelingLabel: { fontSize: 14, fontWeight: '700' },
+  feelingLabel: { fontSize: 14, ...font.w700 },
 });

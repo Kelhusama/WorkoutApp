@@ -6,7 +6,7 @@ import { FEELING_LABEL } from '@/domain/progression';
 import { infoFor, type DayStatus, type DayType } from '@/domain/schedule';
 import type { PlannedDay } from '@/hooks/useWeek';
 import { Pill, type IconName } from './components';
-import { colors, radius, space, type } from './theme';
+import { colors, radius, space, type, font } from './theme';
 
 export const STATUS_STYLE: Record<DayStatus, { label: string; color: string; bg: string }> = {
   done: { label: 'Hecho', color: colors.success, bg: colors.successSoft },
@@ -112,9 +112,9 @@ export function DayRow({ day, onPress, onChange }: { day: PlannedDay; onPress?: 
 const styles = StyleSheet.create({
   strip: { flexDirection: 'row', justifyContent: 'space-between' },
   stripDay: { alignItems: 'center', gap: 6 },
-  stripLetter: { fontSize: 12, fontWeight: '700', color: colors.muted },
+  stripLetter: { fontSize: 12, ...font.w700, color: colors.muted },
   stripDot: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
-  stripType: { fontSize: 14, fontWeight: '800' },
+  stripType: { fontSize: 14, ...font.w800 },
   stripTrip: { width: 14, height: 3, borderRadius: 2 },
   row: {
     flexDirection: 'row',
@@ -128,6 +128,6 @@ const styles = StyleSheet.create({
   swap: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.cardHigh, alignItems: 'center', justifyContent: 'center' },
   rowToday: { borderWidth: 1.5, borderColor: colors.accent },
   rowDate: { width: 34, alignItems: 'center' },
-  rowDay: { fontSize: 18, fontWeight: '800', color: colors.text },
+  rowDay: { fontSize: 18, ...font.w800, color: colors.text },
   rowIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
 });

@@ -11,7 +11,7 @@ import { BackupCard } from '@/ui/BackupCard';
 import { Button, Card, SectionTitle, Segmented } from '@/ui/components';
 import { NumberField, numberToText, parseNumber } from '@/ui/NumberField';
 import { RemindersSettings } from '@/ui/RemindersSettings';
-import { colors, radius, space, type } from '@/ui/theme';
+import { colors, radius, space, type, font } from '@/ui/theme';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -190,11 +190,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     color: colors.text,
     fontSize: 20,
-    fontWeight: '700',
+    ...font.w700,
     textAlign: 'center',
     paddingHorizontal: space.sm,
   },
-  slash: { color: colors.muted, fontSize: 20, fontWeight: '700' },
+  slash: { color: colors.muted, fontSize: 20, ...font.w700 },
   option: {
     minHeight: 56,
     justifyContent: 'center',

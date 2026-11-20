@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, Vibration, View } from 'react-native';
 
 import { ensurePermission } from '@/notifications/reminders';
-import { colors, radius, space } from './theme';
+import { colors, radius, space, font } from './theme';
 
 const PRESETS = [45, 60, 90, 120];
 const NOTIFICATION_ID = 'descanso';
@@ -136,8 +136,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   progress: { position: 'absolute', top: 0, left: 0, height: 3, backgroundColor: colors.accent },
-  time: { fontSize: 26, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
-  caption: { fontSize: 14, fontWeight: '600', color: colors.muted },
+  time: { fontSize: 26, ...font.display, color: colors.text, fontVariant: ['tabular-nums'] },
+  caption: { fontSize: 14, ...font.w600, color: colors.muted },
   chip: {
     minWidth: 52,
     height: 44,
@@ -147,5 +147,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipLabel: { fontSize: 14, fontWeight: '700', color: colors.text },
+  chipLabel: { fontSize: 14, ...font.w700, color: colors.text },
 });

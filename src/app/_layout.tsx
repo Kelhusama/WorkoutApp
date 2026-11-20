@@ -1,3 +1,6 @@
+import { BigShoulders_800ExtraBold } from '@expo-google-fonts/big-shoulders';
+import { InstrumentSans_400Regular, InstrumentSans_500Medium, InstrumentSans_600SemiBold, InstrumentSans_700Bold } from '@expo-google-fonts/instrument-sans';
+import { useFonts } from 'expo-font';
 import { Stack, ThemeProvider } from 'expo-router';
 import { SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
@@ -7,7 +10,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import { loadEventConfig } from '@/db/event';
 import { DB_NAME, migrate } from '@/db/schema';
 import { ReminderSync } from '@/notifications/ReminderSync';
-import { colors, navTheme } from '@/ui/theme';
+import { colors, fonts, navTheme } from '@/ui/theme';
 
 /** Prepara la base de datos y carga la fecha y los objetivos de la prueba antes de pintar nada. */
 async function init(db: SQLiteDatabase) {
@@ -16,6 +19,17 @@ async function init(db: SQLiteDatabase) {
 }
 
 export default function RootLayout() {
+  // Las letras se cargan antes de pintar para que el texto no salte de una fuente a otra.
+  const [loaded, failed] = useFonts({
+    BigShoulders_800ExtraBold,
+    InstrumentSans_400Regular,
+    InstrumentSans_500Medium,
+    InstrumentSans_600SemiBold,
+    InstrumentSans_700Bold,
+  });
+  // Si alguna no carga, se sigue con la del sistema antes que dejar la pantalla en blanco.
+  if (!loaded && !failed) return null;
+
   return (
     <SQLiteProvider databaseName={DB_NAME} onInit={init}>
       <ThemeProvider value={navTheme}>
@@ -25,6 +39,7 @@ export default function RootLayout() {
           screenOptions={{
             headerStyle: { backgroundColor: colors.bg },
             headerTintColor: colors.text,
+            headerTitleStyle: { fontFamily: fonts.bold },
             headerShadowVisible: false,
             contentStyle: { backgroundColor: colors.bg },
           }}>

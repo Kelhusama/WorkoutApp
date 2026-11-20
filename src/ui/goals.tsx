@@ -10,7 +10,7 @@ import { formatShort, monthTitle, today } from '@/domain/dates';
 import { projectGoal, type Projection } from '@/domain/insights';
 import { GOALS, goalProgress, nextMilestone, type Goal } from '@/domain/strength';
 import { Button, Card, Pill, ProgressBar } from './components';
-import { colors, space, type } from './theme';
+import { colors, space, type, font } from './theme';
 
 interface Current {
   value: number;
@@ -167,8 +167,8 @@ export function GoalsSummary({ compact = false }: { compact?: boolean }) {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
-  value: { fontSize: 20, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
-  valueSmall: { fontSize: 16, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
-  target: { fontSize: 14, fontWeight: '600', color: colors.muted },
+  value: { fontSize: 20, ...font.display, color: colors.text, fontVariant: ['tabular-nums'] },
+  valueSmall: { fontSize: 16, ...font.w800, color: colors.text, fontVariant: ['tabular-nums'] },
+  target: { fontSize: 14, ...font.w600, color: colors.muted },
   milestones: { flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' },
 });

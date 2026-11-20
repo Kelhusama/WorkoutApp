@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ROLE_INFO, type Role } from '@/domain/schedule';
 import type { IconName } from './components';
-import { colors, radius } from './theme';
+import { colors, radius, font } from './theme';
 
 const ROLES: Role[] = ['gym', 'casa', 'movilidad', 'rest'];
 
@@ -37,5 +37,5 @@ export function RolePicker({ value, onChange, compact = false }: { value: Role; 
 const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', backgroundColor: colors.cardHigh, borderRadius: radius.md, padding: 3, gap: 3 },
   item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 12, borderRadius: radius.sm },
-  label: { fontSize: 13, fontWeight: '700', color: colors.muted },
+  label: { fontSize: 13, ...font.w700, color: colors.muted },
 });

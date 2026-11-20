@@ -33,7 +33,7 @@ export const INK = {
   far: '#5D636F',
   near: '#E6E9EE',
   torso: '#CBD0D8',
-  accent: '#FF6B35',
+  accent: '#FFCC00',
   accentFar: '#9C4424',
   metal: '#9AA1AD',
   metalDark: '#4A505B',

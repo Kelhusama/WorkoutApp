@@ -16,7 +16,7 @@ import { useMarch } from '@/hooks/useMarch';
 import { useWeek } from '@/hooks/useWeek';
 import { Card, Pill, type IconName } from '@/ui/components';
 import { openDay } from '@/ui/navigation';
-import { colors, space, type } from '@/ui/theme';
+import { colors, space, type, font } from '@/ui/theme';
 
 function Area({
   icon,
@@ -189,5 +189,5 @@ const styles = StyleSheet.create({
   area: { gap: space.sm },
   head: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   icon: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  strong: { color: colors.text, fontWeight: '700' },
+  strong: { color: colors.text, ...font.w700 },
 });

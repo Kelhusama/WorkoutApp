@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { WEEKLY_MINUTES, ZONE_LABEL, ZONE_ORDER, zoneVerdict, type Zone } from '@/domain/stretches';
 import { Card } from './components';
-import { colors, space, type } from './theme';
+import { colors, space, type, font } from './theme';
 
 const SCALE_MAX = 12;
 const TONE = { low: colors.info, good: colors.success, warn: colors.warn } as const;
@@ -42,7 +42,7 @@ export function ZoneBars({ minutes }: { minutes: Record<Zone, number> }) {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'baseline', gap: space.sm },
-  value: { width: 44, textAlign: 'right', fontSize: 16, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
+  value: { width: 44, textAlign: 'right', fontSize: 16, ...font.w800, color: colors.text, fontVariant: ['tabular-nums'] },
   track: { height: 10, borderRadius: 5, backgroundColor: colors.cardHigh, overflow: 'hidden' },
   zone: { position: 'absolute', top: 0, bottom: 0, backgroundColor: colors.successSoft },
   fill: { height: '100%', borderRadius: 5 },
