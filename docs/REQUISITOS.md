@@ -302,6 +302,9 @@ Revisión de lo que hacen ahora las apps líderes, con 12 ideas priorizadas y lo
 ## Entrenador adaptativo (investigación, 20/11/2026)
 Qué hay de cierto en la «IA» de las apps de fuerza, qué dice la ciencia y una propuesta en cuatro capas para Forja: [ENTRENADOR_ADAPTATIVO.md](ENTRENADOR_ADAPTATIVO.md). Hechas las capas 1 y 2 (apuntar lo que quedaba en la última serie y estimar el nivel real de cada ejercicio); el estado y lo que sigue están al final de ese documento.
 
+## Fotos y visión por computador (investigación, 20/11/2026)
+Qué se puede medir de verdad con las fotos de progreso, objetivos con respaldo y propuesta en dos fases: [VISION_FOTOS.md](VISION_FOTOS.md). Pendiente de decidir si se hace la fase A (foto guiada y panel «Cómo voy», sin visión).
+
 ## Para seguir (por orden)
 0. **Entrenador adaptativo**: segunda parte de la capa 3 (mesetas, volumen semanal y banca) y capa 4. Hecho: el plan cambia según lo que quedaba, sesión ligera y sesión extra.
 1. **Usabilidad que queda**: tipografía propia.
