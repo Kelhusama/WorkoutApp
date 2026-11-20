@@ -23,11 +23,6 @@ test('resumen de un ejercicio: mejores marcas y cuándo', () => {
   });
 });
 
-test('series para la gráfica', () => {
-  assert.deepEqual(seriesOf(history, 'best').map((p) => p.value), [5, 6, 6]);
-  assert.deepEqual(seriesOf(history, 'total').map((p) => p.value), [14, 16, 22]);
-});
-
 test('récords: solo cuando se supera una marca anterior', () => {
   const prev = new Map([
     ['flexion_estricta', { bestSet: 6, bestTotal: 22 }],

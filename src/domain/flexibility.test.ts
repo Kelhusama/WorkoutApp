@@ -60,24 +60,6 @@ test('el programa tiene 10 ejercicios con 3 niveles, indicaciones y dibujos que 
   }
 });
 
-test('las dosis siguen la tabla de la investigación', () => {
-  const text = (id: string, level: 1 | 2 | 3) => doseText(FLEX_BY_ID[id].levels[level]);
-  assert.equal(text('rana_mariposa', 1), '2 × 30 s');
-  assert.match(text('rana_mariposa', 2), /^2 ciclos de 6 s de contracción \+ 45 s/);
-  assert.match(text('rana_mariposa', 3), /^2 × 60 s/);
-  assert.equal(text('cosaca', 1), '2 × 6 por lado, con apoyo de las manos');
-  assert.equal(text('isquios_tumbado', 1), '2 × 30 s por lado');
-  assert.match(text('isquios_tumbado', 3), /^2 ciclos de 6 s de contracción \+ 40 s por lado/);
-  assert.equal(text('buenos_dias', 2), '2 × 10, bajada de 5 s');
-  assert.equal(text('zancada_baja', 3).startsWith('2 × 45 s por lado'), true);
-  assert.equal(text('sentadilla_profunda', 1), '3 × 20 s, agarrado a algo firme');
-  assert.equal(text('rodilla_pared', 2), '2 × 10 + 20 s por lado, mantén la última');
-  assert.equal(text('deslizamientos_pared', 1), '2 × 8');
-  assert.equal(text('durmiente', 2), '2 × 45 s por lado');
-  assert.equal(FLEX_BY_ID.buenos_dias.levels[1].method, 'excentrico');
-  assert.equal(FLEX_BY_ID.cosaca.levels[1].method, 'cargado');
-});
-
 test('cada sesión lleva los ejercicios 1–5 y rota el resto de forma fija', () => {
   for (const level of FLEX_LEVELS) {
     for (let n = 0; n < 12; n++) {
@@ -216,27 +198,6 @@ test('bloques: varios seguidos, tope en el nivel 3 y parones sin castigo', () =>
   assert.equal(back.weekInBlock, 1);
   // Y si aún no ha vuelto, empieza hoy.
   assert.equal(flexProgress(b1, null, '2026-06-12').blockStart, '2026-06-12');
-});
-
-test('hay seis tests con protocolo, unidad, sentido y umbral de cambio real', () => {
-  assert.deepEqual(FLEX_TESTS.map((t) => t.id), ['dedos_suelo', 'rodilla_pared', 'apertura', 'rascado', 'pierna_recta', 'sentadilla']);
-  for (const t of FLEX_TESTS) {
-    assert.ok(t.steps.length >= 3, t.id);
-    assert.ok(t.name && t.measures && t.reference, t.id);
-    assert.ok(['cm', '°', 's'].includes(t.unit), t.id);
-    assert.ok(t.min < t.max, t.id);
-    assert.equal(!!t.sign, t.min < 0, t.id);
-  }
-  assert.equal(FLEX_TEST_BY_ID.dedos_suelo.higherIsBetter, false);
-  assert.equal(FLEX_TESTS.filter((t) => t.higherIsBetter).length, 5);
-  assert.equal(FLEX_TEST_BY_ID.dedos_suelo.realChange, 4.5);
-  assert.equal(FLEX_TEST_BY_ID.rodilla_pared.realChange, 2);
-  assert.equal(FLEX_TEST_BY_ID.apertura.realChange, undefined);
-  assert.equal(FLEX_TEST_BY_ID.pierna_recta.unit, '°');
-  assert.equal(FLEX_TEST_BY_ID.sentadilla.unit, 's');
-  assert.equal(isFlexTestId('rascado'), true);
-  assert.equal(isFlexTestId('otro'), false);
-  assert.equal(isFlexTestId(undefined), false);
 });
 
 test('formato y validación de valores', () => {

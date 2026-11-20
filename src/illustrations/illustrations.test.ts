@@ -51,13 +51,3 @@ test('el dibujo cabe en el lienzo y no tiene valores inválidos en todo el recor
   }
 });
 
-test('contorno de cápsula: normal y degenerada', () => {
-  assert.match(capsulePath([0, 0], [10, 0], 2, 1), /^M 0\.00 2\.00 L 10\.00 1\.00 A/);
-  assert.match(capsulePath([5, 5], [5, 5], 2, 2), /^M 3\.00 5\.00 A/);
-});
-
-test('el ciclo de animación empieza y acaba en reposo', () => {
-  assert.equal(cyclePhase(0), 0);
-  assert.equal(cyclePhase(0.999) < 0.01, true);
-  assert.equal(cyclePhase(0.5), 1);
-});

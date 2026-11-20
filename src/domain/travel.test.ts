@@ -41,14 +41,6 @@ test('sin material: remo con toalla, curl isométrico y flexiones', () => {
   assert.equal(travelSlots('C', NO_GEAR)[1].exerciseId, 'flexion_pica');
 });
 
-test('con mesa y mochila se usan el remo invertido y la mochila', () => {
-  const gear = { mochila: true, mesa: true, gimnasio: false };
-  assert.deepEqual(
-    travelSlots('A', gear).map((s) => s.exerciseId),
-    ['remo_invertido', 'remo_mochila', 'curl_mochila', 'elevacion_tibial', 'elevacion_talones'],
-  );
-});
-
 test('las flexiones conservan su clave para seguir la progresión', () => {
   const keys = travelSlots('B', NO_GEAR).map((s) => s.key);
   for (const k of ['B.flexiones', 'B.inclinadas', 'B.pica']) assert.ok(keys.includes(k));

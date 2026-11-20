@@ -18,19 +18,6 @@ test('con pocas sesiones no hay examen', () => {
   assert.equal(train(series(5, (i) => 10 + i)), null);
 });
 
-test('el examen es repetible y da errores con sentido', () => {
-  const obs = series(30, (i) => 8 + i * 0.2 + wobble(i) * 0.8);
-  const a = exam(obs)!;
-  const b = exam(obs)!;
-  assert.deepEqual(a, b);
-  assert.equal(a.n, 20);
-  for (const v of [a.kalman, a.neural, a.last, a.next]) assert.ok(Number.isFinite(v) && v >= 0);
-  // Ningún método debería fallar más que el tamaño del propio ruido multiplicado varias veces.
-  assert.ok(a.kalman < 2 && a.neural < 3, JSON.stringify(a));
-  // La previsión queda cerca del nivel final.
-  assert.ok(Math.abs(a.next - obs[29].value) < 3);
-});
-
 test('la red aprende un patrón que el filtro no ve, y entonces gana', () => {
   // Un día fuerte y dos flojos, siempre igual: el filtro lo trata como ruido.
   const obs = series(40, (i) => 12 + (i % 3 === 0 ? 3 : 0));

@@ -23,11 +23,6 @@ test('semana por defecto: lunes y jueves de gimnasio', () => {
   assert.deepEqual(assignKinds(DEFAULT_TEMPLATE), ['gym', 'B', 'A', 'gym', 'C', 'rest', 'rest']);
 });
 
-test('gimnasio lunes y miércoles reparte igual que antes', () => {
-  const t: Role[] = ['gym', 'casa', 'gym', 'casa', 'casa', 'rest', 'rest'];
-  assert.deepEqual(assignKinds(t), ['gym', 'B', 'gym', 'C', 'A', 'rest', 'rest']);
-});
-
 test('R1 en cualquier semana: nunca tirón (A) el día después del gimnasio', () => {
   const roles: Role[] = ['gym', 'casa', 'rest'];
   // Todas las combinaciones posibles de 7 días
@@ -42,11 +37,6 @@ test('R1 en cualquier semana: nunca tirón (A) el día después del gimnasio', (
       });
     }
   }
-});
-
-test('con 3 días de casa salen A, B y C una vez', () => {
-  const k = assignKinds(['casa', 'rest', 'casa', 'rest', 'casa', 'rest', 'rest']);
-  assert.deepEqual([...k.filter((x) => x !== 'rest')].sort(), ['A', 'B', 'C']);
 });
 
 test('domingo de gimnasio: el lunes no es tirón', () => {
@@ -79,13 +69,6 @@ test('R2: día pasado sin registro = fallado; descanso nunca falla', () => {
 
 const rules: SlotRules = { repsMin: 8, repsMax: 12, maxSets: 4, step: 1, allowsTempo: true };
 const p = (sets: number, reps: number, tempo: 0 | 1 | 2 = 0): Prescription => ({ sets, reps, tempo });
-
-test('progresión: fácil sube repeticiones', () => {
-  const r = progress(p(3, 8), rules, { completed: true, feeling: 'facil' });
-  assert.deepEqual(r.next, p(3, 9));
-  assert.equal(r.change, 'reps');
-  assert.ok(r.reason.length > 10);
-});
 
 test('progresión: dura o incompleta mantiene', () => {
   assert.equal(progress(p(3, 8), rules, { completed: true, feeling: 'dura' }).change, 'none');

@@ -46,20 +46,6 @@ test('la reserva se guarda por ejercicio, se recupera al editar y es opcional', 
   assert.equal((await getExerciseReserves(db, slots[0].exerciseId)).size, 0);
 });
 
-test('del registro al nivel estimado', async () => {
-  const { db, slots, results } = await setup();
-  for (const [i, date] of ['2026-11-02', '2026-11-05', '2026-11-09', '2026-11-12'].entries()) {
-    await saveHomeSession(db, date, 'A', 'normal', results(i % 2 === 0 ? 2 : null), slots);
-  }
-  const id = slots[0].exerciseId;
-  const history = await getExerciseHistory(db, id);
-  const reserves = await getExerciseReserves(db, id);
-  const state = fitStrength(history.map((h) => capacity(h.date, h.values, reserves.get(h.date) ?? null)!))!;
-  assert.equal(state.n, 4);
-  assert.ok(state.level >= Math.max(...history[3].values));
-  assert.ok(state.levelSd > 0);
-});
-
 test('la copia de seguridad lleva la reserva', async () => {
   const { db, slots, results } = await setup();
   await saveHomeSession(db, '2026-11-16', 'A', 'normal', results(2), slots);

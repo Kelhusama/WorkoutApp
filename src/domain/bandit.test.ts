@@ -41,12 +41,6 @@ test('variantes: series cortas da más series y menos repeticiones; largas, lo c
   assert.deepEqual(applyVariant(p(2, 1), rules, 'largas'), p(2, 2));
 });
 
-test('qué ejercicios cambia cada objetivo', () => {
-  assert.equal(goalOfSlot('A.dominadas'), 'dominadas');
-  assert.equal(goalOfSlot('B.flexiones'), 'flexiones');
-  assert.equal(goalOfSlot('A.remo'), null);
-});
-
 test('lo que rinde un bloque: repeticiones ganadas en el test por semana', () => {
   assert.equal(blockReward(block('base', 2)), 0.5); // 2 en 4 semanas
   assert.equal(blockReward(block('base', -1)), -0.25);

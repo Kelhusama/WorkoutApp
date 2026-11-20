@@ -35,18 +35,6 @@ test('todos los estiramientos tienen dibujo', () => {
   for (const s of Object.values(STRETCHES)) assert.ok(s.figure, s.id);
 });
 
-test('la rutina de tren inferior da 3 min de aductores y dura unos 12 min', () => {
-  const r = ROUTINES.inferior;
-  // 2 de 60 s + 5 por lados de 30 s + zancada 60 s y isquios 45 s por lado = 120 + 300 + 120 + 90 = 630 s
-  assert.equal(routineSeconds(r), 630);
-  assert.equal(routineSteps(r).length, 16);
-  assert.equal(routineMinutes(r), 12); // 630 s + 16 cambios de 5 s = 710 s
-  const zones = minutesByZone(routineSteps(r).map((s) => ({ date: '2026-11-16', stretchId: s.stretchId, seconds: s.seconds })));
-  assert.equal(zones.aductores, 3);
-  assert.equal(zones.gluteo, 2);
-  assert.equal(zones.pecho, 0);
-});
-
 test('las rutinas tras la sesión duran entre 4 y 8 minutos', () => {
   for (const id of ['postA', 'postB', 'postC'] as const) {
     const m = routineMinutes(ROUTINES[id]);

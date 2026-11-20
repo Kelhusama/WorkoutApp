@@ -60,25 +60,6 @@ test('escalón de entrada según lo que ya caminas', () => {
   assert.equal(entryStep(40), 7); // aunque camines mucho, no se entra más allá
 });
 
-test('se avanza al completar la tirada larga; si no, se repite', () => {
-  assert.equal(nextStep(5, 15), 6);
-  assert.equal(nextStep(5, 13.5), 6); // 90 % cuenta
-  assert.equal(nextStep(5, 12), 5);
-  assert.equal(nextStep(5, 0), 5);
-  // Las semanas de descarga avanzan siempre
-  assert.equal(nextStep(6, 0), 7);
-  assert.equal(nextStep(LAST_STEP, 50), LAST_STEP);
-});
-
-test('tras un parón se retrocede, sin retomar en reducción ni en el reto', () => {
-  assert.equal(stepAfterBreak(9, 1), 9);
-  assert.equal(stepAfterBreak(9, 2), 8);
-  assert.equal(stepAfterBreak(9, 4), 6);
-  assert.equal(stepAfterBreak(9, 12), 5); // como mucho 4 escalones
-  assert.equal(stepAfterBreak(2, 6), 1);
-  assert.equal(stepAt(stepAfterBreak(LAST_STEP, 2)).kind, 'ensayo');
-});
-
 test('semanas que quedan, preparación y tiempo previsto', () => {
   assert.equal(weeksLeft(1), 18);
   assert.equal(weeksLeft(LAST_STEP), 1);

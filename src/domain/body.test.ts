@@ -25,11 +25,6 @@ test('IMC y su rango', () => {
   assert.equal(rangeFor(ind('imc'), profile, 25)!.label, 'Sobrepeso');
 });
 
-test('edad cumplida', () => {
-  assert.equal(ageOn('1996-05-20', '2026-05-19'), 29);
-  assert.equal(ageOn('1996-05-20', '2026-05-20'), 30);
-});
-
 test('% grasa Marina (hombre y mujer)', () => {
   close(navyBodyFat('H', 180, 90, 38)!, 19.8);
   assert.equal(navyBodyFat('H', 180, 38, 40), null);

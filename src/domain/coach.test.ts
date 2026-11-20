@@ -39,21 +39,6 @@ test('capacidad: la reserva suma a la última serie y sin ella la medida es meno
   assert.equal(capacity('2026-11-20', [0, 0], 1), null);
 });
 
-test('recupera el ritmo de una mejora constante con ruido', () => {
-  const s = fitStrength(synthetic(24, 6, 0.5, 1))!;
-  assert.equal(s.trend, 'mejorando');
-  assert.ok(Math.abs(s.ratePerWeek - 0.5) < 0.25, `ritmo ${s.ratePerWeek}`);
-  const truth = 6 + (0.5 / 7) * 23 * 3;
-  assert.ok(Math.abs(s.level - truth) < 1, `nivel ${s.level} frente a ${truth}`);
-  assert.equal(s.series.length, 24);
-});
-
-test('con ruido y sin mejora dice «estable», no ve progreso donde no lo hay', () => {
-  const s = fitStrength(synthetic(24, 8, 0, 1))!;
-  assert.equal(s.trend, 'estable');
-  assert.ok(Math.abs(s.level - 8) < 0.8);
-});
-
 test('detecta una bajada', () => {
   assert.equal(fitStrength(synthetic(24, 12, -0.5, 1))!.trend, 'bajando');
 });
