@@ -166,10 +166,8 @@ export default function TrialScreen() {
                 </Text>
                 {reached && <Pill label="A tu alcance" color={colors.success} bg={colors.successSoft} />}
               </View>
-              <Text style={styles.level}>
-                {level <= 0 && lift === 'dominada' ? 'Sin lastre' : `${kg(level)} ${info.unit}`}
-                <Text style={type.caption}> · donde estás hoy, a {EVENT_REPS}</Text>
-              </Text>
+              <Text style={styles.level}>{level <= 0 && lift === 'dominada' ? 'Sin lastre' : `${kg(level)} ${info.unit}`}</Text>
+              <Text style={type.caption}>Donde estás hoy, a {EVENT_REPS} repeticiones</Text>
               <ProgressBar value={Math.max(0, Math.min(1, level / target))} color={reached ? colors.success : colors.accent} />
               <Text style={type.caption}>
                 Estimado a partir de tu mejor sesión de las últimas tres semanas
@@ -261,10 +259,8 @@ export default function TrialScreen() {
 
       <SectionTitle>Colgarse</SectionTitle>
       <Card style={{ gap: space.sm }}>
-        <Text style={styles.level}>
-          {hangBest(hangs, today) !== null ? `${hangBest(hangs, today)} s` : 'Sin marca'}
-          <Text style={type.caption}> · mejor intento de las últimas cuatro semanas</Text>
-        </Text>
+        <Text style={styles.level}>{hangBest(hangs, today) !== null ? `${hangBest(hangs, today)} s` : 'Sin marca'}</Text>
+        <Text style={type.caption}>Mejor intento de las últimas cuatro semanas</Text>
         <Text style={type.caption}>
           Por si entra en la prueba. Se entrena al final de cada sesión guiada de dominadas: dos series a tres cuartos de tu marca, y un intento al
           máximo el último día de la semana.

@@ -47,3 +47,13 @@ export async function getTrialActive(db: SQLiteDatabase): Promise<boolean> {
 export async function saveTrialActive(db: SQLiteDatabase, active: boolean) {
   await set(db, 'trial_active', active ? '1' : '0');
 }
+
+/** Fecha de la marcha de 50 km, si ya se sabe (AAAA-MM-DD). */
+export async function getMarchDate(db: SQLiteDatabase): Promise<string | null> {
+  const v = await get(db, 'march_date');
+  return v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+}
+
+export async function saveMarchDate(db: SQLiteDatabase, date: string | null) {
+  await set(db, 'march_date', date ?? '');
+}

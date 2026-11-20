@@ -27,7 +27,7 @@ export function BackupCard({ onRestored }: { onRestored?: () => void }) {
       file.create({ overwrite: true });
       await file.write(JSON.stringify(await exportBackup(db)));
       if (!(await Sharing.isAvailableAsync())) throw new Error('Este dispositivo no permite compartir archivos.');
-      await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Guardar copia de Forja' });
+      await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Guardar copia de Forja del Canario' });
       setNote('Copia creada. Guárdala en Drive o envíatela para tenerla fuera del móvil.');
     } catch (e) {
       Alert.alert('No se pudo crear la copia', message(e));

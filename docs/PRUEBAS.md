@@ -7,6 +7,8 @@ Para probar: `npx expo start` en la carpeta del proyecto y escanear el QR con Ex
 ## Probado
 - [x] **Estiramientos guiados** (16/11/2026): funcionan bien.
 
+> **20/11/2026 — primera pasada en el navegador** (`npx expo start --web`). Vistas sin errores: Hoy, Entrenar, Cuerpo, Progreso, Semana tipo, Gimnasio, una sesión de casa, el apartado de la prueba y la sesión guiada de dominadas completa (calentamiento, seis series con descanso, registro y colgarse). Arreglado lo que salió: aviso de dominadas antes de empezar el plan, un rótulo que se partía, leyenda de iconos en la semana tipo. **No probado, porque solo existe en el móvil**: avisos, cámara, vibración, copia de seguridad a archivo y el teclado.
+
 ## Por probar, de mayor a menor riesgo
 | ✓ | Qué | Dónde | En qué fijarse |
 |---|---|---|---|

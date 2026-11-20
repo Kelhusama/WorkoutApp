@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -13,7 +14,7 @@ import {
   assignKinds,
   countGym,
   isValidTemplate,
-  type Role, infoFor, isFocusWeek } from '@/domain/schedule';
+  type Role, infoFor, isFocusWeek, ROLE_INFO } from '@/domain/schedule';
 import { syncReminders } from '@/notifications/reminders';
 import { Button, Card } from '@/ui/components';
 import { RolePicker } from '@/ui/RolePicker';
@@ -49,6 +50,15 @@ export default function WeekTemplateScreen() {
         Elige qué haces cada día: gimnasio, casa, movilidad (flexibilidad y estiramientos, sin carga) o descanso. Con uno o dos días de casa,
         cada uno es una sesión corta de tren superior centrada en tus objetivos; con tres o más se reparten tirón, empuje y mixta. Se aplica desde esta semana; los días que ya cambiaste a mano se respetan.
       </Text>
+
+      <View style={styles.legend} accessible accessibilityLabel="Los iconos, por orden: gimnasio, casa, movilidad y descanso">
+        {(['gym', 'casa', 'movilidad', 'rest'] as const).map((r) => (
+          <View key={r} style={styles.legendItem}>
+            <Ionicons name={ROLE_INFO[r].icon as keyof typeof Ionicons.glyphMap} size={16} color={colors.muted} />
+            <Text style={type.caption}>{ROLE_INFO[r].label}</Text>
+          </View>
+        ))}
+      </View>
 
       <Card style={{ gap: space.md }}>
         {roles.map((r, i) => (
@@ -89,5 +99,7 @@ export default function WeekTemplateScreen() {
 }
 
 const styles = StyleSheet.create({
+  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
 });

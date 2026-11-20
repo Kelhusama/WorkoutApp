@@ -88,3 +88,12 @@ test('reparto de caminatas en la semana tipo', () => {
   // Sin días de descanso, la larga cae en domingo igualmente
   assert.equal(walkDays(['gym', 'casa', 'casa', 'gym', 'casa', 'casa', 'casa']).long, 6);
 });
+
+test('fecha de la marcha: si da tiempo a terminar el plan', async () => {
+  const { dateFit } = await import('./marchPlan');
+  assert.equal(dateFit(10, 16 * 7).verdict, 'sobra');
+  assert.match(dateFit(10, 16 * 7).text, /6 de margen/);
+  assert.equal(dateFit(10, 10 * 7 + 3).verdict, 'justo');
+  assert.equal(dateFit(10, 6 * 7).verdict, 'falta');
+  assert.equal(dateFit(10, -2).verdict, 'pasada');
+});

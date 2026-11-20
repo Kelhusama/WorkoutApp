@@ -196,3 +196,10 @@ test('colgarse: máximo sin marca o el último día de la semana; el resto, a tr
   // Una marca de hace más de cuatro semanas ya no cuenta.
   assert.equal(hangBest(logs, '2027-01-05'), null);
 });
+
+test('antes de que empiece el plan no tocan dominadas', async () => {
+  const { isPullupDay } = await import('./event');
+  // El viernes 20 de noviembre es la víspera de la primera semana (21–27).
+  assert.equal(isPullupDay('2026-11-20'), false);
+  assert.equal(isPullupDay('2026-11-23'), true);
+});

@@ -1,4 +1,4 @@
-# Forja (WorkoutApp)
+# Forja del Canario (WorkoutApp)
 
 App Android personal para seguir el entrenamiento: 2 días de gimnasio + sesiones cortas en casa, con progresión automática hacia 10 dominadas, 50 flexiones y 80 kg en press de banca.
 
@@ -48,3 +48,13 @@ src/
   hooks/      useWeek
   ui/         tema y componentes
 ```
+
+## Probarla en el ordenador (navegador)
+
+La app también se abre en un navegador, sin móvil. Sirve para revisar pantallas y flujos; no sirve para avisos, cámara ni vibración, que son del teléfono.
+
+```bash
+npx expo start --web
+```
+
+Usa su propia base de datos dentro del navegador: lo que apuntes ahí no llega al móvil. La configuración que lo permite está en `metro.config.js`.

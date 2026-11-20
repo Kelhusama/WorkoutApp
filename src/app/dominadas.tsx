@@ -161,11 +161,13 @@ export default function PullupSession() {
         </Card>
       )}
 
-      <Card style={{ gap: space.sm }}>
-        <Text style={type.subtitle}>Agarre de hoy: {GRIP_INFO[grip].label.toLowerCase()}</Text>
-        <Segmented label="Agarre" options={GRIPS} value={grip} onChange={setGrip} />
-        <Text style={type.caption}>{GRIP_INFO[grip].how}</Text>
-      </Card>
+      {step !== 'hecho' && (
+        <Card style={{ gap: space.sm }}>
+          <Text style={type.subtitle}>Agarre de hoy: {GRIP_INFO[grip].label.toLowerCase()}</Text>
+          <Segmented label="Agarre" options={GRIPS} value={grip} onChange={setGrip} />
+          <Text style={type.caption}>{GRIP_INFO[grip].how}</Text>
+        </Card>
+      )}
 
       {step === 'calentar' && (
         <>

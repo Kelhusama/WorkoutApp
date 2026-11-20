@@ -176,3 +176,18 @@ export function walkDays(template: readonly Role[]): WalkDays {
   const hills = candidates.find((i) => Math.abs(i - easy) > 1) ?? candidates[1] ?? (long + 4) % 7;
   return { easy, hills, long, extra };
 }
+
+/**
+ * ¿Da tiempo a terminar el plan antes de la fecha de la marcha? `weeksNeeded`: lo que queda
+ * si todo sale a la primera. Se pide una semana de margen para dar por buena la fecha.
+ */
+export function dateFit(weeksNeeded: number, daysToEvent: number): { weeksAvailable: number; verdict: 'pasada' | 'justo' | 'falta' | 'sobra'; text: string } {
+  const weeksAvailable = Math.floor(daysToEvent / 7);
+  if (daysToEvent < 0) return { weeksAvailable, verdict: 'pasada', text: 'Esa fecha ya ha pasado.' };
+  const spare = weeksAvailable - weeksNeeded;
+  if (spare < 0) {
+    return { weeksAvailable, verdict: 'falta', text: `Faltan ${weeksAvailable} semanas y al plan le quedan ${weeksNeeded}: no da tiempo a completarlo. Llegarías con menos preparación de la prevista.` };
+  }
+  if (spare < 1) return { weeksAvailable, verdict: 'justo', text: `Faltan ${weeksAvailable} semanas y al plan le quedan ${weeksNeeded}: llegas justo, sin margen para repetir ningún escalón.` };
+  return { weeksAvailable, verdict: 'sobra', text: `Faltan ${weeksAvailable} semanas y al plan le quedan ${weeksNeeded}: llegas con ${spare} de margen.` };
+}

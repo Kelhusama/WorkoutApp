@@ -300,7 +300,8 @@ const PULLUP_WEEKDAYS: Record<number, readonly number[]> = { 4: [0, 1, 3, 4], 3:
 /** ¿Tocan dominadas ese día según el plan? */
 export function isPullupDay(date: ISODate, eventDate: ISODate = eventConfig.date): boolean {
   const week = todayPlan(date, eventDate).week;
-  if (!week) return false;
+  // Los días anteriores al comienzo del plan no cuentan: no hay semana a la que sumarlos.
+  if (!week || date < week.from) return false;
   return (PULLUP_WEEKDAYS[week.doses.dominada.days] ?? []).includes(weekdayIndex(date));
 }
 

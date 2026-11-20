@@ -328,9 +328,9 @@ El usuario va al gimnasio 2–3 días (alguna semana, 4) y quiere que en casa pe
 - [x] ~~Capturas de Huawei Salud~~: recibida una (16/11/2026); sus valores son el caso de prueba del lector.
 - [ ] **Probar «Pegar datos de la captura»** en el móvil y avisar si algún valor sale mal o falta.
 - [ ] **Cuenta gratuita de Expo** (expo.dev), para compilar el APK en la nube.
-- [ ] **Nombre definitivo** de la app («Forja» es provisional).
+- [x] ~~Nombre definitivo~~: **Forja del Canario** (20/11/2026).
 - [x] ~~Elegir icono~~: pintadera, gama Bandera (20/11/2026).
-- [ ] Elegir **sede y fecha** de la Marcha del Mamut.
+- [ ] Elegir **sede y fecha** de la Marcha del Mamut. Ya se puede poner la fecha en la app cuando se sepa (*Marcha → Fecha de la marcha*).
 - [ ] Confirmar si es viable hacer **press de banca 3×5 al final del gimnasio** cuando no toque.
 - [ ] (Opcional) Pedir la **copia de datos de la cuenta Huawei** para importar el historial de peso.
 

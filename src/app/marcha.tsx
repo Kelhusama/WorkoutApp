@@ -2,11 +2,13 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useState } from 'react';
+
+import { getMarchDate, saveMarchDate } from '@/db/settings';
+import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { startMarch, stopMarch } from '@/db/march';
-import { DAY_LONG, formatShort, today } from '@/domain/dates';
+import { DAY_LONG, addDays, formatLong, formatShort, today } from '@/domain/dates';
 import { WALK_LABEL, formatDuration, formatPace, pace, recentForm, weeklySeries } from '@/domain/march';
 import {
   GOAL_KM,
@@ -15,6 +17,7 @@ import {
   MARCH_PLAN,
   entryStep,
   predictedMinutes,
+  dateFit,
   readiness,
   stepAt,
   weeklyKm,
@@ -52,6 +55,81 @@ function Section({ title, children }: { title: string; children: React.ReactNode
         <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={colors.muted} />
       </Pressable>
       {open && children}
+    </Card>
+  );
+}
+
+/** Fecha de la marcha: opcional y rellenable cuando se sepa. Dice si da tiempo a terminar el plan. */
+function MarchDate({ weeksNeeded }: { weeksNeeded: number }) {
+  const db = useSQLiteContext();
+  const now = today();
+  const [date, setDate] = useState<string | null>(null);
+  const [draft, setDraft] = useState<string | null>(null);
+
+  useEffect(() => {
+    getMarchDate(db).then(setDate);
+  }, [db]);
+
+  const daysTo = (d: string) => Math.round((Date.parse(d) - Date.parse(now)) / 86_400_000);
+
+  if (draft !== null) {
+    return (
+      <Card style={{ gap: space.sm }}>
+        <Text style={type.subtitle}>{formatLong(draft)}</Text>
+        <View style={{ flexDirection: 'row', gap: space.sm }}>
+          {([-7, -1, 1, 7] as const).map((n) => (
+            <View key={n} style={{ flex: 1 }}>
+              <Button label={`${n > 0 ? '+' : '−'}${Math.abs(n) === 7 ? '1 sem' : '1 día'}`} variant="secondary" onPress={() => setDraft(addDays(draft, n))} />
+            </View>
+          ))}
+        </View>
+        <Text style={type.caption}>{dateFit(weeksNeeded, daysTo(draft)).text}</Text>
+        <View style={{ flexDirection: 'row', gap: space.sm }}>
+          <View style={{ flex: 1 }}>
+            <Button label="Cancelar" variant="secondary" onPress={() => setDraft(null)} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button
+              label="Guardar"
+              icon="checkmark-circle"
+              disabled={daysTo(draft) < 0}
+              onPress={async () => {
+                await saveMarchDate(db, draft);
+                setDate(draft);
+                setDraft(null);
+              }}
+            />
+          </View>
+        </View>
+      </Card>
+    );
+  }
+
+  return (
+    <Card style={{ gap: space.sm }}>
+      {date ? (
+        <>
+          <Text style={type.subtitle}>{formatLong(date)}</Text>
+          <Text style={type.caption}>{dateFit(weeksNeeded, daysTo(date)).text}</Text>
+          <Button label="Cambiar la fecha" variant="secondary" icon="calendar-outline" onPress={() => setDraft(date)} />
+          <Button
+            label="Quitar la fecha"
+            variant="ghost"
+            onPress={async () => {
+              await saveMarchDate(db, null);
+              setDate(null);
+            }}
+          />
+        </>
+      ) : (
+        <>
+          <Text style={type.caption}>
+            Opcional. Cuando sepas la sede y el día de la marcha, ponlos aquí y te diré si da tiempo a terminar el plan. Mientras tanto, el plan
+            avanza a tu ritmo.
+          </Text>
+          <Button label="Poner la fecha" variant="secondary" icon="calendar-outline" onPress={() => setDraft(addDays(now, weeksNeeded * 7 + 14))} />
+        </>
+      )}
     </Card>
   );
 }
@@ -239,6 +317,9 @@ export default function MarchScreen() {
         })}
       </Card>
       <Button label="Registrar caminata" icon="walk" onPress={() => router.push('/caminata')} />
+
+      <SectionTitle>Fecha de la marcha</SectionTitle>
+      <MarchDate weeksNeeded={weeksLeft(s.n)} />
 
       <SectionTitle>¿Listo para los {GOAL_KM} km?</SectionTitle>
       <Card style={{ gap: space.sm }}>

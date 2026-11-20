@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Forja",
+    "name": "Forja del Canario",
     "slug": "forja",
     "version": "0.1.0",
     "scheme": "forja",
@@ -35,8 +35,8 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Forja usa la cámara para tus fotos de progreso.",
-          "photosPermission": "Forja lee tus fotos para guardar las de progreso.",
+          "cameraPermission": "Forja del Canario usa la cámara para tus fotos de progreso.",
+          "photosPermission": "Forja del Canario lee tus fotos para guardar las de progreso.",
           "microphonePermission": false
         }
       ],
@@ -44,7 +44,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Forja usa la cámara para tus fotos de progreso.",
+          "cameraPermission": "Forja del Canario usa la cámara para tus fotos de progreso.",
           "microphonePermission": false,
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": false
