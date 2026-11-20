@@ -15,6 +15,8 @@ import { getPhotos, getRecentFeelings } from '@/db/stats';
 import { monthlyCheck } from '@/domain/physique';
 import { stretchedOn } from '@/db/stretch';
 import { addDays, formatLong, formatShort, today as getToday, weekStart, weekdayIndex } from '@/domain/dates';
+import { getTrialLogs } from '@/db/event';
+import { EVENT_NAME, LIFTS, doneThisWeek, doseText, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
 import { prescriptionShort } from '@/domain/format';
 import { needsDeload } from '@/domain/gymTools';
 import { WALK_LABEL } from '@/domain/march';
@@ -84,6 +86,8 @@ export default function TodayScreen() {
   const [tests, setTests] = useState<TestDue[]>([]);
   // Lo que el usuario decide para esta semana: menos, normal o más.
   const [weekLoad, setWeekLoad] = useState<WeekLoad>('normal');
+  // Sesiones apuntadas para la prueba del 16 de enero.
+  const [trialLogs, setTrialLogs] = useState<TrialLog[]>([]);
   const [stretched, setStretched] = useState(true);
   const [showExercises, setShowExercises] = useState(false);
   // Sesión extra en día de descanso: cuál propone el entrenador y si conviene que sea ligera.
@@ -116,6 +120,7 @@ export default function TodayScreen() {
       getRecentFeelings(db).then((f) => setDeload(needsDeload(f)));
       if (kind) stretchedOn(db, todayDate, routineAfter(kind)).then(setStretched);
       getBlocks(db).then((b) => setTests(testsDue(b, todayDate)));
+      getTrialLogs(db).then(setTrialLogs);
       (async () => {
         const load = await getWeekLoad(db, weekStart(todayDate));
         const done = await getDoneSessions(db, addDays(todayDate, -30));
@@ -154,6 +159,7 @@ export default function TodayScreen() {
   const info = day ? infoFor(day.type, focus) : null;
   const status = day ? STATUS_STYLE[day.status] : null;
   const routine = kind ? ROUTINES[routineAfter(kind)] : null;
+  const trial = trialToday(todayDate);
 
   return (
     <ScrollView
@@ -298,6 +304,26 @@ export default function TodayScreen() {
           onPress={() => router.push({ pathname: '/viaje', params: { id: String(trip.id) } })}
         />
       )}
+      {trial.week &&
+        (() => {
+          // Lo que falta esta semana para la prueba, en una línea.
+          const left = LIFTS.map((lift) => ({ lift, dose: trialDose(lift, trial.week!, trialLogs), done: doneThisWeek(lift, trial.week!, trialLogs) })).filter(
+            (x) => x.done < x.dose.days,
+          );
+          return (
+            <PlanRow
+              icon="trophy"
+              title={`${EVENT_NAME} · faltan ${trial.daysLeft} días`}
+              detail={
+                left.length === 0
+                  ? 'Todo lo de esta semana está hecho.'
+                  : left.map((x) => `${x.lift === 'dominada' ? 'Dominadas' : 'Peso muerto'} (${x.done} de ${x.dose.days}): ${doseText(x.lift, x.dose)}`).join(' · ')
+              }
+              onPress={() => router.push('/prueba')}
+            />
+          );
+        })()}
+      {trial.phase === 'dia' && <PlanRow icon="trophy" title="Hoy es la prueba" detail="Calienta largo y empieza con un peso que sabes que sale." onPress={() => router.push('/prueba')} />}
       {tests.map((t) => (
         <PlanRow
           key={t.goal}

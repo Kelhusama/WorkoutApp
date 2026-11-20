@@ -49,6 +49,7 @@ Para probar: `npx expo start` en la carpeta del proyecto y escanear el QR con Ex
 | [ ] | Día de movilidad | Calendario → Semana tipo | Que se pueda elegir «Movilidad», salga en Hoy con «Empezar movilidad» y quede hecho tras una sesión de flexibilidad o estiramientos |
 | [ ] | Sesión enfocada | Semana tipo con uno o dos días de casa | Que esos días se llamen «Tren superior» y traigan solo dominadas, flexiones, curl y flexiones inclinadas |
 | [ ] | Esta semana toca | Hoy | Que al elegir «Menos» la sesión de casa se abra en ligera, y con «Más» se proponga una extra |
+| [ ] | Prueba del 16 de enero | Entrenar → Prueba del 16 de enero | Que se entienda qué toca esta semana, se pueda apuntar una sesión, cuente los días hechos y aparezca la fila en Hoy |
 | [ ] | Aspecto general | Todas las pantallas | Textos cortados, botones difíciles de pulsar, el teclado tapando campos |
 
 ## Solo con la app instalada (APK)

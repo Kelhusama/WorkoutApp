@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { EVENT_NAME, todayPlan } from '@/domain/event';
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState, type ReactNode } from 'react';
@@ -74,9 +75,10 @@ export default function TrainScreen() {
     }, [db]),
   );
 
-  const todayPlan = days.find((d) => d.date === todayDate);
+  const todayDay = days.find((d) => d.date === todayDate);
   const next = days.find((d) => d.date >= todayDate && d.type !== 'rest' && d.type !== 'movilidad' && (d.status === 'pending' || d.status === 'future'));
   const state = view?.state ?? null;
+  const trial = todayPlan(todayDate);
   const step = state ? stepAt(state.step) : null;
   const pendingWalks = view?.planned.filter((p) => !p.done) ?? [];
 
@@ -98,12 +100,27 @@ export default function TrainScreen() {
             {next.date === todayDate ? 'Hoy' : formatLong(next.date)}: <Text style={styles.strong}>{SESSION_INFO[next.type].title}</Text>
           </Text>
         ) : (
-          <Text style={type.body}>{todayPlan?.status === 'done' ? 'Sesión de hoy hecha.' : 'No quedan sesiones esta semana.'}</Text>
+          <Text style={type.body}>{todayDay?.status === 'done' ? 'Sesión de hoy hecha.' : 'No quedan sesiones esta semana.'}</Text>
         )}
         <Text style={type.caption}>
           {next && next.date === todayDate ? 'Toca para registrar la sesión.' : 'Gimnasio y sesiones en casa con pierna. Toca para ver tu semana tipo.'}
         </Text>
       </Area>
+
+      {trial.phase !== 'pasado' && (
+        <Area icon="trophy" title={EVENT_NAME} status={trial.phase === 'dia' ? 'Hoy' : `${trial.daysLeft} días`} onPress={() => router.push('/prueba')}>
+          <Text style={type.body}>
+            {trial.week ? (
+              <>
+                Semana {9 - trial.week.weeksLeft} de 8: <Text style={styles.strong}>{trial.week.title}</Text>
+              </>
+            ) : (
+              'Calienta largo y a por ello.'
+            )}
+          </Text>
+          <Text style={type.caption}>Dominadas con lastre y peso muerto, a tres repeticiones. Toca para ver qué hacer esta semana y apuntarlo.</Text>
+        </Area>
+      )}
 
       <Area icon="walk" title={`Marcha de ${GOAL_KM} km`} status={state && !state.completed ? `${state.step}/${LAST_STEP}` : undefined} onPress={() => router.push('/marcha')}>
         {!state ? (

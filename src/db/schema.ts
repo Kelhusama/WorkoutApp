@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 17;
+const LATEST = 18;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -294,6 +294,23 @@ export async function migrate(db: SQLiteDatabase) {
       await db.execAsync('ALTER TABLE session_log ADD COLUMN focus INTEGER NOT NULL DEFAULT 0');
     }
     version = 17;
+  }
+
+  if (version === 17) {
+    // Prueba del 16 de enero: sesiones de dominadas con lastre y de peso muerto.
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS trial_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        lift TEXT NOT NULL CHECK (lift IN ('dominada','peso_muerto')),
+        weight REAL NOT NULL CHECK (weight >= 0),
+        reps INTEGER NOT NULL CHECK (reps > 0),
+        sets INTEGER NOT NULL CHECK (sets > 0),
+        reserve INTEGER CHECK (reserve IN (0,1,2))
+      );
+      CREATE INDEX IF NOT EXISTS idx_trial_log_date ON trial_log (date);
+    `);
+    version = 18;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);

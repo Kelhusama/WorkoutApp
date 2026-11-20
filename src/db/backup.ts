@@ -24,6 +24,7 @@ const TABLES = [
   'flex_session',
   'flex_test',
   'coach_block',
+  'trial_log',
 ] as const;
 
 type Row = Record<string, string | number | null>;

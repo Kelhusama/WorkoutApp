@@ -311,7 +311,8 @@ El usuario va al gimnasio 2–3 días (alguna semana, 4) y quiere que en casa pe
 - **Día de movilidad** ✅: papel nuevo en la semana tipo y en los cambios de un día (gimnasio · casa · movilidad · descanso). Abre Flexibilidad; se da por hecho si ese día hay flexibilidad o estiramientos; si no se hace, no cuenta como fallo.
 - **Sesión enfocada** ✅: cuando la semana tiene uno o dos días de casa, cada uno es «Tren superior»: dominadas, flexiones estrictas, curl y flexiones inclinadas, sin pierna. Comparte progresión con las sesiones A, B y C. Con tres días de casa o más, se reparten tirón, empuje y mixta como antes.
 - **Esta semana toca** ✅ (pantalla Hoy): Menos · Normal · Más. Con «Menos» las sesiones de casa salen ligeras; con «Más» el entrenador admite más sesiones seguidas y propone una extra en descanso o movilidad. Dos sesiones duras seguidas mandan aflojar en cualquier caso.
-- **Pendiente**: objetivo con fecha (aniversario de enero de 2027): falta la fecha y qué significa «en forma» para ese día. Y que el entrenador cuente también lo que se hace dentro del gimnasio, no solo el número de sesiones.
+- **Prueba del 16 de enero de 2027** ✅: apartado propio con plan de 8 semanas para dominadas con lastre y peso muerto a tres repeticiones. Ver [PRUEBA_16_ENERO.md](PRUEBA_16_ENERO.md).
+- **Pendiente**: que el entrenador cuente también lo que se hace dentro del gimnasio, no solo el número de sesiones.
 
 ## Para seguir (por orden)
 0. **Entrenador adaptativo**: volumen semanal por músculo y progresión por peso si se compran mancuernas ajustables (de momento, no; y nunca banco). Hecho también el paso automático a versiones más duras. Hechas las capas 1 a 4, el aviso de test, la previsión con margen y el experimento de la red neuronal: reserva, nivel real, plan que cambia solo, sesión ligera y extra, mesetas, carga de banca y bloques de prueba entre tests.
