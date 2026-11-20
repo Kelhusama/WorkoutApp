@@ -299,6 +299,9 @@ Revisión de lo que hacen ahora las apps líderes, con 12 ideas priorizadas y lo
 - **Tendencias**: revisión de la semana con un foco (*Progreso → Revisión de la semana*), proyección de cuándo se alcanzaría cada objetivo, peso tendencial con ritmo semanal en *Cuerpo* y racha por semanas con un comodín.
 - Lista de lo que falta probar en el móvil: [PRUEBAS.md](PRUEBAS.md).
 
+## Entrenador adaptativo (investigación, 20/11/2026)
+Qué hay de cierto en la «IA» de las apps de fuerza, qué dice la ciencia y una propuesta en cuatro capas para Forja: [ENTRENADOR_ADAPTATIVO.md](ENTRENADOR_ADAPTATIVO.md). Pendiente de decidir el enfoque antes de implementar.
+
 ## Para seguir (por orden)
 1. **Usabilidad que queda**: tipografía propia.
 2. **Pantalla de inicio** con la pintadera (se configura al preparar el APK).
