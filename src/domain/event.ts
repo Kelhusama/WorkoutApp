@@ -319,7 +319,7 @@ export function platesWarning(today: ISODate): string | null {
   const d = fromISODate(first.from);
   const when = `${d.getDate()}/${d.getMonth() + 1}`;
   return left > 0
-    ? `El ${when} empieza el lastre en dominadas y aún no tienes discos para el cinturón. Con dos de 1,25 kg y dos de 2,5 kg vale. Faltan ${left} días.`
+    ? `El ${when} empieza el lastre en dominadas y aún no tienes discos para el cinturón. Con tres discos de 2 kg vale para todo el plan. Faltan ${left} días.`
     : 'Ya toca lastre en las dominadas y no tienes discos: mientras tanto las haces sin peso y bajando despacio, pero consíguelos cuanto antes.';
 }
 

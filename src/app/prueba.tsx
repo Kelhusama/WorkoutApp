@@ -40,7 +40,7 @@ import { LineChart } from '@/ui/LineChart';
 import { colors, radius, space, type } from '@/ui/theme';
 
 /** Tamaños de disco que se pueden indicar. */
-const PLATE_SIZES = [1.25, 2.5, 5] as const;
+const PLATE_SIZES = [1, 1.25, 2, 2.5, 5] as const;
 
 /** Kilos sin ceros de sobra y sin perder el cuarto de kilo: 2 · 2,5 · 1,25. */
 const kg = (v: number) => String(Math.round(v * 100) / 100).replace('.', ',');
