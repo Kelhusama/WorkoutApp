@@ -306,11 +306,11 @@ Qué hay de cierto en la «IA» de las apps de fuerza, qué dice la ciencia y un
 Qué se puede medir de verdad con las fotos de progreso, objetivos con respaldo y propuesta en dos fases: [VISION_FOTOS.md](VISION_FOTOS.md). Hecha la fase A (foto guiada, panel «Cómo voy» y aviso mensual, sin visión). La fase B (alinear fotos y medir hombros/cintura) espera al APK.
 
 ## Para seguir (por orden)
-0. **Entrenador adaptativo**: cambio de variante automático (a la espera de decidir la compra de mancuernas) y volumen semanal por músculo. Hechas las capas 1 a 4, el aviso de test, la previsión con margen y el experimento de la red neuronal: reserva, nivel real, plan que cambia solo, sesión ligera y extra, mesetas, carga de banca y bloques de prueba entre tests.
+0. **Entrenador adaptativo**: volumen semanal por músculo y progresión por peso si se compran mancuernas ajustables (de momento, no; y nunca banco). Hecho también el paso automático a versiones más duras. Hechas las capas 1 a 4, el aviso de test, la previsión con margen y el experimento de la red neuronal: reserva, nivel real, plan que cambia solo, sesión ligera y extra, mesetas, carga de banca y bloques de prueba entre tests.
 1. **Usabilidad que queda**: tipografía propia.
 2. **Pantalla de inicio** con la pintadera (se configura al preparar el APK).
-3. **Flexibilidad, retoques**: la sesión de nivel 3 dura 23–26 min (el objetivo eran 10–15) y no hay forma de borrar una sesión apuntada por error.
-4. **Estiramientos, dosis**: solo los aductores llegan a 5 min por semana; valorar subir isquios y cadera.
+3. ~~Flexibilidad, retoques~~ ✅ (20/11/2026): el nivel 3 baja a 15–17 min y las sesiones recientes se pueden borrar.
+4. ~~Estiramientos, dosis~~ ✅ (20/11/2026): la zancada pasa a 60 s por lado y los isquios a 45 s; la rutina de tren inferior dura unos 12 min.
 5. **Con el APK**: fusionar la rama `google-drive`, leer la captura eligiendo la imagen y GPS en las caminatas.
 
 ## Debes (lo que tiene que hacer el usuario)

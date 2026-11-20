@@ -106,7 +106,7 @@ export const FLEX_EXERCISES: FlexExercise[] = [
     levels: {
       1: hold(2, 30, false, { name: 'Mariposa' }),
       2: pnf(2, 45, false, { name: 'Mariposa con contracción', note: 'aprieta las rodillas contra las manos' }),
-      3: hold(3, 60, false, { name: 'Rana profunda', figure: 'est_rana', note: 'rodillas muy separadas y cadera atrás' }),
+      3: hold(2, 60, false, { name: 'Rana profunda', figure: 'est_rana', note: 'rodillas muy separadas y cadera atrás' }),
     },
   },
   {
@@ -120,7 +120,7 @@ export const FLEX_EXERCISES: FlexExercise[] = [
     levels: {
       1: reps(2, 6, true, 'cargado', 4, { note: 'con apoyo de las manos' }),
       2: reps(2, 8, true, 'cargado', 4, { note: 'sin apoyo' }),
-      3: reps(3, 8, true, 'cargado', 6, { note: 'pausa de 3 s abajo' }),
+      3: reps(2, 6, true, 'cargado', 6, { note: 'pausa de 3 s abajo' }),
     },
   },
   {
@@ -134,7 +134,7 @@ export const FLEX_EXERCISES: FlexExercise[] = [
     levels: {
       1: hold(2, 30, true),
       2: pnf(2, 30, true, { note: 'empuja la pierna contra las manos' }),
-      3: pnf(3, 30, true, { note: 'empuja la pierna contra las manos' }),
+      3: pnf(2, 40, true, { note: 'empuja la pierna contra las manos' }),
     },
   },
   {
@@ -147,7 +147,7 @@ export const FLEX_EXERCISES: FlexExercise[] = [
     levels: {
       1: reps(2, 8, false, 'excentrico', 5, { note: 'bajada de 3 s' }),
       2: reps(2, 10, false, 'excentrico', 7, { note: 'bajada de 5 s' }),
-      3: reps(3, 8, true, 'excentrico', 5, { name: 'Buenos días a una pierna', note: 'bajada lenta' }),
+      3: reps(2, 6, true, 'excentrico', 5, { name: 'Buenos días a una pierna', note: 'bajada lenta' }),
     },
   },
   {
@@ -161,7 +161,7 @@ export const FLEX_EXERCISES: FlexExercise[] = [
     levels: {
       1: hold(2, 30, true),
       2: hold(2, 45, true),
-      3: hold(2, 60, true, { name: 'Estiramiento del sofá', note: 'empeine de atrás apoyado en el sofá o la pared' }),
+      3: hold(2, 45, true, { name: 'Estiramiento del sofá', note: 'empeine de atrás apoyado en el sofá o la pared' }),
     },
   },
   {
@@ -226,7 +226,7 @@ export const FLEX_EXERCISES: FlexExercise[] = [
     levels: {
       1: hold(2, 30, true),
       2: hold(2, 45, true),
-      3: hold(2, 60, true),
+      3: pnf(2, 30, true, { note: 'empuja el antebrazo contra la mano' }),
     },
   },
 ];

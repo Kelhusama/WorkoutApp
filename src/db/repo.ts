@@ -24,7 +24,7 @@ import {
   type WeekTemplate,
 } from '@/domain/schedule';
 import { estimate1RM } from '@/domain/strength';
-import { LEG_KEYS, initialPrescription, type Slot } from '@/domain/templates';
+import { LEG_KEYS, hasNextStage, initialPrescription, stageNote, type Slot } from '@/domain/templates';
 import { getExerciseHistory, getExerciseReserves } from './stats';
 import { tripOn, type TravelGear, type Trip } from '@/domain/travel';
 
@@ -318,6 +318,14 @@ export interface SlotChange {
   next: Prescription;
   /** Por qué el entrenador lo ha decidido. */
   reason: string;
+  /** Si pasa a una versión más dura del ejercicio, cómo se hace. */
+  stageNote?: string;
+}
+
+/** Etapa (versión más dura) en la que va cada ejercicio; los que no aparecen están en la normal. */
+export async function getSlotStages(db: SQLiteDatabase): Promise<Record<string, number>> {
+  const rows = await db.getAllAsync<{ slot_key: string; stage: number }>('SELECT slot_key, stage FROM slot_stage');
+  return Object.fromEntries(rows.map((r) => [r.slot_key, r.stage]));
 }
 
 /** Sesiones hechas desde una fecha (gimnasio incluido), para valorar la carga reciente. */
@@ -345,6 +353,7 @@ export async function saveHomeSession(
   variants: Record<string, Variant> = {},
 ): Promise<SlotChange[]> {
   const prescriptions = await getPrescriptions(db, sessionSlots);
+  const stages = await getSlotStages(db);
   const slots = new Map(sessionSlots.map((s) => [s.key, s]));
   const changes: SlotChange[] = [];
 
@@ -374,7 +383,7 @@ export async function saveHomeSession(
       const target = applyVariant(plan, slot, variants[r.slotKey] ?? 'base');
       for (let i = 0; i < r.values.length; i++) {
         await tx.runAsync(
-          'INSERT INTO set_log (session_id, slot_key, exercise_id, set_index, target, value, tempo) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO set_log (session_id, slot_key, exercise_id, set_index, target, value, tempo, stage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
           sessionId,
           r.slotKey,
           r.exerciseId,
@@ -382,6 +391,7 @@ export async function saveHomeSession(
           target.reps,
           r.values[i],
           target.tempo,
+          stages[r.slotKey] ?? 0,
         );
       }
       if (r.reserve != null) {
@@ -445,6 +455,28 @@ export async function saveHomeSession(
             result = plateauAction(target, slot, { upper: !LEG_KEYS[kind].includes(r.slotKey), atLimit });
           }
         }
+      }
+      // Escalera completada: si hay una versión más dura, se pasa a ella y se vuelve a empezar.
+      const stage = stages[r.slotKey] ?? 0;
+      if (result.change === 'variante' && hasNextStage(r.slotKey, stage)) {
+        const note = stageNote(r.slotKey, stage + 1)!;
+        const fresh = initialPrescription(slot);
+        await tx.runAsync(
+          'INSERT INTO slot_stage (slot_key, stage) VALUES (?, ?) ON CONFLICT(slot_key) DO UPDATE SET stage = excluded.stage',
+          r.slotKey,
+          stage + 1,
+        );
+        await tx.runAsync(
+          `INSERT INTO prescription (slot_key, sets, reps, tempo, updated_at) VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(slot_key) DO UPDATE SET sets = excluded.sets, reps = excluded.reps, tempo = excluded.tempo, updated_at = excluded.updated_at`,
+          r.slotKey,
+          fresh.sets,
+          fresh.reps,
+          fresh.tempo,
+          now(),
+        );
+        changes.push({ slotKey: r.slotKey, exerciseId: r.exerciseId, next: fresh, change: 'variante', reason: 'Has completado toda la escalera: pasas a una versión más dura y vuelves a empezar.', stageNote: note });
+        continue;
       }
       changes.push({ slotKey: r.slotKey, exerciseId: r.exerciseId, ...result });
       if (result.change !== 'none' && result.change !== 'variante') {

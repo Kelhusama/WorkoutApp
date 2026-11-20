@@ -44,6 +44,8 @@ Para probar: `npx expo start` en la carpeta del proyecto y escanear el QR con Ex
 | [ ] | Entrenador: bloques de prueba | Objetivos → test de dominadas o flexiones | Que el primer test abra un bloque, que explique qué se está probando y, a las 4 semanas, que el siguiente test lo cierre y elija otro |
 | [ ] | Entrenador: aviso de test | Hoy | Que aparezca «Toca test de dominadas» y «de flexiones» y lleve a la pantalla del test |
 | [ ] | Entrenador: experimento de la red | Progreso → Ejercicios → un ejercicio | Que diga cuántas sesiones faltan; con 12 o más, que muestre el examen sin que la pantalla se quede parada |
+| [ ] | Flexibilidad: borrar sesión | Entrenar → Flexibilidad → Sesiones recientes | Que pida confirmación y la sesión desaparezca |
+| [ ] | Entrenador: versión más dura | Al guardar una sesión tras completar toda la escalera de un ejercicio | Solo con semanas de uso: que anuncie la nueva versión y la tarjeta del ejercicio la recuerde |
 | [ ] | Aspecto general | Todas las pantallas | Textos cortados, botones difíciles de pulsar, el teclado tapando campos |
 
 ## Solo con la app instalada (APK)

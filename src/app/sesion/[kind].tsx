@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getDoneSessions, getPrescriptions, getSessionLog, getSessionReserves, getSessionSets, getTripOn, saveHomeSession, type SlotChange } from '@/db/repo';
+import { getDoneSessions, getPrescriptions, getSessionLog, getSlotStages, getSessionReserves, getSessionSets, getTripOn, saveHomeSession, type SlotChange } from '@/db/repo';
 import { getSlotVariants } from '@/db/coach';
 import { VARIANT_INFO, applyVariant, type Variant } from '@/domain/bandit';
 import { lightSets, readiness, type Readiness, type Reserve } from '@/domain/coach';
@@ -15,10 +15,10 @@ import { addDays, formatLong, today as getToday } from '@/domain/dates';
 import { EXERCISES } from '@/domain/exercises';
 import { detectRecords, type NewRecord } from '@/domain/stats';
 import { ROUTINES, routineAfter, routineMinutes } from '@/domain/stretches';
-import { amountText, describeChange } from '@/domain/format';
+import { amountText, describeChange, prescriptionText } from '@/domain/format';
 import type { Feeling, Prescription } from '@/domain/progression';
 import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
-import { LEG_KEYS, exerciseFor, type Slot } from '@/domain/templates';
+import { LEG_KEYS, exerciseFor, stageNote, type Slot } from '@/domain/templates';
 import { sessionSlots } from '@/domain/travel';
 import { Button, Card, FeelingPicker, SectionTitle, Segmented } from '@/ui/components';
 import { syncReminders } from '@/notifications/reminders';
@@ -44,6 +44,8 @@ export default function SessionScreen() {
   const [advice, setAdvice] = useState<Readiness | null>(null);
   // Bloque de prueba del entrenador: cambia lo que se pide en dominadas o flexiones.
   const [variants, setVariants] = useState<Record<string, Variant>>({});
+  // Versión más dura de cada ejercicio, si ya se completó su escalera.
+  const [stages, setStages] = useState<Record<string, number>>({});
   const [feeling, setFeeling] = useState<Feeling | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -63,6 +65,7 @@ export default function SessionScreen() {
       const t: Record<string, Prescription> = {};
       for (const s of slots) t[s.key] = applyVariant(base[s.key], s, blockVariants[s.key] ?? 'base');
       setVariants(blockVariants);
+      setStages(trip ? {} : await getSlotStages(db));
       const log = await getSessionLog(db, date, kind);
       const saved = log?.status === 'done' ? await getSessionSets(db, log.id) : {};
       const ready = readiness(await getDoneSessions(db, addDays(date, -30)), date);
@@ -174,7 +177,9 @@ export default function SessionScreen() {
                     />
                     <View style={{ flex: 1 }}>
                       <Text style={type.subtitle}>{ex.name}</Text>
-                      <Text style={type.caption}>{describeChange(c.change, c.next, ex)}</Text>
+                      <Text style={type.caption}>
+                        {c.stageNote ? `Nueva versión: ${c.stageNote.toLowerCase()}. Empiezas con ${prescriptionText(c.next, ex)}.` : describeChange(c.change, c.next, ex)}
+                      </Text>
                       <Text style={[type.caption, { color: colors.faint }]}>{c.reason}</Text>
                     </View>
                   </View>
@@ -242,6 +247,7 @@ export default function SessionScreen() {
           key={s.key}
           slot={s}
           target={targetOf(s.key)}
+          stageNote={stageNote(s.key, stages[s.key] ?? 0) ?? undefined}
           blockNote={variants[s.key] && variants[s.key] !== 'base' ? `Bloque de prueba · ${VARIANT_INFO[variants[s.key]].label}. ${VARIANT_INFO[variants[s.key]].detail} Hasta tu próximo test.` : undefined}
           values={values[s.key] ?? []}
           onChange={(v) => {

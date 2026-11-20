@@ -89,3 +89,30 @@ export function exerciseFor(s: Slot): Exercise {
 export function unitFor(ex: Exercise): string {
   return ex.measure === 'time' ? ' s' : '';
 }
+
+/**
+ * Versiones más duras de cada ejercicio, en orden, con el material que ya hay en casa
+ * (mochila, una silla, las gomas). Al completar toda la escalera de series y repeticiones
+ * se pasa a la siguiente y la escalera vuelve a empezar. Sin banco.
+ */
+export const STAGES: Record<string, readonly string[]> = {
+  'A.dominadas': ['Con mochila lastrada, unos 3 kg', 'Con mochila lastrada, unos 6 kg'],
+  'C.dominadas': ['Con mochila lastrada, unos 3 kg', 'Con mochila lastrada, unos 6 kg'],
+  'A.remo': ['Con la goma pisada y sujeta junto a la mancuerna'],
+  'A.curl': ['Con la goma pisada y sujeta junto a la mancuerna'],
+  'B.flexiones': ['Con los pies sobre una silla', 'Con mochila lastrada, unos 5 kg', 'Pies sobre una silla y mochila lastrada'],
+  'B.inclinadas': ['Con las manos más bajas: un escalón o un libro grueso'],
+  'B.pica': ['Con los pies sobre una silla'],
+  'C.press': ['Con la goma pisada y sujeta junto a la mancuerna'],
+  'C.martillo': ['Con la goma pisada y sujeta junto a la mancuerna'],
+};
+
+/** Cómo se hace el ejercicio en la etapa indicada; null en la versión normal (etapa 0). */
+export function stageNote(slotKey: string, stage: number): string | null {
+  return stage > 0 ? (STAGES[slotKey]?.[stage - 1] ?? null) : null;
+}
+
+/** ¿Queda una versión más dura después de esta etapa? */
+export function hasNextStage(slotKey: string, stage: number): boolean {
+  return stage < (STAGES[slotKey]?.length ?? 0);
+}

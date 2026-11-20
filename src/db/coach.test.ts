@@ -184,3 +184,36 @@ test('bloques de prueba: el test abre, deja seguir o cierra el bloque, y la sesi
   await importBackup(fresh, JSON.parse(JSON.stringify(backup)));
   assert.equal((await getBlocks(fresh)).length, 2);
 });
+
+test('al completar toda la escalera se pasa solo a la versión más dura y se vuelve a empezar', async () => {
+  const { db, slots } = await setup();
+  const { getSlotStages } = await import('./repo');
+  const { addDays } = await import('../domain/dates');
+  const { STAGES, TEMPLATES: T, initialPrescription, stageNote } = await import('../domain/templates');
+  // Todas las versiones duras cuelgan de un ejercicio que existe.
+  const keys = Object.values(T).flat().map((s) => s.key);
+  for (const k of Object.keys(STAGES)) assert.ok(keys.includes(k), k);
+
+  const slot = slots.find((s) => s.key === 'A.curl')!;
+  let change: Awaited<ReturnType<typeof saveHomeSession>>[number] | undefined;
+  let i = 0;
+  for (; i < 40; i++) {
+    const p = (await getPrescriptions(db, slots))[slot.key];
+    const out = await saveHomeSession(db, addDays('2026-01-05', i * 7), 'A', 'normal', [{ slotKey: slot.key, exerciseId: slot.exerciseId, values: Array(p.sets).fill(p.reps), reserve: 2 }], slots);
+    change = out[0];
+    if (change.stageNote) break;
+  }
+  assert.ok(i < 40, 'debería completar la escalera');
+  assert.equal(change!.change, 'variante');
+  assert.equal(change!.stageNote, stageNote('A.curl', 1));
+  assert.deepEqual({ ...(await getSlotStages(db)) }, { 'A.curl': 1 });
+  assert.deepEqual((await getPrescriptions(db, slots))[slot.key], initialPrescription(slot));
+
+  // La siguiente sesión se guarda en la versión dura, y el historial ya solo cuenta esa.
+  const p = (await getPrescriptions(db, slots))[slot.key];
+  await saveHomeSession(db, addDays('2026-01-05', (i + 1) * 7), 'A', 'normal', [{ slotKey: slot.key, exerciseId: slot.exerciseId, values: Array(p.sets).fill(p.reps), reserve: 0 }], slots);
+  const history = await getExerciseHistory(db, slot.exerciseId);
+  assert.equal(history.length, 1);
+  // No hay más versiones del curl: al volver a completarla, solo avisa.
+  assert.equal(stageNote('A.curl', 2), null);
+});

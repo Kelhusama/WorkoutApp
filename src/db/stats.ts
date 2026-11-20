@@ -7,13 +7,15 @@ import type { Feeling } from '@/domain/progression';
 import type { Bests, SessionSets } from '@/domain/stats';
 import { estimate1RM } from '@/domain/strength';
 
-/** Series de un ejercicio en cada sesión hecha, por orden de fecha. */
+/** Series de un ejercicio en cada sesión hecha, por orden de fecha. Solo las de su versión más dura, para no mezclar. */
 export async function getExerciseHistory(db: SQLiteDatabase, exerciseId: string): Promise<SessionSets[]> {
   const rows = await db.getAllAsync<{ date: ISODate; value: number }>(
     `SELECT s.date AS date, l.value AS value
        FROM set_log l JOIN session_log s ON s.id = l.session_id
       WHERE l.exercise_id = ? AND s.status = 'done'
+        AND l.stage = (SELECT MAX(l2.stage) FROM set_log l2 WHERE l2.exercise_id = ?)
       ORDER BY s.date, l.slot_key, l.set_index`,
+    exerciseId,
     exerciseId,
   );
   const out: SessionSets[] = [];

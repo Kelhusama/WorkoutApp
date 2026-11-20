@@ -13,6 +13,7 @@ const TABLES = [
   'day_override',
   'trip',
   'prescription',
+  'slot_stage',
   'session_log',
   'set_log',
   'effort_log',

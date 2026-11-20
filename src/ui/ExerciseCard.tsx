@@ -21,9 +21,11 @@ interface Props {
   onReserve: (r: Reserve) => void;
   /** Aviso de que el entrenador está probando otra forma de hacer este ejercicio. */
   blockNote?: string;
+  /** Versión más dura en la que va este ejercicio, si ya no es la normal. */
+  stageNote?: string;
 }
 
-export function ExerciseCard({ slot, target, values, onChange, reserve, onReserve, blockNote }: Props) {
+export function ExerciseCard({ slot, target, values, onChange, reserve, onReserve, blockNote, stageNote }: Props) {
   const ex = exerciseFor(slot);
   const step = ex.measure === 'time' ? 5 : 1;
   const [showHow, setShowHow] = useState(false);
@@ -42,6 +44,12 @@ export function ExerciseCard({ slot, target, values, onChange, reserve, onReserv
         <Text style={type.caption}>{ex.muscles.join(' · ')}</Text>
       </View>
 
+      {stageNote && (
+        <View style={styles.tempo}>
+          <Ionicons name="trending-up" size={18} color={colors.info} />
+          <Text style={[type.caption, { color: colors.info, flex: 1 }]}>Versión más dura: {stageNote.toLowerCase()}.</Text>
+        </View>
+      )}
       {blockNote && (
         <View style={styles.tempo}>
           <Ionicons name="flask-outline" size={18} color={colors.info} />

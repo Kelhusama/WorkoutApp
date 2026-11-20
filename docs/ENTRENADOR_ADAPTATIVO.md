@@ -129,8 +129,9 @@ Hoy la app progresa con una escalera fija (`src/domain/progression.ts`): repetic
   - **Aviso de test** en Hoy: el primero de cada objetivo y, después, a las 4 semanas de bloque.
   - **Previsión con margen** en los objetivos (Progreso): horquilla de fechas con el mismo filtro, solo cuando hay mejora clara.
   - **Experimento de la red neuronal** (`src/domain/neural.ts`): red de una capa oculta escrita a mano que predice la sesión siguiente. Con 12 sesiones de un ejercicio se examina contra el filtro prediciendo las últimas sesiones sin verlas; solo gana si falla al menos un 5 % menos. Se ve en la ficha de cada ejercicio. En pruebas con datos inventados gana cuando hay un patrón repetido y pierde con ruido puro; con datos reales aún no se ha podido examinar.
+- ✅ **Versiones más duras automáticas** (20/11/2026; `STAGES` en `src/domain/templates.ts`, tabla `slot_stage`): al completar toda la escalera de un ejercicio, el entrenador pasa solo a una versión más dura con lo que ya hay en casa (mochila lastrada, pies sobre una silla, la goma junto a la mancuerna) y la escalera vuelve a empezar. Sin banco. El nivel real y el historial de la ficha cuentan solo la versión más dura, para no mezclar. Tienen versiones: dominadas, remo, curl, flexiones estrictas, inclinadas y en pica, press y martillo.
 - **Pendiente**:
-  1. **Cambio de variante automático** al agotar la escalera (hoy solo avisa). Aplazado: depende de si se compran mancuernas ajustables, porque entonces lo natural es progresar por peso.
+  1. Progresión por peso si algún día hay mancuernas ajustables.
   2. Volumen semanal total por músculo.
   3. Que la etiqueta «mejorando» reaccione antes a un parón.: probar variantes por bloques de 4 semanas.
   4. Experimento de la red neuronal contra el filtro.

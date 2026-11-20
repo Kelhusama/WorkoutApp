@@ -64,12 +64,12 @@ test('las dosis siguen la tabla de la investigación', () => {
   const text = (id: string, level: 1 | 2 | 3) => doseText(FLEX_BY_ID[id].levels[level]);
   assert.equal(text('rana_mariposa', 1), '2 × 30 s');
   assert.match(text('rana_mariposa', 2), /^2 ciclos de 6 s de contracción \+ 45 s/);
-  assert.match(text('rana_mariposa', 3), /^3 × 60 s/);
+  assert.match(text('rana_mariposa', 3), /^2 × 60 s/);
   assert.equal(text('cosaca', 1), '2 × 6 por lado, con apoyo de las manos');
   assert.equal(text('isquios_tumbado', 1), '2 × 30 s por lado');
-  assert.match(text('isquios_tumbado', 3), /^3 ciclos de 6 s de contracción \+ 30 s por lado/);
+  assert.match(text('isquios_tumbado', 3), /^2 ciclos de 6 s de contracción \+ 40 s por lado/);
   assert.equal(text('buenos_dias', 2), '2 × 10, bajada de 5 s');
-  assert.equal(text('zancada_baja', 3).startsWith('2 × 60 s por lado'), true);
+  assert.equal(text('zancada_baja', 3).startsWith('2 × 45 s por lado'), true);
   assert.equal(text('sentadilla_profunda', 1), '3 × 20 s, agarrado a algo firme');
   assert.equal(text('rodilla_pared', 2), '2 × 10 + 20 s por lado, mantén la última');
   assert.equal(text('deslizamientos_pared', 1), '2 × 8');
@@ -111,8 +111,8 @@ test('los pasos desdoblan series y lados, y la sesión dura lo previsto', () => 
   const mixed = exerciseSteps(FLEX_BY_ID.rodilla_pared, 2)[0];
   assert.deepEqual([mixed.reps, mixed.hold, mixed.seconds], [10, 20, 50]);
 
-  // Minutos estimados con la tabla tal cual: el nivel 1 cabe en 10–15; el 2 y el 3 suman series y salen más largos.
-  const limits = { 1: [10, 15], 2: [12, 17], 3: [20, 26] } as const;
+  // Minutos estimados con la tabla tal cual: el nivel 1 cabe en 10–15; el 2 y el 3 llegan a unos 17.
+  const limits = { 1: [10, 15], 2: [12, 17], 3: [14, 18] } as const;
   for (const level of FLEX_LEVELS) {
     for (let n = 0; n < 5; n++) {
       const m = sessionMinutes(sessionSteps(sessionExercises(level, n), level));

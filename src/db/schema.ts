@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 15;
+const LATEST = 16;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -259,6 +259,21 @@ export async function migrate(db: SQLiteDatabase) {
       );
     `);
     version = 15;
+  }
+
+  if (version === 15) {
+    // Versiones más duras de un ejercicio: en qué etapa va cada hueco y con cuál se hizo cada serie.
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS slot_stage (
+        slot_key TEXT PRIMARY KEY NOT NULL,
+        stage INTEGER NOT NULL DEFAULT 0
+      );
+    `);
+    const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(set_log)');
+    if (!cols.some((c) => c.name === 'stage')) {
+      await db.execAsync('ALTER TABLE set_log ADD COLUMN stage INTEGER NOT NULL DEFAULT 0');
+    }
+    version = 16;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);

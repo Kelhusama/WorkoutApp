@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import {
   BLOCK_PASS,
@@ -21,6 +22,8 @@ import {
   testSummary,
   type TestSummary,
 } from '@/domain/flexibility';
+import { deleteFlexSession, type FlexSession } from '@/db/flexibility';
+import { formatLong } from '@/domain/dates';
 import { useFlex } from '@/hooks/useFlex';
 import { Button, Card, Pill, ProgressBar } from '@/ui/components';
 import { LineChart } from '@/ui/LineChart';
@@ -77,7 +80,8 @@ function TestCard({ summary }: { summary: TestSummary }) {
 }
 
 export default function FlexibilityScreen() {
-  const { view } = useFlex();
+  const { view, reload } = useFlex();
+  const db = useSQLiteContext();
 
   if (!view) return <View style={{ flex: 1 }} />;
 
@@ -89,6 +93,20 @@ export default function FlexibilityScreen() {
   const pendingTests = summaries.filter((s) => s.due).length;
   const marks = milestones(tests);
   const last = progress.lastBlock;
+  const recent = [...sessions].reverse().slice(0, 5);
+
+  const removeSession = (s: FlexSession) =>
+    Alert.alert('¿Borrar esta sesión?', `${formatLong(s.date)}, ${Math.round(s.seconds / 60)} min. No se puede deshacer y puede cambiar tu avance en el bloque.`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Borrar',
+        style: 'destructive',
+        onPress: async () => {
+          await deleteFlexSession(db, s.id);
+          reload();
+        },
+      },
+    ]);
 
   return (
     <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: space.xxl }}>
@@ -188,6 +206,31 @@ export default function FlexibilityScreen() {
         <TestCard key={s.test.id} summary={s} />
       ))}
 
+      {recent.length > 0 && (
+        <>
+          <Heading>Sesiones recientes</Heading>
+          <Card style={{ paddingVertical: space.sm }}>
+            {recent.map((s) => (
+              <View key={s.id} style={[styles.row, { minHeight: 56 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={type.subtitle}>{formatLong(s.date)}</Text>
+                  <Text style={type.caption}>
+                    Nivel {s.level} · {Math.round(s.seconds / 60)} min · {s.exercises.length} ejercicios
+                  </Text>
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Borrar la sesión del ${formatLong(s.date).toLowerCase()}`}
+                  onPress={() => removeSession(s)}
+                  style={styles.delete}>
+                  <Ionicons name="trash-outline" size={20} color={colors.muted} />
+                </Pressable>
+              </View>
+            ))}
+          </Card>
+        </>
+      )}
+
       <Heading>Hitos</Heading>
       <Card style={{ gap: space.md }}>
         {marks.map((m) => (
@@ -209,6 +252,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   value: { fontSize: 22, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
   test: { gap: space.sm, minHeight: 64 },
+  delete: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   notice: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   exercise: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   number: { width: 24, fontSize: 15, fontWeight: '700', color: colors.muted, textAlign: 'center', fontVariant: ['tabular-nums'] },
