@@ -129,3 +129,22 @@ export function onTest(blocks: readonly Block[], goal: GoalId, date: ISODate, va
   const all = blocks.map((b) => (b.id === open.id ? closed : b));
   return { kind: 'cambio', reward: blockReward(closed)!, previous: open.variant, variant: chooseVariant(all, goal, random) };
 }
+
+export interface TestDue {
+  goal: GoalId;
+  /** Aún no hay ningún test: hace falta el primero para empezar a comparar. */
+  first: boolean;
+  /** Días que lleva el bloque abierto. */
+  days: number;
+}
+
+/** Objetivos a los que les toca test: sin ninguno todavía, o con el bloque abierto desde hace 4 semanas. */
+export function testsDue(blocks: readonly Block[], today: ISODate): TestDue[] {
+  const out: TestDue[] = [];
+  for (const goal of Object.keys(GOAL_SLOTS) as GoalId[]) {
+    const open = blocks.find((b) => b.goal === goal && b.endDate === null);
+    if (!open) out.push({ goal, first: true, days: 0 });
+    else if (days(open.startDate, today) >= BLOCK_TEST_DAYS) out.push({ goal, first: false, days: days(open.startDate, today) });
+  }
+  return out;
+}

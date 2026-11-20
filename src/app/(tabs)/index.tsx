@@ -7,8 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getBodyLog } from '@/db/body';
 import { deleteLog, getDoneSessions, getPrescriptions, markMissed } from '@/db/repo';
-import { getSlotVariants } from '@/db/coach';
-import { applyVariant } from '@/domain/bandit';
+import { getBlocks, getSlotVariants } from '@/db/coach';
+import { applyVariant, testsDue, type TestDue } from '@/domain/bandit';
 import { extraKind, readiness, type Readiness } from '@/domain/coach';
 import { getPhotos, getRecentFeelings } from '@/db/stats';
 import { monthlyCheck } from '@/domain/physique';
@@ -77,6 +77,8 @@ export default function TodayScreen() {
   const [deload, setDeload] = useState(false);
   // Revisión mensual de cinta y fotos.
   const [monthly, setMonthly] = useState<{ due: boolean; detail: string } | null>(null);
+  // Tests de máximo que tocan, para que el entrenador pueda comparar bloques.
+  const [tests, setTests] = useState<TestDue[]>([]);
   const [stretched, setStretched] = useState(true);
   const [showExercises, setShowExercises] = useState(false);
   // Sesión extra en día de descanso: cuál propone el entrenador y si conviene que sea ligera.
@@ -107,6 +109,7 @@ export default function TodayScreen() {
       });
       getRecentFeelings(db).then((f) => setDeload(needsDeload(f)));
       if (kind) stretchedOn(db, todayDate, routineAfter(kind)).then(setStretched);
+      getBlocks(db).then((b) => setTests(testsDue(b, todayDate)));
       getDoneSessions(db, addDays(todayDate, -30)).then((done) => setExtra({ kind: extraKind(done), ready: readiness(done, todayDate) }));
     }, [db, slots, kind, todayDate, gear]),
   );
@@ -279,6 +282,19 @@ export default function TodayScreen() {
           onPress={() => router.push({ pathname: '/viaje', params: { id: String(trip.id) } })}
         />
       )}
+      {tests.map((t) => (
+        <PlanRow
+          key={t.goal}
+          icon="stopwatch"
+          title={`Toca test de ${t.goal}`}
+          detail={
+            t.first
+              ? 'Haz el primero cuando estés fresco: es el punto de partida del entrenador.'
+              : `Llevas ${Math.round(t.days / 7)} semanas con este bloque: el test dirá cuánto te ha hecho mejorar.`
+          }
+          onPress={() => router.push({ pathname: '/test', params: { test: t.goal } })}
+        />
+      ))}
       {monthly?.due && (
         <PlanRow
           icon="body"

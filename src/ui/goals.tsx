@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getBenchSeries, getTestSeries } from '@/db/stats';
 import type { Point } from '@/domain/body';
+import { goalWindow, type Window } from '@/domain/coach';
 import { formatShort, monthTitle, today } from '@/domain/dates';
 import { projectGoal, type Projection } from '@/domain/insights';
 import { GOALS, goalProgress, nextMilestone, type Goal } from '@/domain/strength';
@@ -16,6 +17,8 @@ interface Current {
   measured: boolean;
   when?: string;
   projection: Projection;
+  /** Horquilla de fechas según el filtro del entrenador, si hay mejora clara. */
+  window: Window | null;
 }
 
 const num = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1).replace('.', ','));
@@ -60,6 +63,7 @@ export function GoalsSummary({ compact = false }: { compact?: boolean }) {
             measured: best !== null,
             when: best?.date,
             projection: projectGoal(pts, g.target, now),
+            window: goalWindow(pts, g.target, now),
           };
         }
         setCurrent(out);
@@ -138,6 +142,11 @@ export function GoalsSummary({ compact = false }: { compact?: boolean }) {
             </View>
             {!reached && (
               <Text style={[type.caption, c.projection.status === 'en_camino' && { color: colors.text }]}>{projectionText(g, c.projection)}</Text>
+            )}
+            {!reached && c.window && (
+              <Text style={type.caption}>
+                Con margen de error: {c.window.to ? `entre ${monthTitle(c.window.from).toLowerCase()} y ${monthTitle(c.window.to).toLowerCase()}` : `no antes de ${monthTitle(c.window.from).toLowerCase()}`}.
+              </Text>
             )}
             {g.id !== 'banca' ? (
               <Button

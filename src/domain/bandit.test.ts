@@ -96,3 +96,13 @@ test('al apuntar un test: primero, demasiado pronto o cambio de bloque', () => {
     assert.ok(['base', 'cortas', 'largas'].includes(out.variant));
   }
 });
+
+test('cuándo toca test: el primero, o a las cuatro semanas de bloque', async () => {
+  const { testsDue } = await import('./bandit');
+  assert.deepEqual(testsDue([], '2026-11-20'), [
+    { goal: 'dominadas', first: true, days: 0 },
+    { goal: 'flexiones', first: true, days: 0 },
+  ]);
+  const open = (goal: Block['goal'], startDate: string): Block => ({ id: nextId++, goal, variant: 'base', startDate, startValue: 5, endDate: null, endValue: null });
+  assert.deepEqual(testsDue([open('dominadas', '2026-11-01'), open('flexiones', '2026-10-20')], '2026-11-20'), [{ goal: 'flexiones', first: false, days: 31 }]);
+});

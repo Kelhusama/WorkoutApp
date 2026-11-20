@@ -1,6 +1,6 @@
 # «bowflex_uk»: ¿compro las mancuernas? (20/11/2026)
 
-**Respuesta corta**: la cuenta y la tienda son las oficiales, no un fraude, pero **bowflex.co.uk no envía a España**. Las mismas mancuernas (par de 2–24 kg) se venden aquí a **458 €** por el distribuidor oficial. Son una compra razonable, no la mejor: para tus objetivos, un **kit de discos de Decathlon con banco inclinable (unos 235 €)** da lo mismo por la mitad, y el banco es lo que más aporta al pecho.
+**Respuesta corta**: la cuenta y la tienda son las oficiales, no un fraude, pero **bowflex.co.uk no envía a España**. Las mismas mancuernas (par de 2–24 kg) se venden aquí a **458 €** por el distribuidor oficial. Como el requisito es que ocupen muy poco espacio, **son la opción recomendada**: el par DB52 comprado en España, con un banco plegable. El kit de discos de Decathlon (unos 235 € con banco) es más barato y robusto, pero ocupa bastante más y queda descartado por espacio.
 
 > **Cómo se hizo.** Tres agentes de investigación en paralelo (tienda y legitimidad, calidad del producto, alternativas en España) y comprobación directa de los datos clave: términos de la tienda, precio en MediaMarkt, retirada de seguridad en EE. UU. y precio del kit de Decathlon. No se compró nada ni se añadió nada a ninguna cesta. Los precios son del 20/11/2026, en plena campaña de Black Friday. Lo no confirmado está en el apartado 7.
 
@@ -76,9 +76,14 @@ Bancos inclinables: Domyos Bench 500 a 99,99 €, Bench 900 reforzado a 139,99 �
 
 **Recomendación**
 
-1. **Mejor relación entre precio y resultado: kit Domyos 50 kg + Bench 500, unos 235 €.** Cubre lo mismo que las BowFlex, es de hierro, se amplía con discos y la barra larga sirve para remo y curl.
-2. **Si valoras la comodidad y el poco espacio: BowFlex DB52 a 458 € comprada en España + Bench 900, unos 600 €.** Antes de pagar, confirma que es el modelo DB52 y no la 552i antigua.
-3. **Si quieres margen hasta 32 kg: NÜOBELL 232 + banco, unos 910 €.**
+Requisito del usuario (20/11/2026): **tiene que ocupar muy poco espacio**. Eso descarta el kit de discos (dos barras, una barra larga de 1,55 m y unos 20 discos sueltos) y deja solo las ajustables de selector.
+
+1. **Recomendada: BowFlex DB52 a 458 € comprada en España + banco plegable Domyos Bench 500 (99,99 €), unos 560 €.** Las dos mancuernas en sus bases ocupan aproximadamente 45 × 45 cm de suelo y caben bajo una cama o en un armario. Antes de pagar, confirma que es el modelo DB52 y no la 552i antigua.
+2. **Sin banco, para empezar: solo el par, 458 €.** El press se hace en el suelo y el banco se añade después si hay sitio.
+3. **Si el presupuesto lo permite: NÜOBELL 232, 769 €.** Llega a 32 kg y la mancuerna se acorta al quitar peso, así que es la más cómoda de usar. Es 311 € más cara.
+4. **PowerBlock Pro 50, 579 €**: probablemente la que menos ocupa, pero cuesta más que la BowFlex para un rango parecido.
+
+Si el espacio no fuera un límite, la mejor relación entre precio y resultado sería el kit Domyos 50 kg + Bench 500, unos 235 €.
 
 En cualquier caso, no la pidas a Reino Unido.
 

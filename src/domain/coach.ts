@@ -75,7 +75,7 @@ export function fitStrength(observations: readonly Observation[]): StrengthState
   const scale = Math.max(first.value, 1);
   // Cuánto pueden cambiar de un día a otro el nivel y el ritmo sin que nadie lo vea.
   const qLevel = (0.004 * scale) ** 2;
-  const qRate = (0.002 * scale) ** 2;
+  const qRate = (0.0004 * scale) ** 2;
 
   let x = first.value; // nivel
   let v = 0; // ritmo por día
@@ -200,15 +200,22 @@ export function extraKind(done: readonly DoneSession[]): 'A' | 'B' | 'C' {
 
 /** Días sin que cambie lo que se pide de un ejercicio para hablar de meseta. */
 export const PLATEAU_DAYS = 21;
-/** Sesiones mínimas en ese tiempo. */
-export const PLATEAU_SESSIONS = 6;
+/** Sesiones mínimas en ese tiempo: cada ejercicio se hace una vez por semana. */
+export const PLATEAU_SESSIONS = 4;
 
 /**
- * Meseta: tres semanas o más pidiendo lo mismo, con sesiones suficientes,
- * y sin que el nivel real mejore. Una o dos semanas flojas son ruido.
+ * Meseta: tres semanas o más pidiendo lo mismo, con sesiones suficientes, y sin que lo que
+ * rindes en ese tramo haya subido (menos de un 3 %). Una o dos semanas flojas son ruido.
+ * No se usa la tendencia del filtro porque tarda unos dos meses en ver un parón.
+ * `capacities`: lo que rendiste en cada sesión del tramo, por orden.
  */
-export function isPlateau(p: { daysUnchanged: number; sessions: number; trend: Trend }): boolean {
-  return p.daysUnchanged >= PLATEAU_DAYS && p.sessions >= PLATEAU_SESSIONS && p.trend !== 'mejorando' && p.trend !== 'pocos_datos';
+export function isPlateau(p: { daysUnchanged: number; capacities: readonly number[] }): boolean {
+  const n = p.capacities.length;
+  if (p.daysUnchanged < PLATEAU_DAYS || n < PLATEAU_SESSIONS) return false;
+  const mean = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+  const first = mean(p.capacities.slice(0, 2));
+  const last = mean(p.capacities.slice(-2));
+  return last - first < first * 0.03;
 }
 
 /**
@@ -262,4 +269,14 @@ export function benchAdvice(last: { weight: number; reps: number; reserve: Reser
   if (last.reserve === 2 || last.reps >= BENCH_REPS + 3) return at(5, 'La última vez te sobraba mucho: sube 5 kg.');
   if (last.reserve === 1 || last.reps > BENCH_REPS) return at(2.5, 'La última vez salió con margen: sube 2,5 kg.');
   return at(0, 'Repite el peso; si hoy sale con margen, la próxima sube.');
+}
+
+/**
+ * Horquilla de fechas para llegar a un objetivo a partir de sus registros (tests o 1RM estimado),
+ * usando el mismo filtro que el nivel real. Null si no hay mejora clara o faltan datos.
+ */
+export function goalWindow(points: readonly { date: ISODate; value: number }[], target: number, today: ISODate): Window | null {
+  const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date));
+  const state = fitStrength(sorted.map((p) => ({ date: p.date, value: p.value, noise: Math.max(1, p.value * 0.05) })));
+  return state ? projectWindow(state, target, today) : null;
 }

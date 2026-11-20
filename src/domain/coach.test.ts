@@ -115,11 +115,12 @@ test('sesión extra: la que hace más tiempo que no haces', async () => {
 
 test('meseta: tres semanas igual, con sesiones suficientes y sin mejora real', async () => {
   const { isPlateau } = await import('./coach');
-  assert.equal(isPlateau({ daysUnchanged: 24, sessions: 7, trend: 'estable' }), true);
-  assert.equal(isPlateau({ daysUnchanged: 24, sessions: 7, trend: 'bajando' }), true);
-  assert.equal(isPlateau({ daysUnchanged: 24, sessions: 7, trend: 'mejorando' }), false);
-  assert.equal(isPlateau({ daysUnchanged: 14, sessions: 7, trend: 'estable' }), false);
-  assert.equal(isPlateau({ daysUnchanged: 40, sessions: 3, trend: 'estable' }), false);
+  assert.equal(isPlateau({ daysUnchanged: 21, capacities: [12, 12, 12, 12] }), true);
+  assert.equal(isPlateau({ daysUnchanged: 28, capacities: [12, 13, 11, 12, 12] }), true);
+  assert.equal(isPlateau({ daysUnchanged: 28, capacities: [13, 12, 12, 11] }), true); // yendo a menos
+  assert.equal(isPlateau({ daysUnchanged: 28, capacities: [12, 12, 13, 13.5] }), false); // sigue subiendo
+  assert.equal(isPlateau({ daysUnchanged: 14, capacities: [12, 12, 12, 12] }), false);
+  assert.equal(isPlateau({ daysUnchanged: 40, capacities: [12, 12, 12] }), false);
 });
 
 test('qué se hace con una meseta: más estímulo arriba, la pierna se deja', async () => {
@@ -150,4 +151,22 @@ test('banca: la carga de hoy según la última serie y lo que quedaba', async ()
   assert.equal(w(8, null), 55);
   assert.equal(benchAdvice({ weight: 20, reps: 2, reserve: null }).weight, 20); // nunca por debajo de la barra
   assert.equal(benchAdvice({ weight: 50, reps: 5, reserve: 1 }).reps, 5);
+});
+
+test('horquilla de un objetivo: solo con mejora clara', async () => {
+  const { goalWindow } = await import('./coach');
+  const pts = (perWeek: number) => Array.from({ length: 10 }, (_, i) => ({ date: addDays('2026-09-01', i * 7), value: 50 + perWeek * i }));
+  const w = goalWindow(pts(1.5), 80, '2026-11-20')!;
+  assert.ok(w.from > '2026-11-20');
+  assert.ok(w.to === null || w.to >= w.from);
+  assert.equal(goalWindow(pts(0), 80, '2026-11-20'), null);
+  assert.equal(goalWindow(pts(1.5).slice(0, 2), 80, '2026-11-20'), null);
+  assert.equal(goalWindow([], 80, '2026-11-20'), null);
+});
+
+test('al ritmo real (una sesión por semana) el filtro ve una mejora lenta y no inventa una en plano', () => {
+  const weekly = (n: number, f: (i: number) => number) => fitStrength(Array.from({ length: n }, (_, i) => ({ date: addDays('2026-01-05', i * 7), value: f(i), noise: 1 })))!;
+  assert.equal(weekly(10, (i) => 8 + 0.25 * i).trend, 'mejorando');
+  assert.equal(weekly(6, (i) => 10 + i).trend, 'mejorando');
+  assert.equal(weekly(12, () => 12).trend, 'estable');
 });

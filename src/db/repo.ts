@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { PLATEAU_DAYS, PLATEAU_SESSIONS, capacity, fitStrength, isPlateau, plateauAction, type DoneSession, type Observation, type Reserve } from '@/domain/coach';
+import { PLATEAU_DAYS, PLATEAU_SESSIONS, capacity, isPlateau, plateauAction, type DoneSession, type Observation, type Reserve } from '@/domain/coach';
 import { applyVariant, type Variant } from '@/domain/bandit';
 import { EXERCISES } from '@/domain/exercises';
 import { addDays, today as getToday, weekdayIndex, weekStart, type ISODate } from '@/domain/dates';
@@ -435,10 +435,12 @@ export async function saveHomeSession(
           const history = await getExerciseHistory(tx, r.exerciseId);
           const reserves = await getExerciseReserves(tx, r.exerciseId);
           const unit = EXERCISES[r.exerciseId]?.measure === 'time' ? 5 : 1;
-          const state = fitStrength(
-            history.map((h) => capacity(h.date, h.values, reserves.get(h.date) ?? null, unit)).filter((o): o is Observation => o !== null),
-          );
-          if (state && isPlateau({ daysUnchanged, sessions, trend: state.trend })) {
+          const capacities = history
+            .filter((h) => h.date >= since)
+            .map((h) => capacity(h.date, h.values, reserves.get(h.date) ?? null, unit))
+            .filter((o): o is Observation => o !== null)
+            .map((o) => o.value);
+          if (isPlateau({ daysUnchanged, capacities })) {
             const atLimit = !completed || r.reserve === 0 || (r.reserve == null && feeling === 'dura');
             result = plateauAction(target, slot, { upper: !LEG_KEYS[kind].includes(r.slotKey), atLimit });
           }
