@@ -165,6 +165,8 @@ export default function TodayScreen() {
   const status = day ? STATUS_STYLE[day.status] : null;
   const routine = kind ? ROUTINES[routineAfter(kind)] : null;
   const trial = trialToday(todayDate);
+  // Plan de la prueba en marcha: lo que no ayuda a llegar a ese día se deja para después.
+  const focusOnTrial = trialActive && trial.week !== null;
 
   return (
     <ScrollView
@@ -340,7 +342,7 @@ export default function TodayScreen() {
         />
       )}
       {tests
-        .filter((t) => !(trialActive && trial.week && t.goal === 'dominadas'))
+        .filter(() => !focusOnTrial)
         .map((t) => (
         <PlanRow
           key={t.goal}
@@ -354,7 +356,7 @@ export default function TodayScreen() {
           onPress={() => router.push({ pathname: '/test', params: { test: t.goal } })}
         />
       ))}
-      {monthly?.due && (
+      {monthly?.due && !focusOnTrial && (
         <PlanRow
           icon="body"
           title="Toca revisión mensual"
