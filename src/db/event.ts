@@ -54,3 +54,12 @@ export async function saveEventConfig(db: SQLiteDatabase, c: { date: ISODate; do
   await put('event_target_peso_muerto', String(c.peso_muerto));
   setEventConfig({ date: c.date, targets: { dominada: c.dominada, peso_muerto: c.peso_muerto } });
 }
+
+/** Marcas de colgarse, de la más antigua a la más reciente. */
+export async function getHangLogs(db: SQLiteDatabase): Promise<{ id: number; date: ISODate; seconds: number }[]> {
+  return db.getAllAsync<{ id: number; date: ISODate; seconds: number }>('SELECT id, date, seconds FROM hang_log ORDER BY date, id');
+}
+
+export async function addHangLog(db: SQLiteDatabase, date: ISODate, seconds: number): Promise<void> {
+  await db.runAsync('INSERT INTO hang_log (date, seconds) VALUES (?, ?)', date, Math.round(seconds));
+}

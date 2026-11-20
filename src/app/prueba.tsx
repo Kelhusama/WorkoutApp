@@ -5,7 +5,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { addTrialLog, deleteTrialLog, getLastBodyWeight, getTrialLogs, saveEventConfig, type SavedTrialLog } from '@/db/event';
+import { addTrialLog, deleteTrialLog, getHangLogs, getLastBodyWeight, getTrialLogs, saveEventConfig, type SavedTrialLog } from '@/db/event';
 import { getReminderSettings, getTrialActive, saveTrialActive } from '@/db/settings';
 import { ensurePermission, syncReminders } from '@/notifications/reminders';
 import { RESERVE_OPTIONS, type Reserve } from '@/domain/coach';
@@ -26,6 +26,7 @@ import {
   estimate3RM,
   gripFor,
   gripsText,
+  hangBest,
   isPullupDay,
   prescription,
   pullupDaysText,
@@ -51,6 +52,7 @@ export default function TrialScreen() {
   const today = getToday();
   const [logs, setLogs] = useState<SavedTrialLog[]>([]);
   const [body, setBody] = useState<number | null>(null);
+  const [hangs, setHangs] = useState<{ date: string; seconds: number }[]>([]);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [showPlan, setShowPlan] = useState(false);
   // Plan activo: avisos los días de dominadas, a las horas de Perfil y avisos.
@@ -63,6 +65,7 @@ export default function TrialScreen() {
   const load = useCallback(async () => {
     setLogs(await getTrialLogs(db));
     setBody((await getLastBodyWeight(db))?.weight ?? null);
+    setHangs(await getHangLogs(db));
     setActive(await getTrialActive(db));
     setTimes((await getReminderSettings(db)).times);
   }, [db]);
@@ -255,6 +258,19 @@ export default function TrialScreen() {
           </View>
         );
       })}
+
+      <SectionTitle>Colgarse</SectionTitle>
+      <Card style={{ gap: space.sm }}>
+        <Text style={styles.level}>
+          {hangBest(hangs, today) !== null ? `${hangBest(hangs, today)} s` : 'Sin marca'}
+          <Text style={type.caption}> · mejor intento de las últimas cuatro semanas</Text>
+        </Text>
+        <Text style={type.caption}>
+          Por si entra en la prueba. Se entrena al final de cada sesión guiada de dominadas: dos series a tres cuartos de tu marca, y un intento al
+          máximo el último día de la semana.
+        </Text>
+        {hangs.length >= 2 && <LineChart points={hangs.map((h) => ({ date: h.date, value: h.seconds }))} height={130} format={(v) => String(Math.round(v))} />}
+      </Card>
 
       <SectionTitle>Fecha y objetivos</SectionTitle>
       <Card style={{ gap: space.sm }}>

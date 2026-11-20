@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, Vibration, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { addTrialLog, getTrialLogs } from '@/db/event';
+import { addHangLog, addTrialLog, getHangLogs, getTrialLogs } from '@/db/event';
 import { RESERVE_OPTIONS, type Reserve } from '@/domain/coach';
 import { today as getToday } from '@/domain/dates';
 import {
@@ -19,11 +19,13 @@ import {
   TEST_GRIP,
   doseText,
   gripFor,
+  hangDose,
   isElbowCareDay,
   prescription,
   todayPlan,
   type Dose,
   type Grip,
+  type HangDose,
 } from '@/domain/event';
 import { ROUTINES, routineMinutes } from '@/domain/stretches';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
@@ -55,6 +57,10 @@ export default function PullupSession() {
   // Agarre del día según el plan; se puede cambiar si la barra o el codo piden otro.
   const [grip, setGrip] = useState<Grip>(gripFor(today) ?? TEST_GRIP);
   const rang = useRef(false);
+  // Colgarse, al final: lo que toca hoy y los segundos que se apuntan.
+  const [hang, setHang] = useState<HangDose | null>(null);
+  const [hangSeconds, setHangSeconds] = useState(30);
+  const [hangSaved, setHangSaved] = useState(false);
   const allowLeave = useUnsavedGuard(done > 0 && step !== 'hecho', 'la sesión de dominadas');
 
   useEffect(() => {
@@ -63,6 +69,9 @@ export default function PullupSession() {
       const d = week ? prescription('dominada', week, await getTrialLogs(db)) : null;
       setDose(d);
       if (d) setReps(d.reps);
+      const h = hangDose(await getHangLogs(db), today);
+      setHang(h);
+      if (!h.max) setHangSeconds(h.seconds);
     })();
   }, [db, today]);
 
@@ -241,6 +250,33 @@ export default function PullupSession() {
             <Ionicons name="trophy" size={52} color={colors.accent} />
             <Text style={type.hero}>¡Dominadas hechas!</Text>
           </View>
+          {hang && (
+            <>
+              <SectionTitle>Para acabar: colgarse</SectionTitle>
+              <Card style={{ gap: space.sm }}>
+                <Text style={type.body}>{hang.text}</Text>
+                <Text style={type.caption}>Brazos estirados y hombros activos, sin encogerte. Cuenta los segundos o usa un cronómetro.</Text>
+                {hangSaved ? (
+                  <Text style={[type.caption, { color: colors.success }]} accessibilityLiveRegion="polite">
+                    Apuntado: {hangSeconds} s.
+                  </Text>
+                ) : (
+                  <>
+                    <Stepper label="segundos colgado" value={hangSeconds} onChange={setHangSeconds} step={5} min={5} suffix=" s" />
+                    <Button
+                      label={hang.max ? 'Apuntar mi marca' : 'Apuntar lo que aguanté'}
+                      variant="secondary"
+                      icon="checkmark-circle"
+                      onPress={async () => {
+                        await addHangLog(db, today, hangSeconds);
+                        setHangSaved(true);
+                      }}
+                    />
+                  </>
+                )}
+              </Card>
+            </>
+          )}
           {isElbowCareDay(today) && (
             <>
               <SectionTitle>Hoy toca cuidar los codos (3 minutos)</SectionTitle>

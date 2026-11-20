@@ -178,3 +178,21 @@ test('fecha y objetivos se pueden cambiar: el plan, los días y el nombre se mue
   }
   assert.equal(eventName(), 'Prueba del 16 de enero');
 });
+
+test('colgarse: máximo sin marca o el último día de la semana; el resto, a tres cuartos', async () => {
+  const { hangBest, hangDose } = await import('./event');
+  const h = (date: string, seconds: number) => ({ date, seconds });
+  // Sin marca: intento al máximo.
+  assert.equal(hangDose([], '2026-11-23').max, true);
+  const logs = [h('2026-11-23', 40), h('2026-11-24', 30)];
+  assert.equal(hangBest(logs, '2026-11-26'), 40);
+  // Jueves: dos series al 75 % de 40 s = 30 s.
+  const thu = hangDose(logs, '2026-11-26');
+  assert.deepEqual([thu.max, thu.sets, thu.seconds], [false, 2, 30]);
+  // Viernes, último día de dominadas de la semana: al máximo.
+  assert.equal(hangDose(logs, '2026-11-27').max, true);
+  // En la descarga no se busca el máximo ni el último día.
+  assert.equal(hangDose([h('2027-01-05', 60)], '2027-01-13').max, false);
+  // Una marca de hace más de cuatro semanas ya no cuenta.
+  assert.equal(hangBest(logs, '2027-01-05'), null);
+});

@@ -425,3 +425,43 @@ export function gripsText(week: WeekPlan): string {
   }
   return parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}`;
 }
+
+// ---------- Colgarse ----------
+
+export interface HangLog {
+  date: ISODate;
+  /** Segundos aguantados en el mejor intento del día. */
+  seconds: number;
+}
+
+export interface HangDose {
+  /** Hoy toca intento al máximo (no hay marca todavía, o es el último día de dominadas de la semana). */
+  max: boolean;
+  sets: number;
+  /** Segundos por serie; 0 si es intento al máximo. */
+  seconds: number;
+  text: string;
+}
+
+/** Mejor marca de las últimas cuatro semanas, o null si no hay. */
+export function hangBest(logs: readonly HangLog[], today: ISODate): number | null {
+  const recent = logs.filter((l) => l.date >= addDays(today, -28) && l.seconds > 0);
+  return recent.length ? Math.max(...recent.map((l) => l.seconds)) : null;
+}
+
+/**
+ * Colgarse al final de la sesión de dominadas: un intento al máximo el último día de dominadas
+ * de la semana (o si aún no hay marca) y, el resto, dos series a tres cuartos de la mejor marca.
+ * En la descarga no se busca el máximo.
+ */
+export function hangDose(logs: readonly HangLog[], today: ISODate): HangDose {
+  const best = hangBest(logs, today);
+  const week = todayPlan(today).week;
+  const lastDay = isPullupDay(today) && !isPullupDay(addDays(today, 1)) && ![2, 3, 4].some((n) => addDays(today, n) <= (week?.to ?? today) && isPullupDay(addDays(today, n)));
+  if (best === null) return { max: true, sets: 1, seconds: 0, text: 'Cuélgate una vez hasta que no puedas más y apunta los segundos: será tu marca de partida.' };
+  if (lastDay && week?.phase !== 'descarga') {
+    return { max: true, sets: 1, seconds: 0, text: `Un intento al máximo. Tu marca es ${best} s: a por un par de segundos más.` };
+  }
+  const seconds = Math.max(10, Math.round((best * 0.75) / 5) * 5);
+  return { max: false, sets: 2, seconds, text: `2 series de ${seconds} s, con un minuto de descanso. Sin llegar al límite.` };
+}
