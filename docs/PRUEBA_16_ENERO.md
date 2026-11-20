@@ -55,6 +55,8 @@ No hay ensayos serios sobre programas de dominadas de este tipo: es práctica de
 - El usuario tiene **cinturón de lastre pero aún no tiene discos** (20/11/2026). El plan pide lastre desde la semana 4 (12 de diciembre), en saltos de 2 kg: hacen falta discos pequeños (1,25 y 2,5 kg) o un sustituto antes de esa fecha.
 - Sustitutos válidos mientras tanto: botellas de agua en una bolsa colgada del cinturón (1,5 kg cada una). La mancuerna de 10 kg es un salto demasiado grande para empezar.
 
+- **El plan tiene en cuenta los discos** (20/11/2026): en *Tu lastre* se indica cuántos discos de 1,25, 2,5 y 5 kg hay. El plan solo pide pesos que se puedan montar (admite medio kilo de diferencia). Lo que no se pueda montar se cambia por repeticiones equivalentes: sin discos, 3 con 2 kg pasan a 4 sin lastre, y 3 con 4 kg a 5. Hoy avisa de que faltan discos desde cuatro semanas antes de la primera semana con lastre.
+
 ## Riesgos
 
 - El mayor riesgo es perseguir los 12 kg de lastre subiendo más rápido de lo que aguantan los codos.

@@ -16,14 +16,21 @@ export const EVENT_NAME = 'Prueba del 16 de enero';
  * por lo que el usuario haya guardado (ver `loadEventConfig`). Las funciones de este archivo
  * los usan cuando no se les pasa otra fecha.
  */
-export const eventConfig: { date: ISODate; targets: Record<'dominada' | 'peso_muerto', number> } = {
+export const eventConfig: {
+  date: ISODate;
+  targets: Record<'dominada' | 'peso_muerto', number>;
+  /** Discos que hay para el cinturón, en kg. Lista vacía = ninguno. null = sin indicar: no se limita nada. */
+  plates: number[] | null;
+} = {
   date: EVENT_DATE,
   targets: { dominada: 12, peso_muerto: 100 },
+  plates: null,
 };
 
-export function setEventConfig(c: { date?: ISODate; targets?: Partial<Record<'dominada' | 'peso_muerto', number>> }) {
+export function setEventConfig(c: { date?: ISODate; targets?: Partial<Record<'dominada' | 'peso_muerto', number>>; plates?: number[] | null }) {
   if (c.date) eventConfig.date = c.date;
   if (c.targets) Object.assign(eventConfig.targets, c.targets);
+  if (c.plates !== undefined) eventConfig.plates = c.plates;
 }
 
 /** «Prueba del 16 de enero», con la fecha vigente. */
@@ -228,7 +235,7 @@ export function todayPlan(today: ISODate, eventDate: ISODate = eventConfig.date)
  * - Dominadas: el lastre no pasa del que se ha demostrado más 2 kg, y solo sube si la última
  *   sesión salió entera y sobraba al menos una. En la descarga manda el plan.
  */
-export function prescription(lift: Lift, week: WeekPlan, logs: readonly TrialLog[]): Dose {
+function planned(lift: Lift, week: WeekPlan, logs: readonly TrialLog[]): Dose {
   const plan = week.doses[lift];
   const last = [...logs].filter((l) => l.lift === lift).sort((a, b) => a.date.localeCompare(b.date)).pop();
   if (!last || week.phase === 'descarga') return plan;
@@ -251,6 +258,69 @@ export function prescription(lift: Lift, week: WeekPlan, logs: readonly TrialLog
   }
   // Va por delante del plan: se le deja seguir subiendo desde lo que ya ha hecho.
   return proven > plan.weight ? { ...plan, weight: proven, note: 'Vas por delante del plan: sigue desde lo que ya has hecho.' } : plan;
+}
+
+/** Lastres que se pueden montar con unos discos: todas las sumas posibles, de menor a mayor, empezando por 0. */
+export function loadsWith(plates: readonly number[]): number[] {
+  let sums = new Set<number>([0]);
+  for (const p of plates) sums = new Set([...sums, ...[...sums].map((s) => Math.round((s + p) * 100) / 100)]);
+  return [...sums].sort((a, b) => a - b);
+}
+
+/**
+ * Repeticiones sin lastre que equivalen a hacer `reps` con `kilos` colgados: hacer más
+ * repeticiones es subir de nivel igual que añadir peso (misma fórmula que el nivel estimado).
+ */
+export function repsInsteadOf(reps: number, kilos: number, bodyKg: number = ASSUMED_BODY_KG): number {
+  const equivalent = (1 + kilos / bodyKg) * (30 + reps) - 30;
+  return Math.max(reps + 1, Math.round(equivalent));
+}
+
+/**
+ * Ajusta el lastre de una dosis de dominadas a los discos que hay.
+ * - Si con los discos sale un peso a medio kilo del pedido, se usa ese.
+ * - Si no llega, se pone lo más cercano por debajo y los kilos que faltan se cambian por repeticiones.
+ */
+export function fitToPlates(dose: Dose, plates: readonly number[] | null): Dose {
+  if (plates === null || dose.weight <= 0) return dose;
+  const loads = loadsWith(plates);
+  const near = loads.filter((l) => Math.abs(l - dose.weight) <= 0.5).sort((a, b) => Math.abs(a - dose.weight) - Math.abs(b - dose.weight))[0];
+  if (near !== undefined) return { ...dose, weight: near };
+  const best = loads.filter((l) => l < dose.weight).pop() ?? 0;
+  const reps = repsInsteadOf(dose.reps, dose.weight - best);
+  const kg = (v: number) => String(v).replace('.', ',');
+  if (plates.length === 0) {
+    return {
+      ...dose,
+      weight: 0,
+      reps,
+      note: `El plan pedía ${dose.reps} con ${kg(dose.weight)} kg, pero aún no tienes discos: ${reps} sin lastre equivalen a ese esfuerzo. Si no salen todas limpias, quédate en ${reps - 1}.`,
+    };
+  }
+  return { ...dose, weight: best, reps, note: `Con tus discos llegas a ${kg(best)} kg (el plan pedía ${kg(dose.weight)}): lo que falta se compensa con ${reps} repeticiones en vez de ${dose.reps}.` };
+}
+
+/**
+ * Lo que toca hoy en un ejercicio: lo del plan, corregido por lo último apuntado y,
+ * en las dominadas, por los discos que hay para el cinturón.
+ */
+export function prescription(lift: Lift, week: WeekPlan, logs: readonly TrialLog[]): Dose {
+  const dose = planned(lift, week, logs);
+  return lift === 'dominada' ? fitToPlates(dose, eventConfig.plates) : dose;
+}
+
+/** Aviso si se acerca (o ya ha llegado) la semana con lastre y no hay ningún disco. */
+export function platesWarning(today: ISODate): string | null {
+  if (eventConfig.plates === null || eventConfig.plates.length > 0) return null;
+  const first = buildPlan().find((w) => w.doses.dominada.weight > 0);
+  if (!first || todayPlan(today).week === null) return null;
+  const left = days(today, first.from);
+  if (left > 28) return null;
+  const d = fromISODate(first.from);
+  const when = `${d.getDate()}/${d.getMonth() + 1}`;
+  return left > 0
+    ? `El ${when} empieza el lastre en dominadas y aún no tienes discos para el cinturón. Con dos de 1,25 kg y dos de 2,5 kg vale. Faltan ${left} días.`
+    : 'Ya toca lastre en las dominadas y no tienes discos: mientras tanto las haces sin peso y bajando despacio, pero consíguelos cuanto antes.';
 }
 
 /** Peso estimado para tres repeticiones a partir de una serie (fórmula de Epley), redondeado a 0,5 kg. */

@@ -5,7 +5,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { addTrialLog, deleteTrialLog, getHangLogs, getLastBodyWeight, getTrialLogs, saveEventConfig, type SavedTrialLog } from '@/db/event';
+import { addTrialLog, deleteTrialLog, getHangLogs, getLastBodyWeight, getTrialLogs, saveEventConfig, savePlates, type SavedTrialLog } from '@/db/event';
 import { getReminderSettings, getTrialActive, saveTrialActive } from '@/db/settings';
 import { ensurePermission, syncReminders } from '@/notifications/reminders';
 import { RESERVE_OPTIONS, type Reserve } from '@/domain/coach';
@@ -27,6 +27,8 @@ import {
   gripFor,
   gripsText,
   hangBest,
+  loadsWith,
+  platesWarning,
   isPullupDay,
   prescription,
   pullupDaysText,
@@ -37,7 +39,11 @@ import { Button, Card, Pill, ProgressBar, SectionTitle, Segmented, Stepper, Togg
 import { LineChart } from '@/ui/LineChart';
 import { colors, radius, space, type } from '@/ui/theme';
 
-const kg = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1).replace('.', ','));
+/** Tamaños de disco que se pueden indicar. */
+const PLATE_SIZES = [1.25, 2.5, 5] as const;
+
+/** Kilos sin ceros de sobra y sin perder el cuarto de kilo: 2 · 2,5 · 1,25. */
+const kg = (v: number) => String(Math.round(v * 100) / 100).replace('.', ',');
 
 interface Draft {
   lift: Lift;
@@ -76,6 +82,16 @@ export default function TrialScreen() {
   );
 
   const now = todayPlan(today);
+  // Discos del cinturón: cuántos hay de cada tamaño.
+  const plates = eventConfig.plates ?? [];
+  const count = (p: number) => plates.filter((x) => x === p).length;
+  const warn = platesWarning(today);
+  const setPlates = async (size: number, n: number) => {
+    const next = [...plates.filter((x) => x !== size), ...Array(Math.min(8, Math.max(0, n))).fill(size)].sort((a, b) => a - b);
+    await savePlates(db, next);
+    syncReminders(db);
+    load();
+  };
   const plan = buildPlan();
   const bodyKg = body ?? ASSUMED_BODY_KG;
 
@@ -256,6 +272,26 @@ export default function TrialScreen() {
           </View>
         );
       })}
+
+      <SectionTitle>Tu lastre</SectionTitle>
+      <Card style={{ gap: space.sm }}>
+        <Text style={type.body}>
+          {plates.length === 0
+            ? 'Cinturón, sin discos todavía.'
+            : `Discos: ${PLATE_SIZES.filter((p) => count(p) > 0).map((p) => `${count(p)} de ${kg(p)} kg`).join(', ')}.`}
+        </Text>
+        {plates.length > 0 && <Text style={type.caption}>Puedes montar: {loadsWith(plates).slice(1).map(kg).join(' · ')} kg.</Text>}
+        {warn && <Text style={[type.caption, { color: colors.warn }]}>{warn}</Text>}
+        <Text style={type.caption}>Dime qué discos tienes y el plan te pedirá solo pesos que puedas montar.</Text>
+        {PLATE_SIZES.map((p) => (
+          <View key={p} style={styles.row}>
+            <Text style={[type.subtitle, { flex: 1 }]}>Discos de {kg(p)} kg</Text>
+            <View style={{ width: 170 }}>
+              <Stepper label={`discos de ${kg(p)} kilos`} value={count(p)} onChange={(n) => setPlates(p, n)} min={0} />
+            </View>
+          </View>
+        ))}
+      </Card>
 
       <SectionTitle>Colgarse</SectionTitle>
       <Card style={{ gap: space.sm }}>

@@ -203,3 +203,39 @@ test('antes de que empiece el plan no tocan dominadas', async () => {
   assert.equal(isPullupDay('2026-11-20'), false);
   assert.equal(isPullupDay('2026-11-23'), true);
 });
+
+test('el plan se ajusta a los discos que hay para el cinturón', async () => {
+  const { loadsWith, fitToPlates, repsInsteadOf, platesWarning, setEventConfig, eventConfig, prescription: rx } = await import('./event');
+  assert.deepEqual(loadsWith([]), [0]);
+  assert.deepEqual(loadsWith([1.25, 1.25, 2.5]), [0, 1.25, 2.5, 3.75, 5]);
+  const plan = buildPlan();
+  const w3 = plan[5]; // pide 4 kg
+  const before = eventConfig.plates;
+  try {
+    // Sin indicar nada, no se limita.
+    assert.equal(rx('dominada', w3, []).weight, 4);
+    assert.equal(platesWarning('2026-11-25'), null);
+    // Sin discos: sin lastre y bajando despacio, y aviso con los días que faltan.
+    setEventConfig({ plates: [] });
+    // Sin discos, más repeticiones en vez de kilos: 3 con 4 kg equivalen a unas 5 sin lastre.
+    const none = rx('dominada', w3, []);
+    assert.deepEqual([none.weight, none.reps], [0, 5]);
+    assert.match(none.note, /5 sin lastre equivalen/);
+    assert.deepEqual([repsInsteadOf(3, 2), repsInsteadOf(3, 4), repsInsteadOf(3, 6), repsInsteadOf(2, 2)], [4, 5, 5, 3]);
+    assert.match(platesWarning('2026-11-25')!, /El 12\/12 empieza el lastre.*Faltan 17 días/);
+    assert.match(platesWarning('2026-12-20')!, /Ya toca lastre/);
+    assert.equal(platesWarning('2026-11-01'), null); // aún queda mucho
+    // El peso muerto no depende de estos discos.
+    assert.equal(rx('peso_muerto', w3, []).weight, 95);
+    // Con discos que se quedan cortos: el más cercano por debajo y una repetición más.
+    setEventConfig({ plates: [2.5, 2.5] });
+    const short = rx('dominada', w3, []);
+    assert.deepEqual([short.weight, short.reps], [2.5, 4]);
+    assert.equal(platesWarning('2026-11-25'), null);
+    // Si sale un peso a medio kilo del pedido, vale: 3,75 kg por 4.
+    setEventConfig({ plates: [1.25, 1.25, 2.5, 2.5] });
+    assert.deepEqual(fitToPlates(w3.doses.dominada, eventConfig.plates), { ...w3.doses.dominada, weight: 3.75 });
+  } finally {
+    setEventConfig({ plates: before });
+  }
+});

@@ -16,7 +16,7 @@ import { monthlyCheck } from '@/domain/physique';
 import { stretchedOn } from '@/db/stretch';
 import { addDays, formatLong, formatShort, today as getToday, weekStart, weekdayIndex } from '@/domain/dates';
 import { getTrialLogs } from '@/db/event';
-import { eventName, GRIP_INFO, LIFTS, TEST_GRIP, gripFor, doneThisWeek, doseText, isPullupDay, withoutTrialWork, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
+import { eventName, platesWarning, GRIP_INFO, LIFTS, TEST_GRIP, gripFor, doneThisWeek, doseText, isPullupDay, withoutTrialWork, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
 import { prescriptionShort } from '@/domain/format';
 import { needsDeload } from '@/domain/gymTools';
 import { WALK_LABEL } from '@/domain/march';
@@ -210,6 +210,9 @@ export default function TodayScreen() {
             />
           );
         })()}
+      {platesWarning(todayDate) && (
+        <PlanRow icon="alert-circle" tint={colors.warn} title="Te hacen falta discos" detail={platesWarning(todayDate)!} onPress={() => router.push('/prueba')} />
+      )}
       {trial.phase === 'dia' && <PlanRow icon="trophy" title="Hoy es la prueba" detail="Calienta largo y empieza con un peso que sabes que sale." onPress={() => router.push('/prueba')} />}
 
       {/* Lo de hoy, con la acción principal justo debajo del título */}

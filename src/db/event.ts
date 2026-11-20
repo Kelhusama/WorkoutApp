@@ -43,7 +43,12 @@ export async function loadEventConfig(db: SQLiteDatabase): Promise<void> {
   const dead = num(v.event_target_peso_muerto);
   if (pull !== undefined) targets.dominada = pull;
   if (dead !== undefined) targets.peso_muerto = dead;
-  setEventConfig({ date: /^\d{4}-\d{2}-\d{2}$/.test(v.event_date ?? '') ? v.event_date : undefined, targets });
+  // Discos del cinturón: si nunca se ha dicho nada, se parte de que no hay ninguno.
+  const plates = (v.event_plates ?? '')
+    .split(',')
+    .map(Number)
+    .filter((n) => Number.isFinite(n) && n > 0);
+  setEventConfig({ date: /^\d{4}-\d{2}-\d{2}$/.test(v.event_date ?? '') ? v.event_date : undefined, targets, plates });
 }
 
 export async function saveEventConfig(db: SQLiteDatabase, c: { date: ISODate; dominada: number; peso_muerto: number }): Promise<void> {
@@ -62,4 +67,14 @@ export async function getHangLogs(db: SQLiteDatabase): Promise<{ id: number; dat
 
 export async function addHangLog(db: SQLiteDatabase, date: ISODate, seconds: number): Promise<void> {
   await db.runAsync('INSERT INTO hang_log (date, seconds) VALUES (?, ?)', date, Math.round(seconds));
+}
+
+/** Guarda los discos que hay para el cinturón y los deja vigentes. */
+export async function savePlates(db: SQLiteDatabase, plates: readonly number[]): Promise<void> {
+  await db.runAsync(
+    'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+    'event_plates',
+    plates.join(','),
+  );
+  setEventConfig({ plates: [...plates] });
 }
