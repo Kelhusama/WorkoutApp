@@ -71,3 +71,28 @@ test('la copia de seguridad lleva la reserva', async () => {
   await importBackup(fresh, JSON.parse(JSON.stringify(backup)));
   assert.deepEqual([...(await getExerciseReserves(fresh, slots[0].exerciseId))], [['2026-11-16', 2]]);
 });
+
+test('el plan cambia según la reserva, baja tras dos fallos y no se mueve en sesión ligera', async () => {
+  const { db, slots } = await setup();
+  const key = slots[2].key; // remo: 3 series de 10 a 15
+  const before = (await getPrescriptions(db, slots))[key];
+  const run = (date: string, reps: number, reserve: 0 | 1 | 2 | null, light = false) =>
+    saveHomeSession(db, date, 'A', 'normal', [{ slotKey: key, exerciseId: slots[2].exerciseId, values: Array(before.sets).fill(reps), reserve }], slots, light);
+  const now = async () => (await getPrescriptions(db, slots))[key].reps;
+
+  // Sobraban tres o más: sube dos, y explica por qué.
+  const up = await run('2026-11-02', before.reps, 2);
+  assert.equal(await now(), before.reps + 2);
+  assert.match(up[0].reason, /dos de golpe/);
+  // Sesión ligera: nada cambia aunque sobre.
+  await run('2026-11-04', before.reps + 2, 2, true);
+  assert.equal(await now(), before.reps + 2);
+  // Un fallo se repite; el segundo seguido baja un peldaño. La ligera de en medio no cuenta.
+  await run('2026-11-06', before.reps, null);
+  assert.equal(await now(), before.reps + 2);
+  await run('2026-11-07', before.reps, null, true);
+  const down = await run('2026-11-09', before.reps, null);
+  assert.equal(down[0].change, 'baja');
+  assert.equal(await now(), before.reps + 1);
+  assert.equal((await getSessionLog(db, '2026-11-07', 'A'))!.light, 1);
+});

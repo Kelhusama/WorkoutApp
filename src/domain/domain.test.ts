@@ -81,10 +81,10 @@ const rules: SlotRules = { repsMin: 8, repsMax: 12, maxSets: 4, step: 1, allowsT
 const p = (sets: number, reps: number, tempo: 0 | 1 | 2 = 0): Prescription => ({ sets, reps, tempo });
 
 test('progresión: fácil sube repeticiones', () => {
-  assert.deepEqual(progress(p(3, 8), rules, { completed: true, feeling: 'facil' }), {
-    next: p(3, 9),
-    change: 'reps',
-  });
+  const r = progress(p(3, 8), rules, { completed: true, feeling: 'facil' });
+  assert.deepEqual(r.next, p(3, 9));
+  assert.equal(r.change, 'reps');
+  assert.ok(r.reason.length > 10);
 });
 
 test('progresión: dura o incompleta mantiene', () => {
@@ -100,11 +100,11 @@ test('progresión: normal en el tope no cambia de peldaño', () => {
 test('progresión: escalera completa tempo → pausa → serie → variante', () => {
   const easy = { completed: true, feeling: 'facil' as const };
   let r = progress(p(3, 12), rules, easy);
-  assert.deepEqual(r, { next: p(3, 8, 1), change: 'tempo' });
+  assert.deepEqual([r.next, r.change], [p(3, 8, 1), 'tempo']);
   r = progress(p(3, 12, 1), rules, easy);
-  assert.deepEqual(r, { next: p(3, 8, 2), change: 'tempo' });
+  assert.deepEqual([r.next, r.change], [p(3, 8, 2), 'tempo']);
   r = progress(p(3, 12, 2), rules, easy);
-  assert.deepEqual(r, { next: p(4, 8, 2), change: 'sets' });
+  assert.deepEqual([r.next, r.change], [p(4, 8, 2), 'sets']);
   r = progress(p(4, 12, 2), rules, easy);
   assert.equal(r.change, 'variante');
 });
@@ -139,4 +139,32 @@ test('fuerza: 1RM estimado y objetivos', () => {
   assert.equal(goalProgress(banca, 65), 0.5);
   assert.equal(nextMilestone(banca, 62), 70);
   assert.equal(nextMilestone(banca, 80), null);
+});
+
+test('progresión con la reserva apuntada: manda sobre la sensación de la sesión', () => {
+  const done = { completed: true, feeling: 'dura' as const };
+  // Al límite se repite, aunque la sesión fuese fácil.
+  assert.equal(progress(p(3, 8), rules, { completed: true, feeling: 'facil', reserve: 0 }).change, 'none');
+  // Con una o dos de margen, una más; con tres o más, dos de golpe (sin pasarse del tope).
+  assert.deepEqual(progress(p(3, 8), rules, { ...done, reserve: 1 }).next, p(3, 9));
+  assert.deepEqual(progress(p(3, 8), rules, { ...done, reserve: 2 }).next, p(3, 10));
+  assert.deepEqual(progress(p(3, 11), rules, { ...done, reserve: 2 }).next, p(3, 12));
+  // En el tope basta con que quede margen para subir de peldaño.
+  assert.equal(progress(p(3, 12), rules, { completed: true, feeling: 'normal', reserve: 1 }).change, 'tempo');
+});
+
+test('progresión: dos sesiones seguidas sin completarlo bajan un peldaño', () => {
+  const miss = { completed: false, feeling: 'normal' as const };
+  assert.equal(progress(p(3, 10), rules, { ...miss, misses: 1 }).change, 'none');
+  const down = progress(p(3, 10), rules, { ...miss, misses: 2 });
+  assert.deepEqual([down.next, down.change], [p(3, 9), 'baja']);
+  // En el suelo del rango con tempo, se quita el tempo; sin nada que quitar, se repite.
+  assert.deepEqual(progress(p(3, 8, 1), rules, { ...miss, misses: 2 }).next, p(3, 12, 0));
+  assert.equal(progress(p(3, 8), rules, { ...miss, misses: 3 }).change, 'none');
+});
+
+test('progresión: una sesión ligera no mueve el plan', () => {
+  const r = progress(p(3, 8), rules, { completed: true, feeling: 'facil', reserve: 2, light: true });
+  assert.equal(r.change, 'none');
+  assert.match(r.reason, /ligera/);
 });

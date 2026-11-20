@@ -303,7 +303,7 @@ Revisión de lo que hacen ahora las apps líderes, con 12 ideas priorizadas y lo
 Qué hay de cierto en la «IA» de las apps de fuerza, qué dice la ciencia y una propuesta en cuatro capas para Forja: [ENTRENADOR_ADAPTATIVO.md](ENTRENADOR_ADAPTATIVO.md). Hechas las capas 1 y 2 (apuntar lo que quedaba en la última serie y estimar el nivel real de cada ejercicio); el estado y lo que sigue están al final de ese documento.
 
 ## Para seguir (por orden)
-0. **Entrenador adaptativo**: capa 3 (que cambie el plan solo, descargas y sesiones extra con prioridad al tren superior).
+0. **Entrenador adaptativo**: segunda parte de la capa 3 (mesetas, volumen semanal y banca) y capa 4. Hecho: el plan cambia según lo que quedaba, sesión ligera y sesión extra.
 1. **Usabilidad que queda**: tipografía propia.
 2. **Pantalla de inicio** con la pintadera (se configura al preparar el APK).
 3. **Flexibilidad, retoques**: la sesión de nivel 3 dura 23–26 min (el objetivo eran 10–15) y no hay forma de borrar una sesión apuntada por error.

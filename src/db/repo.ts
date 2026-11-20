@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import type { Reserve } from '@/domain/coach';
+import type { DoneSession, Reserve } from '@/domain/coach';
 import { addDays, today as getToday, weekdayIndex, weekStart, type ISODate } from '@/domain/dates';
 import {
   isCompleted,
@@ -35,6 +35,8 @@ export interface SessionLog {
   feeling: Feeling | null;
   bench_weight: number | null;
   bench_reps: number | null;
+  /** 1 si fue una sesión ligera. */
+  light: number;
 }
 
 const now = () => new Date().toISOString();
@@ -242,7 +244,7 @@ export async function getPrescriptions(db: SQLiteDatabase, slots: readonly Slot[
 
 export async function getLogsBetween(db: SQLiteDatabase, from: ISODate, to: ISODate) {
   return db.getAllAsync<SessionLog>(
-    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps FROM session_log WHERE date BETWEEN ? AND ? ORDER BY date',
+    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light FROM session_log WHERE date BETWEEN ? AND ? ORDER BY date',
     from,
     to,
   );
@@ -250,14 +252,14 @@ export async function getLogsBetween(db: SQLiteDatabase, from: ISODate, to: ISOD
 
 export async function getRecentLogs(db: SQLiteDatabase, limit = 20) {
   return db.getAllAsync<SessionLog>(
-    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps FROM session_log ORDER BY date DESC, id DESC LIMIT ?',
+    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light FROM session_log ORDER BY date DESC, id DESC LIMIT ?',
     limit,
   );
 }
 
 export async function getSessionLog(db: SQLiteDatabase, date: ISODate, kind: LogKind) {
   return db.getFirstAsync<SessionLog>(
-    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps FROM session_log WHERE date = ? AND kind = ?',
+    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light FROM session_log WHERE date = ? AND kind = ?',
     date,
     kind,
   );
@@ -310,6 +312,16 @@ export interface SlotChange {
   exerciseId: string;
   change: ChangeKind;
   next: Prescription;
+  /** Por qué el entrenador lo ha decidido. */
+  reason: string;
+}
+
+/** Sesiones hechas desde una fecha (gimnasio incluido), para valorar la carga reciente. */
+export async function getDoneSessions(db: SQLiteDatabase, from: ISODate): Promise<DoneSession[]> {
+  return db.getAllAsync<DoneSession>(
+    "SELECT date, kind, feeling FROM session_log WHERE status = 'done' AND date >= ? ORDER BY date",
+    from,
+  );
 }
 
 /**
@@ -323,6 +335,8 @@ export async function saveHomeSession(
   feeling: Feeling,
   results: SlotResult[],
   sessionSlots: readonly Slot[],
+  /** Sesión ligera: se guarda, pero no sube ni baja nada. */
+  light = false,
 ): Promise<SlotChange[]> {
   const prescriptions = await getPrescriptions(db, sessionSlots);
   const slots = new Map(sessionSlots.map((s) => [s.key, s]));
@@ -338,10 +352,11 @@ export async function saveHomeSession(
     if (existing) await tx.runAsync('DELETE FROM session_log WHERE id = ?', existing.id);
 
     const { lastInsertRowId: sessionId } = await tx.runAsync(
-      `INSERT INTO session_log (date, kind, status, feeling, created_at) VALUES (?, ?, 'done', ?, ?)`,
+      `INSERT INTO session_log (date, kind, status, feeling, light, created_at) VALUES (?, ?, 'done', ?, ?, ?)`,
       date,
       kind,
       feeling,
+      light ? 1 : 0,
       now(),
     );
 
@@ -371,9 +386,25 @@ export async function saveHomeSession(
         );
       }
       if (alreadyDone) continue;
-      const result = progress(target, slot, { completed: isCompleted(target, r.values), feeling });
+      const completed = isCompleted(target, r.values);
+      // ¿También falló la vez anterior, con este mismo objetivo? Entonces son dos seguidas.
+      let misses = completed ? 0 : 1;
+      if (!completed) {
+        const prev = await tx.getAllAsync<{ target: number; value: number }>(
+          `SELECT l.target AS target, l.value AS value FROM set_log l JOIN session_log s ON s.id = l.session_id
+            WHERE l.slot_key = ? AND s.status = 'done' AND s.light = 0 AND s.date = (
+              SELECT MAX(s2.date) FROM set_log l2 JOIN session_log s2 ON s2.id = l2.session_id
+               WHERE l2.slot_key = ? AND s2.status = 'done' AND s2.light = 0 AND s2.date < ?)`,
+          r.slotKey,
+          r.slotKey,
+          date,
+        );
+        if (prev.length > 0 && prev[0].target === target.reps && prev.some((p) => p.value < p.target)) misses = 2;
+      }
+      const result = progress(target, slot, { completed, feeling, reserve: r.reserve ?? null, misses, light });
       changes.push({ slotKey: r.slotKey, exerciseId: r.exerciseId, ...result });
       if (result.change !== 'none' && result.change !== 'variante') {
+        // Una serie que falta en una sesión ligera no es un fallo: `progress` ya la deja como está.
         await tx.runAsync(
           `INSERT INTO prescription (slot_key, sets, reps, tempo, updated_at) VALUES (?, ?, ?, ?, ?)
            ON CONFLICT(slot_key) DO UPDATE SET sets = excluded.sets, reps = excluded.reps, tempo = excluded.tempo, updated_at = excluded.updated_at`,

@@ -108,8 +108,14 @@ Hoy la app progresa con una escalera fija (`src/domain/progression.ts`): repetic
 ## 6. Estado
 - ✅ **Capa 1** (20/11/2026): pregunta «¿cuántas más habrías podido hacer?» en cada ejercicio de las sesiones de casa (opcional); tabla `effort_log`, incluida en la copia de seguridad.
 - ✅ **Capa 2** (20/11/2026): `src/domain/coach.ts`, filtro de Kalman de nivel y ritmo por ejercicio. Se ve en la ficha de cada ejercicio como «Tu nivel real», con margen, tendencia y previsión con horquilla de fechas.
+- ✅ **Capa 3, primera parte** (20/11/2026):
+  - **El plan cambia según lo que quedaba** en cada ejercicio (`progress` en `src/domain/progression.ts`): al límite se repite; con una o dos de margen, una más; con tres o más, dos de golpe; en el tope del rango basta con que quede margen para subir de peldaño. Donde no se contestó, decide la sensación de la sesión, como antes.
+  - **Baja un peldaño** tras dos sesiones seguidas sin completar un ejercicio.
+  - **Cada cambio lleva su porqué**, que se ve al guardar la sesión.
+  - **Sesión ligera** («¿Cómo llegas hoy?» → Cansado): solo tren superior, un tercio menos de series y sin mover el plan. El entrenador la propone si llevas 4 sesiones en 7 días, tres días seguidos o dos sesiones duras recientes.
+  - **Sesión extra** en día de descanso (pantalla Hoy): propone la sesión que hace más tiempo que no haces y dice si conviene ligera.
 - **Pendiente, por orden**:
   1. Llevar el nivel real a los objetivos (dominadas, flexiones, banca) y a la pantalla Hoy, y pedir la reserva también en el gimnasio.
-  2. **Capa 3**: reglas que usan la reserva y el nivel para cambiar el plan; descarga cuando hay fatiga; sesiones extra (qué hacer en una cuarta o quinta sesión de la semana, con el tren superior primero).
+  2. **Capa 3, segunda parte**: usar el nivel real para detectar mesetas (3–4 semanas sin mejora) y cambiar rango o variante; ajustar el volumen semanal con prioridad al tren superior; ajuste de carga en banca.
   3. **Capa 4**: probar variantes por bloques de 4 semanas.
   4. Experimento de la red neuronal contra el filtro.

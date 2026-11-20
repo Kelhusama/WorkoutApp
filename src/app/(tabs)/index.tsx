@@ -6,7 +6,8 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getBodyLog } from '@/db/body';
-import { deleteLog, getPrescriptions, markMissed } from '@/db/repo';
+import { deleteLog, getDoneSessions, getPrescriptions, markMissed } from '@/db/repo';
+import { extraKind, readiness, type Readiness } from '@/domain/coach';
 import { getRecentFeelings } from '@/db/stats';
 import { stretchedOn } from '@/db/stretch';
 import { addDays, formatLong, formatShort, today as getToday, weekdayIndex } from '@/domain/dates';
@@ -73,6 +74,8 @@ export default function TodayScreen() {
   const [deload, setDeload] = useState(false);
   const [stretched, setStretched] = useState(true);
   const [showExercises, setShowExercises] = useState(false);
+  // Sesión extra en día de descanso: cuál propone el entrenador y si conviene que sea ligera.
+  const [extra, setExtra] = useState<{ kind: SessionKind; ready: Readiness } | null>(null);
   const [showMore, setShowMore] = useState(false);
 
   const kind = day && day.type !== 'gym' && day.type !== 'rest' ? (day.type as SessionKind) : null;
@@ -90,6 +93,7 @@ export default function TodayScreen() {
       getBodyLog(db).then((log) => setLastWeighIn(log.length ? log[log.length - 1].date : null));
       getRecentFeelings(db).then((f) => setDeload(needsDeload(f)));
       if (kind) stretchedOn(db, todayDate, routineAfter(kind)).then(setStretched);
+      getDoneSessions(db, addDays(todayDate, -30)).then((done) => setExtra({ kind: extraKind(done), ready: readiness(done, todayDate) }));
     }, [db, slots, kind, todayDate]),
   );
 
@@ -152,6 +156,20 @@ export default function TodayScreen() {
           </View>
 
           {day.type === 'rest' && <Text style={type.caption}>Hoy toca descansar. El músculo crece mientras te recuperas.</Text>}
+          {day.type === 'rest' && extra && (
+            <>
+              <Text style={type.caption}>
+                Si aun así quieres entrenar, te propongo la sesión «{SESSION_INFO[extra.kind].title}»
+                {extra.ready.light ? `, en versión ligera. ${extra.ready.reason}` : '.'}
+              </Text>
+              <Button
+                label="Hacer una sesión extra"
+                variant="secondary"
+                icon="add-circle-outline"
+                onPress={() => openDay(extra.kind, todayDate)}
+              />
+            </>
+          )}
 
           {day.type !== 'rest' && day.status === 'pending' && (
             <Button

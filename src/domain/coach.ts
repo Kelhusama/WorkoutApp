@@ -149,3 +149,48 @@ export function trendText(state: StrengthState, unit: string): string {
       return 'Estable: los cambios de las últimas sesiones entran dentro de lo normal de un día a otro.';
   }
 }
+
+// ---------- Capa 3: fatiga, sesión ligera y sesiones extra ----------
+
+/** Series de una sesión ligera: un tercio menos, y nunca menos de dos (o las que hubiera). */
+export function lightSets(sets: number): number {
+  return Math.min(sets, Math.max(2, Math.ceil((sets * 2) / 3)));
+}
+
+export interface DoneSession {
+  date: ISODate;
+  kind: string;
+  feeling: 'facil' | 'normal' | 'dura' | null;
+}
+
+export interface Readiness {
+  /** Conviene hacer la sesión ligera. */
+  light: boolean;
+  reason: string;
+}
+
+/**
+ * ¿Conviene aflojar hoy? Mira solo lo que ya está apuntado:
+ * cuántas sesiones llevas en los últimos 7 días y cómo fueron las dos últimas.
+ * `done`: sesiones hechas (gimnasio incluido), en cualquier orden.
+ */
+export function readiness(done: readonly DoneSession[], today: ISODate): Readiness {
+  const before = done.filter((s) => s.date < today).sort((a, b) => (a.date < b.date ? 1 : -1));
+  const week = before.filter((s) => s.date >= addDays(today, -6));
+  const lastTwo = before.slice(0, 2);
+  if (lastTwo.length === 2 && lastTwo.every((s) => s.feeling === 'dura') && lastTwo[1].date >= addDays(today, -6)) {
+    return { light: true, reason: 'Tus dos últimas sesiones fueron duras: hoy toca aflojar para recuperar.' };
+  }
+  const streak = [1, 2, 3].every((n) => before.some((s) => s.date === addDays(today, -n)));
+  if (streak) return { light: true, reason: 'Llevas tres días seguidos entrenando: hoy mejor una sesión ligera.' };
+  if (week.length >= 4) {
+    return { light: true, reason: `Llevas ${week.length} sesiones en los últimos 7 días: la de hoy, mejor ligera.` };
+  }
+  return { light: false, reason: 'Vas bien de carga esta semana.' };
+}
+
+/** Qué sesión de casa hacer como extra: la que hace más tiempo que no haces. */
+export function extraKind(done: readonly DoneSession[]): 'A' | 'B' | 'C' {
+  const last = (k: string) => done.filter((s) => s.kind === k).reduce((m, s) => (s.date > m ? s.date : m), '');
+  return (['A', 'B', 'C'] as const).reduce((best, k) => (last(k) < last(best) ? k : best), 'A');
+}

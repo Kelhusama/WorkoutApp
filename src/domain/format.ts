@@ -23,6 +23,8 @@ export function describeChange(change: ChangeKind, next: Prescription, ex: Exerc
       return `Nuevo reto: ${TEMPO_LABEL[next.tempo]!.toLowerCase()}. Vuelves a ${p}.`;
     case 'sets':
       return `Una serie más: ${p}.`;
+    case 'baja':
+      return `Baja un peldaño: ${p}.`;
     case 'variante':
       return 'Has llegado al tope: listo para una variante más difícil.';
     case 'none':

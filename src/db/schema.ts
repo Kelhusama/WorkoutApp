@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 12;
+const LATEST = 13;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -225,6 +225,15 @@ export async function migrate(db: SQLiteDatabase) {
       CREATE INDEX IF NOT EXISTS idx_effort_log_exercise ON effort_log (exercise_id);
     `);
     version = 12;
+  }
+
+  if (version === 12) {
+    // Sesión ligera: se apunta, pero el entrenador no mueve el plan con ella.
+    const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(session_log)');
+    if (!cols.some((c) => c.name === 'light')) {
+      await db.execAsync('ALTER TABLE session_log ADD COLUMN light INTEGER NOT NULL DEFAULT 0');
+    }
+    version = 13;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);

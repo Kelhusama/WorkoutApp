@@ -81,3 +81,34 @@ test('proyección con margen: la fecha optimista va antes que la prudente', () =
   assert.equal(projectWindow(s, 5, '2026-11-20'), null);
   assert.equal(projectWindow(fitStrength(synthetic(24, 8, 0, 1))!, 15, '2026-11-20'), null);
 });
+
+test('sesión ligera: un tercio menos de series, nunca menos de dos', async () => {
+  const { lightSets } = await import('./coach');
+  assert.deepEqual([5, 4, 3, 2, 1].map(lightSets), [4, 3, 2, 2, 1]);
+});
+
+test('cuándo aflojar: muchas sesiones, tres días seguidos o dos duras', async () => {
+  const { readiness } = await import('./coach');
+  const s = (date: string, feeling: 'facil' | 'normal' | 'dura' = 'normal', kind = 'A') => ({ date, kind, feeling });
+  const today = '2026-11-21';
+  assert.equal(readiness([s('2026-11-17'), s('2026-11-19')], today).light, false);
+  // Cuatro en los últimos 7 días
+  const four = readiness([s('2026-11-15'), s('2026-11-16'), s('2026-11-18'), s('2026-11-19')], today);
+  assert.equal(four.light, true);
+  assert.match(four.reason, /4 sesiones/);
+  // Tres días seguidos
+  assert.match(readiness([s('2026-11-18'), s('2026-11-19'), s('2026-11-20')], today).reason, /tres días seguidos/);
+  // Dos duras recientes; si son viejas, ya no cuentan
+  assert.equal(readiness([s('2026-11-17', 'dura'), s('2026-11-19', 'dura')], today).light, true);
+  assert.equal(readiness([s('2026-10-01', 'dura'), s('2026-10-03', 'dura')], today).light, false);
+  // La sesión de hoy no cuenta contra sí misma
+  assert.equal(readiness([s(today, 'dura'), s('2026-11-19', 'dura')], today).light, false);
+});
+
+test('sesión extra: la que hace más tiempo que no haces', async () => {
+  const { extraKind } = await import('./coach');
+  const s = (date: string, kind: string) => ({ date, kind, feeling: null });
+  assert.equal(extraKind([]), 'A');
+  assert.equal(extraKind([s('2026-11-16', 'A'), s('2026-11-18', 'B')]), 'C');
+  assert.equal(extraKind([s('2026-11-16', 'B'), s('2026-11-18', 'C'), s('2026-11-19', 'A'), s('2026-11-17', 'gym')]), 'B');
+});

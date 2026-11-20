@@ -6,19 +6,19 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getPrescriptions, getSessionLog, getSessionReserves, getSessionSets, getTripOn, saveHomeSession, type SlotChange } from '@/db/repo';
-import type { Reserve } from '@/domain/coach';
+import { getDoneSessions, getPrescriptions, getSessionLog, getSessionReserves, getSessionSets, getTripOn, saveHomeSession, type SlotChange } from '@/db/repo';
+import { lightSets, readiness, type Readiness, type Reserve } from '@/domain/coach';
 import { getBests } from '@/db/stats';
-import { formatLong, today as getToday } from '@/domain/dates';
+import { addDays, formatLong, today as getToday } from '@/domain/dates';
 import { EXERCISES } from '@/domain/exercises';
 import { detectRecords, type NewRecord } from '@/domain/stats';
 import { ROUTINES, routineAfter, routineMinutes } from '@/domain/stretches';
 import { amountText, describeChange } from '@/domain/format';
 import type { Feeling, Prescription } from '@/domain/progression';
 import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
-import { exerciseFor, type Slot } from '@/domain/templates';
+import { LEG_KEYS, exerciseFor, type Slot } from '@/domain/templates';
 import { sessionSlots } from '@/domain/travel';
-import { Button, Card, FeelingPicker, SectionTitle } from '@/ui/components';
+import { Button, Card, FeelingPicker, SectionTitle, Segmented } from '@/ui/components';
 import { syncReminders } from '@/notifications/reminders';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { ExerciseCard } from '@/ui/ExerciseCard';
@@ -37,6 +37,9 @@ export default function SessionScreen() {
   const [targets, setTargets] = useState<Record<string, Prescription> | null>(null);
   const [values, setValues] = useState<Record<string, number[]>>({});
   const [reserves, setReserves] = useState<Record<string, Reserve>>({});
+  // Sesión ligera: sin bloque de pierna y con menos series; no mueve el plan.
+  const [light, setLight] = useState(false);
+  const [advice, setAdvice] = useState<Readiness | null>(null);
   const [feeling, setFeeling] = useState<Feeling | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -53,8 +56,13 @@ export default function SessionScreen() {
       const t = await getPrescriptions(db, slots);
       const log = await getSessionLog(db, date, kind);
       const saved = log?.status === 'done' ? await getSessionSets(db, log.id) : {};
+      const ready = readiness(await getDoneSessions(db, addDays(date, -30)), date);
+      // Al editar se respeta cómo se guardó; si no, el entrenador propone según la carga reciente.
+      const startLight = log?.status === 'done' ? log.light === 1 : ready.light;
       const initial: Record<string, number[]> = {};
-      for (const s of slots) initial[s.key] = saved[s.key] ?? Array(t[s.key].sets).fill(t[s.key].reps);
+      for (const s of slots) initial[s.key] = saved[s.key] ?? Array(startLight ? lightSets(t[s.key].sets) : t[s.key].sets).fill(t[s.key].reps);
+      setAdvice(ready);
+      setLight(startLight);
       setSlots(slots);
       setTravelling(!!trip);
       setTargets(t);
@@ -67,14 +75,28 @@ export default function SessionScreen() {
     })();
   }, [db, kind, date]);
 
+  const legs = LEG_KEYS[kind];
+  const activeSlots = light ? slots.filter((s) => !legs.includes(s.key)) : slots;
+  const targetOf = (key: string): Prescription => (light && targets ? { ...targets[key], sets: lightSets(targets[key].sets) } : targets![key]);
+
+  const changeMode = (toLight: boolean) => {
+    if (!targets || toLight === light) return;
+    setLight(toLight);
+    setDirty(true);
+    // Las series precargadas se rehacen para el nuevo modo.
+    const next: Record<string, number[]> = {};
+    for (const s of slots) next[s.key] = Array(toLight ? lightSets(targets[s.key].sets) : targets[s.key].sets).fill(targets[s.key].reps);
+    setValues(next);
+  };
+
   const save = async () => {
     if (!feeling) return;
     setSaving(true);
     try {
-      const results = slots.map((s) => ({ slotKey: s.key, exerciseId: s.exerciseId, values: values[s.key] ?? [], reserve: reserves[s.key] ?? null }));
+      const results = activeSlots.map((s) => ({ slotKey: s.key, exerciseId: s.exerciseId, values: values[s.key] ?? [], reserve: reserves[s.key] ?? null }));
       // Marcas anteriores a hoy, para saber si esta sesión bate algún récord.
       const before = await getBests(db, date);
-      const result = await saveHomeSession(db, date, kind, feeling, results, slots);
+      const result = await saveHomeSession(db, date, kind, feeling, results, activeSlots, light);
       setRecords(detectRecords(before, results));
       setDirty(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -144,6 +166,7 @@ export default function SessionScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={type.subtitle}>{ex.name}</Text>
                       <Text style={type.caption}>{describeChange(c.change, c.next, ex)}</Text>
+                      <Text style={[type.caption, { color: colors.faint }]}>{c.reason}</Text>
                     </View>
                   </View>
                 );
@@ -185,11 +208,31 @@ export default function SessionScreen() {
         )}
       </View>
 
-      {slots.map((s) => (
+      <Card style={{ gap: space.sm }}>
+        <Text style={type.subtitle}>¿Cómo llegas hoy?</Text>
+        <Segmented
+          label="Cómo llegas hoy"
+          options={MODES}
+          value={light ? 'ligera' : 'normal'}
+          onChange={(m) => changeMode(m === 'ligera')}
+        />
+        <Text style={type.caption}>
+          {light
+            ? 'Sesión ligera: solo tren superior, un tercio menos de series y deja 2 o 3 repeticiones sin hacer en cada una. Hoy el plan no cambia.'
+            : 'Sesión normal: según cómo salga, el entrenador sube, mantiene o baja cada ejercicio.'}
+        </Text>
+        {advice?.light && !editing && (
+          <Text style={[type.caption, { color: colors.warn }]}>
+            <Ionicons name="battery-half" size={12} color={colors.warn} /> {advice.reason}
+          </Text>
+        )}
+      </Card>
+
+      {activeSlots.map((s) => (
         <ExerciseCard
           key={s.key}
           slot={s}
-          target={targets[s.key]}
+          target={targetOf(s.key)}
           values={values[s.key] ?? []}
           onChange={(v) => {
             setDirty(true);
@@ -211,13 +254,13 @@ export default function SessionScreen() {
           setFeeling(v);
         }}
       />
-      {slots.some((s) => reserves[s.key] === undefined) && (
+      {activeSlots.some((s) => reserves[s.key] === undefined) && (
         <Text style={type.caption}>
           Si contestas lo que te quedaba en cada ejercicio, el entrenador afina mejor. Puedes guardar sin hacerlo.
         </Text>
       )}
       <Text style={type.caption}>
-        {feeling ? 'Con «Fácil» la app sube la dificultad; con «Dura» la mantiene.' : 'Elige cómo ha ido para poder guardar: con «Fácil» sube la dificultad y con «Dura» se mantiene.'}
+        {feeling ? 'Donde no hayas contestado lo que te quedaba, decide esta sensación: «Fácil» sube y «Dura» mantiene.' : 'Elige cómo ha ido para poder guardar.'}
       </Text>
 
       <View style={{ marginTop: space.md }}>
@@ -233,6 +276,11 @@ export default function SessionScreen() {
     </View>
   );
 }
+
+const MODES = [
+  { id: 'normal', label: 'Bien' },
+  { id: 'ligera', label: 'Cansado' },
+] as const;
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
