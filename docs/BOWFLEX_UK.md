@@ -2,6 +2,8 @@
 
 **Respuesta corta**: la cuenta y la tienda son las oficiales, no un fraude, pero **bowflex.co.uk no envía a España**. Las mismas mancuernas (par de 2–24 kg) se venden aquí a **458 €** por el distribuidor oficial. Como el requisito es que ocupen muy poco espacio, **son la opción recomendada**: el par DB52 comprado en España, con un banco plegable. El kit de discos de Decathlon (unos 235 € con banco) es más barato y robusto, pero ocupa bastante más y queda descartado por espacio.
 
+> **Actualización (20/11/2026): sin banco.** El usuario no quiere banco bajo ningún concepto. Todo lo que este documento dice sobre bancos queda descartado: el pecho en casa se trabaja con press en el suelo y flexiones (con lastre o con más recorrido), y no habrá press inclinado ni aperturas en banco. La compra a valorar es solo el par de mancuernas.
+
 > **Cómo se hizo.** Tres agentes de investigación en paralelo (tienda y legitimidad, calidad del producto, alternativas en España) y comprobación directa de los datos clave: términos de la tienda, precio en MediaMarkt, retirada de seguridad en EE. UU. y precio del kit de Decathlon. No se compró nada ni se añadió nada a ninguna cesta. Los precios son del 20/11/2026, en plena campaña de Black Friday. Lo no confirmado está en el apartado 7.
 
 ## 1. Qué vende la cuenta y a qué precio
