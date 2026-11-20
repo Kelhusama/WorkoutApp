@@ -75,7 +75,7 @@ export default function TrainScreen() {
   );
 
   const todayPlan = days.find((d) => d.date === todayDate);
-  const next = days.find((d) => d.date >= todayDate && d.type !== 'rest' && (d.status === 'pending' || d.status === 'future'));
+  const next = days.find((d) => d.date >= todayDate && d.type !== 'rest' && d.type !== 'movilidad' && (d.status === 'pending' || d.status === 'future'));
   const state = view?.state ?? null;
   const step = state ? stepAt(state.step) : null;
   const pendingWalks = view?.planned.filter((p) => !p.done) ?? [];

@@ -170,3 +170,17 @@ test('al ritmo real (una sesión por semana) el filtro ve una mejora lenta y no 
   assert.equal(weekly(6, (i) => 10 + i).trend, 'mejorando');
   assert.equal(weekly(12, () => 12).trend, 'estable');
 });
+
+test('semana marcada: suave siempre ligera; fuerte aguanta más, pero dos duras siguen mandando', async () => {
+  const { readiness } = await import('./coach');
+  const s = (date: string, feeling: 'facil' | 'normal' | 'dura' = 'normal') => ({ date, kind: 'A', feeling });
+  const today = '2026-11-21';
+  assert.equal(readiness([], today, 'menos').light, true);
+  const four = [s('2026-11-15'), s('2026-11-16'), s('2026-11-18'), s('2026-11-19')];
+  assert.equal(readiness(four, today, 'normal').light, true);
+  assert.equal(readiness(four, today, 'mas').light, false);
+  const three = [s('2026-11-18'), s('2026-11-19'), s('2026-11-20')];
+  assert.equal(readiness(three, today, 'mas').light, false);
+  assert.equal(readiness([...three, s('2026-11-17'), s('2026-11-16')], today, 'mas').light, true);
+  assert.equal(readiness([s('2026-11-19', 'dura'), s('2026-11-20', 'dura')], today, 'mas').light, true);
+});

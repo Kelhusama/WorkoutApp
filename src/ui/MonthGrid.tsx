@@ -8,7 +8,7 @@ import type { PlannedDay } from '@/hooks/useWeek';
 import { colors, radius, space } from './theme';
 import { STATUS_STYLE } from './week';
 
-const TYPE_LABEL: Record<DayType, string> = { gym: 'Gim', A: 'A', B: 'B', C: 'C', rest: '' };
+const TYPE_LABEL: Record<DayType, string> = { gym: 'Gim', A: 'A', B: 'B', C: 'C', movilidad: 'Mov', rest: '' };
 
 /** Cuadrícula mensual: `days` debe empezar en lunes y cubrir semanas completas. */
 export function MonthGrid({

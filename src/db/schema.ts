@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 16;
+const LATEST = 17;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -274,6 +274,26 @@ export async function migrate(db: SQLiteDatabase) {
       await db.execAsync('ALTER TABLE set_log ADD COLUMN stage INTEGER NOT NULL DEFAULT 0');
     }
     version = 16;
+  }
+
+  if (version === 16) {
+    // Día de movilidad en la semana y sesión de casa enfocada.
+    // La tabla de cambios por día solo admitía tres papeles: se rehace para admitir «movilidad».
+    await db.execAsync(`
+      DROP TABLE IF EXISTS day_override_new;
+      CREATE TABLE day_override_new (
+        date TEXT PRIMARY KEY NOT NULL,
+        role TEXT NOT NULL CHECK (role IN ('gym','casa','movilidad','rest'))
+      );
+      INSERT INTO day_override_new (date, role) SELECT date, role FROM day_override;
+      DROP TABLE day_override;
+      ALTER TABLE day_override_new RENAME TO day_override;
+    `);
+    const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(session_log)');
+    if (!cols.some((c) => c.name === 'focus')) {
+      await db.execAsync('ALTER TABLE session_log ADD COLUMN focus INTEGER NOT NULL DEFAULT 0');
+    }
+    version = 17;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);

@@ -1,6 +1,6 @@
 import type { ISODate } from './dates';
 import type { SessionKind } from './schedule';
-import { LEG_KEYS, TEMPLATES, slot, type Slot } from './templates';
+import { LEG_KEYS, TEMPLATES, slot, type Slot, focusSlots } from './templates';
 
 /** Lo que tienes a mano durante un viaje. Sin nada marcado: solo tu cuerpo y una toalla. */
 export interface TravelGear {
@@ -69,8 +69,9 @@ export function travelSlots(kind: SessionKind, gear: TravelGear): Slot[] {
 }
 
 /** Ejercicios de la sesión: los de casa, o los adaptados si ese día hay viaje. */
-export function sessionSlots(kind: SessionKind, gear: TravelGear | null | undefined): Slot[] {
-  return gear ? travelSlots(kind, gear) : TEMPLATES[kind];
+/** Ejercicios de una sesión de casa: adaptados al viaje, los de la sesión enfocada o los normales. */
+export function sessionSlots(kind: SessionKind, gear: TravelGear | null | undefined, focus = false): Slot[] {
+  return gear ? travelSlots(kind, gear) : focus ? focusSlots() : TEMPLATES[kind];
 }
 
 export function gearSummary(g: TravelGear): string {

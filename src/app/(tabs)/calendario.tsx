@@ -62,7 +62,7 @@ export default function CalendarScreen() {
 
   const inRange = mode === 'semana' ? days : days.filter((d) => d.date.startsWith(anchor.slice(0, 7)));
   const done = inRange.filter((d) => d.status === 'done').length;
-  const planned = inRange.filter((d) => d.type !== 'rest' && d.status !== 'excused' && d.date <= todayDate).length;
+  const planned = inRange.filter((d) => d.type !== 'rest' && d.type !== 'movilidad' && d.status !== 'excused' && d.date <= todayDate).length;
   const trips = [...new Map(days.filter((d) => d.trip).map((d) => [d.trip!.id, d.trip!])).values()];
   const newTrip = (date: ISODate) => router.push({ pathname: '/viaje', params: { date } });
 
@@ -121,7 +121,7 @@ export default function CalendarScreen() {
             <DayRow
               key={d.date}
               day={d}
-              onPress={d.type !== 'rest' && d.date <= todayDate ? () => openDay(d.type, d.date) : undefined}
+              onPress={d.type !== 'rest' && d.date <= todayDate ? () => openDay(d.type, d.date, d.focus) : undefined}
               onChange={changeDay(d)}
             />
           ))}

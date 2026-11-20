@@ -6,9 +6,9 @@ import { ROLE_INFO, type Role } from '@/domain/schedule';
 import type { IconName } from './components';
 import { colors, radius } from './theme';
 
-const ROLES: Role[] = ['gym', 'casa', 'rest'];
+const ROLES: Role[] = ['gym', 'casa', 'movilidad', 'rest'];
 
-/** Selector Gimnasio / Casa / Descanso. */
+/** Selector Gimnasio / Casa / Movilidad / Descanso. */
 export function RolePicker({ value, onChange, compact = false }: { value: Role; onChange: (r: Role) => void; compact?: boolean }) {
   return (
     <View style={styles.wrap}>

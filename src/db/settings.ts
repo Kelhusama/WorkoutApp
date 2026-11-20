@@ -28,3 +28,13 @@ export async function saveReminderSettings(db: SQLiteDatabase, s: ReminderSettin
   await set(db, 'reminders_enabled', s.enabled ? '1' : '0');
   await set(db, 'reminder_times', s.times.join(','));
 }
+
+/** Lo que el usuario ha marcado para una semana (por su lunes): 'menos', 'normal' o 'mas'. */
+export async function getWeekLoad(db: SQLiteDatabase, monday: string): Promise<'menos' | 'normal' | 'mas'> {
+  const v = await get(db, `week_load.${monday}`);
+  return v === 'menos' || v === 'mas' ? v : 'normal';
+}
+
+export async function saveWeekLoad(db: SQLiteDatabase, monday: string, load: 'menos' | 'normal' | 'mas') {
+  await set(db, `week_load.${monday}`, load);
+}

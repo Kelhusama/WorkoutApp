@@ -56,7 +56,7 @@ export function planReminders(
 
   const out: Reminder[] = [];
   for (const d of days) {
-    if (d.type === 'gym' || d.type === 'rest') continue;
+    if (d.type === 'gym' || d.type === 'rest' || d.type === 'movilidad') continue;
     if (d.status !== 'pending' && d.status !== 'future') continue;
     const title = SESSION_INFO[d.type].title;
     times.forEach((t, i) => {

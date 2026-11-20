@@ -164,6 +164,15 @@ export interface DoneSession {
   feeling: 'facil' | 'normal' | 'dura' | null;
 }
 
+/** Lo que el usuario decide para la semana: aflojar, lo normal o apretar. */
+export type WeekLoad = 'menos' | 'normal' | 'mas';
+
+export const WEEK_LOAD_INFO: Record<WeekLoad, { label: string; detail: string }> = {
+  menos: { label: 'Menos', detail: 'Semana suave: las sesiones de casa salen ligeras y el plan no se mueve. Para cuando estás cansado o con poco tiempo.' },
+  normal: { label: 'Normal', detail: 'El entrenador decide según cómo vayas: sube, mantiene o afloja.' },
+  mas: { label: 'Más', detail: 'Semana fuerte: admite más sesiones seguidas y te propone una extra en los días de descanso o movilidad. Dos sesiones duras seguidas siguen mandando aflojar.' },
+};
+
 export interface Readiness {
   /** Conviene hacer la sesión ligera. */
   light: boolean;
@@ -175,19 +184,24 @@ export interface Readiness {
  * cuántas sesiones llevas en los últimos 7 días y cómo fueron las dos últimas.
  * `done`: sesiones hechas (gimnasio incluido), en cualquier orden.
  */
-export function readiness(done: readonly DoneSession[], today: ISODate): Readiness {
+export function readiness(done: readonly DoneSession[], today: ISODate, week: WeekLoad = 'normal'): Readiness {
+  // Semana marcada como suave: todo ligero, sin mirar nada más.
+  if (week === 'menos') return { light: true, reason: 'Has marcado esta semana como suave: sesiones ligeras.' };
   const before = done.filter((s) => s.date < today).sort((a, b) => (a.date < b.date ? 1 : -1));
-  const week = before.filter((s) => s.date >= addDays(today, -6));
+  const recent = before.filter((s) => s.date >= addDays(today, -6));
   const lastTwo = before.slice(0, 2);
   if (lastTwo.length === 2 && lastTwo.every((s) => s.feeling === 'dura') && lastTwo[1].date >= addDays(today, -6)) {
     return { light: true, reason: 'Tus dos últimas sesiones fueron duras: hoy toca aflojar para recuperar.' };
   }
-  const streak = [1, 2, 3].every((n) => before.some((s) => s.date === addDays(today, -n)));
-  if (streak) return { light: true, reason: 'Llevas tres días seguidos entrenando: hoy mejor una sesión ligera.' };
-  if (week.length >= 4) {
-    return { light: true, reason: `Llevas ${week.length} sesiones en los últimos 7 días: la de hoy, mejor ligera.` };
+  // En una semana fuerte se aceptan más sesiones seguidas; las dos sesiones duras siguen mandando.
+  const strong = week === 'mas';
+  const run = strong ? 5 : 3;
+  const streak = Array.from({ length: run }, (_, i) => i + 1).every((n) => before.some((s) => s.date === addDays(today, -n)));
+  if (streak) return { light: true, reason: `Llevas ${run === 3 ? 'tres' : 'cinco'} días seguidos entrenando: hoy mejor una sesión ligera.` };
+  if (recent.length >= (strong ? 6 : 4)) {
+    return { light: true, reason: `Llevas ${recent.length} sesiones en los últimos 7 días: la de hoy, mejor ligera.` };
   }
-  return { light: false, reason: 'Vas bien de carga esta semana.' };
+  return { light: false, reason: strong ? 'Semana fuerte: adelante mientras no se acumulen sesiones duras.' : 'Vas bien de carga esta semana.' };
 }
 
 /** Qué sesión de casa hacer como extra: la que hace más tiempo que no haces. */

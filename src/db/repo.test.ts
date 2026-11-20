@@ -148,3 +148,52 @@ test('la sesión de viaje guarda su propia progresión sin tocar la de casa', as
   // Guardar otra vez el mismo día no vuelve a subir la dificultad
   assert.equal((await saveHomeSession(db, '2026-12-01', 'A', 'facil', results, slots)).length, 0);
 });
+
+test('día de movilidad: entra en la semana, se da por hecho con flexibilidad o estiramientos y nunca cuenta como fallo', async () => {
+  const db = createTestDb();
+  await migrate(db);
+  await saveTemplate(db, ['gym', 'movilidad', 'gym', 'casa', 'gym', 'movilidad', 'rest']);
+  const base = weekStart(today());
+  // Semana pasada: martes con estiramientos, sábado sin nada.
+  const past = addDays(base, -7);
+  await db.runAsync("INSERT INTO week_template (from_date, roles) VALUES (?, ?) ON CONFLICT(from_date) DO UPDATE SET roles = excluded.roles", addDays(base, -14), 'gym,movilidad,gym,casa,gym,movilidad,rest');
+  await db.runAsync("INSERT INTO stretch_log (date, routine, stretch_id, seconds) VALUES (?, 'inferior', 'mariposa', 60)", addDays(past, 1));
+  const { days } = await loadDays(db, past, addDays(past, 6));
+  assert.deepEqual(days.map((d) => d.type), ['gym', 'movilidad', 'gym', days[3].type, 'gym', 'movilidad', 'rest']);
+  assert.equal(days[1].status, 'done');
+  assert.equal(days[5].status, 'rest'); // no hecho, pero no es un fallo
+  assert.equal(days[0].status, 'missed'); // el gimnasio sin registrar sí lo es
+  // Un día suelto se puede cambiar a movilidad (la tabla de cambios lo admite).
+  await setOverride(db, addDays(base, 6), 'movilidad');
+  assert.equal((await loadDays(db, base, addDays(base, 6))).days[6].type, 'movilidad');
+});
+
+test('sesión enfocada: con uno o dos días de casa en la semana, y se recuerda al guardarla', async () => {
+  const db = createTestDb();
+  await migrate(db);
+  const base = weekStart(today());
+  // Por defecto hay tres días de casa: sesiones normales.
+  assert.equal((await loadDays(db, base, addDays(base, 6))).days.some((d) => d.focus), false);
+  await saveTemplate(db, ['gym', 'movilidad', 'gym', 'casa', 'gym', 'movilidad', 'rest']);
+  const week = (await loadDays(db, base, addDays(base, 6))).days;
+  assert.deepEqual(week.map((d) => d.focus), [false, false, false, true, false, false, false]);
+
+  const { focusSlots } = await import('../domain/templates');
+  const { sessionSlots } = await import('../domain/travel');
+  const slots = sessionSlots('B', null, true);
+  assert.deepEqual(slots.map((s) => s.key), ['A.dominadas', 'B.flexiones', 'A.curl', 'B.inclinadas']);
+  assert.deepEqual(slots, focusSlots());
+  const p = await getPrescriptions(db, slots);
+  const results = slots.map((s) => ({ slotKey: s.key, exerciseId: s.exerciseId, values: Array(p[s.key].sets).fill(p[s.key].reps), reserve: 1 as const }));
+  const kind = week[3].type as 'A' | 'B' | 'C';
+  const changes = await saveHomeSession(db, week[3].date, kind, 'normal', results, slots, false, {}, true);
+  assert.equal(changes.length, 4);
+  // Comparte progresión con las sesiones normales: las dominadas de la A han subido.
+  assert.equal((await getPrescriptions(db, TEMPLATES.A))['A.dominadas'].reps, p['A.dominadas'].reps + 1);
+  const after = (await loadDays(db, base, addDays(base, 6))).days[3];
+  assert.equal(after.status, 'done');
+  assert.equal(after.focus, true);
+  // Aunque luego la semana vuelva a tener tres días de casa, lo ya hecho sigue siendo enfocada.
+  await saveTemplate(db, ['gym', 'casa', 'casa', 'casa', 'gym', 'rest', 'rest']);
+  assert.equal((await loadDays(db, base, addDays(base, 6))).days[3].focus, true);
+});

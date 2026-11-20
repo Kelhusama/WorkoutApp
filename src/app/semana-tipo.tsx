@@ -13,8 +13,7 @@ import {
   assignKinds,
   countGym,
   isValidTemplate,
-  type Role,
-} from '@/domain/schedule';
+  type Role, infoFor, isFocusWeek } from '@/domain/schedule';
 import { syncReminders } from '@/notifications/reminders';
 import { Button, Card } from '@/ui/components';
 import { RolePicker } from '@/ui/RolePicker';
@@ -34,6 +33,8 @@ export default function WeekTemplateScreen() {
   const gym = countGym(roles);
   const casa = roles.filter((r) => r === 'casa').length;
   const valid = isValidTemplate(roles);
+  const mobility = roles.filter((r) => r === 'movilidad').length;
+  const focus = isFocusWeek(roles);
 
   const save = async () => {
     await saveTemplate(db, roles);
@@ -45,8 +46,8 @@ export default function WeekTemplateScreen() {
   return (
     <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: space.xxl }}>
       <Text style={type.caption}>
-        Elige qué haces cada día. Las sesiones de casa (tirón, empuje, mixta) se reparten solas, sin poner tirón el día después
-        del gimnasio. Se aplica desde esta semana; los días que ya cambiaste a mano se respetan.
+        Elige qué haces cada día: gimnasio, casa, movilidad (flexibilidad y estiramientos, sin carga) o descanso. Con uno o dos días de casa,
+        cada uno es una sesión corta de tren superior centrada en tus objetivos; con tres o más se reparten tirón, empuje y mixta. Se aplica desde esta semana; los días que ya cambiaste a mano se respetan.
       </Text>
 
       <Card style={{ gap: space.md }}>
@@ -55,7 +56,7 @@ export default function WeekTemplateScreen() {
             <View style={{ width: 92 }}>
               <Text style={type.subtitle}>{DAY_LONG[i]}</Text>
               <Text style={[type.caption, { color: kinds[i] === 'rest' ? colors.faint : colors.accent }]} numberOfLines={1}>
-                {SESSION_INFO[kinds[i]].title}
+                {infoFor(kinds[i], focus).title}
               </Text>
             </View>
             <View style={{ flex: 1 }}>
@@ -67,7 +68,7 @@ export default function WeekTemplateScreen() {
 
       <Card style={{ gap: 4 }}>
         <Text style={type.body}>
-          {gym} {gym === 1 ? 'día' : 'días'} de gimnasio · {casa} en casa · {7 - gym - casa} de descanso
+          {gym} {gym === 1 ? 'día' : 'días'} de gimnasio · {casa} en casa · {mobility} de movilidad · {7 - gym - casa - mobility} de descanso
         </Text>
         {!valid && (
           <Text style={[type.caption, { color: colors.danger }]}>

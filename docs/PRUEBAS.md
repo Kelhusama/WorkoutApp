@@ -46,6 +46,9 @@ Para probar: `npx expo start` en la carpeta del proyecto y escanear el QR con Ex
 | [ ] | Entrenador: experimento de la red | Progreso → Ejercicios → un ejercicio | Que diga cuántas sesiones faltan; con 12 o más, que muestre el examen sin que la pantalla se quede parada |
 | [ ] | Flexibilidad: borrar sesión | Entrenar → Flexibilidad → Sesiones recientes | Que pida confirmación y la sesión desaparezca |
 | [ ] | Entrenador: versión más dura | Al guardar una sesión tras completar toda la escalera de un ejercicio | Solo con semanas de uso: que anuncie la nueva versión y la tarjeta del ejercicio la recuerde |
+| [ ] | Día de movilidad | Calendario → Semana tipo | Que se pueda elegir «Movilidad», salga en Hoy con «Empezar movilidad» y quede hecho tras una sesión de flexibilidad o estiramientos |
+| [ ] | Sesión enfocada | Semana tipo con uno o dos días de casa | Que esos días se llamen «Tren superior» y traigan solo dominadas, flexiones, curl y flexiones inclinadas |
+| [ ] | Esta semana toca | Hoy | Que al elegir «Menos» la sesión de casa se abra en ligera, y con «Más» se proponga una extra |
 | [ ] | Aspecto general | Todas las pantallas | Textos cortados, botones difíciles de pulsar, el teclado tapando campos |
 
 ## Solo con la app instalada (APK)

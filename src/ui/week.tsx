@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DAY_SHORT, formatLong, fromISODate, today, weekdayIndex } from '@/domain/dates';
 import { FEELING_LABEL } from '@/domain/progression';
-import { SESSION_INFO, type DayStatus, type DayType } from '@/domain/schedule';
+import { infoFor, type DayStatus, type DayType } from '@/domain/schedule';
 import type { PlannedDay } from '@/hooks/useWeek';
 import { Pill, type IconName } from './components';
 import { colors, radius, space, type } from './theme';
@@ -17,7 +17,7 @@ export const STATUS_STYLE: Record<DayStatus, { label: string; color: string; bg:
   excused: { label: 'Viaje', color: colors.info, bg: colors.infoSoft },
 };
 
-const TYPE_LETTER: Record<DayType, string> = { gym: 'G', A: 'A', B: 'B', C: 'C', rest: '–' };
+const TYPE_LETTER: Record<DayType, string> = { gym: 'G', A: 'A', B: 'B', C: 'C', movilidad: 'M', rest: '–' };
 
 /** Tira compacta de 7 días para la pantalla Hoy. */
 export function WeekStrip({ days, onPressDay }: { days: PlannedDay[]; onPressDay?: (d: PlannedDay) => void }) {
@@ -33,7 +33,7 @@ export function WeekStrip({ days, onPressDay }: { days: PlannedDay[]; onPressDay
             disabled={!onPressDay}
             onPress={() => onPressDay?.(d)}
             accessibilityRole={onPressDay ? 'button' : undefined}
-            accessibilityLabel={`${formatLong(d.date)}: ${SESSION_INFO[d.type].title}, ${s.label.toLowerCase()}`}
+            accessibilityLabel={`${formatLong(d.date)}: ${infoFor(d.type, d.focus).title}, ${s.label.toLowerCase()}`}
             hitSlop={{ top: 6, bottom: 6, left: 2, right: 2 }}
             style={styles.stripDay}>
             <Text style={[styles.stripLetter, isToday && { color: colors.accent }]}>
@@ -53,7 +53,7 @@ export function WeekStrip({ days, onPressDay }: { days: PlannedDay[]; onPressDay
                 <Ionicons name="airplane" size={15} color={colors.info} />
               ) : (
                 <Text style={[styles.stripType, { color: d.type === 'rest' ? colors.faint : colors.text }]}>
-                  {TYPE_LETTER[d.type]}
+                  {d.focus ? 'S' : TYPE_LETTER[d.type]}
                 </Text>
               )}
             </View>
@@ -67,7 +67,7 @@ export function WeekStrip({ days, onPressDay }: { days: PlannedDay[]; onPressDay
 
 /** Fila de un día para la pantalla Semana. */
 export function DayRow({ day, onPress, onChange }: { day: PlannedDay; onPress?: () => void; onChange?: () => void }) {
-  const info = SESSION_INFO[day.type];
+  const info = infoFor(day.type, day.focus);
   const s = STATUS_STYLE[day.status];
   const isToday = day.date === today();
   const detail =

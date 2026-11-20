@@ -16,6 +16,8 @@ import {
   DEFAULT_TEMPLATE,
   assignKinds,
   dayStatus,
+  isFocusWeek,
+  isHomeKind,
   parseTemplate,
   type DayStatus,
   type DayType,
@@ -41,6 +43,8 @@ export interface SessionLog {
   /** 1 si fue una sesión ligera. */
   light: number;
   bench_reserve: Reserve | null;
+  /** 1 si fue la sesión de casa enfocada en los objetivos. */
+  focus: number;
 }
 
 const now = () => new Date().toISOString();
@@ -173,6 +177,8 @@ export interface PlannedDay {
   trip?: Trip;
   /** El día se ha cambiado respecto a la semana tipo. */
   overridden: boolean;
+  /** La sesión de casa de ese día es la enfocada en los objetivos. */
+  focus: boolean;
 }
 
 const HOME_KINDS: readonly LogKind[] = ['A', 'B', 'C'];
@@ -185,6 +191,18 @@ export async function loadDays(db: SQLiteDatabase, from: ISODate, to: ISODate) {
   const overrides = await getOverrides(db, addDays(firstMonday, -1), lastSunday);
   const logs = await getLogsBetween(db, firstMonday, lastSunday);
   const trips = await getTrips(db, addDays(firstMonday, -1), lastSunday);
+  // Un día de movilidad está hecho si ese día hubo flexibilidad o estiramientos.
+  const mobility = new Set(
+    (
+      await db.getAllAsync<{ date: ISODate }>(
+        'SELECT date FROM flex_session WHERE date BETWEEN ? AND ? UNION SELECT date FROM stretch_log WHERE date BETWEEN ? AND ?',
+        firstMonday,
+        lastSunday,
+        firstMonday,
+        lastSunday,
+      )
+    ).map((r) => r.date),
+  );
   const todayDate = getToday();
   // Un día ya registrado conserva lo que se hizo, cambie lo que cambie la semana tipo.
   const loggedRole = (d: ISODate): Role | null => {
@@ -209,18 +227,23 @@ export async function loadDays(db: SQLiteDatabase, from: ISODate, to: ISODate) {
       roles[i] === 'casa' ? ((logs.find((l) => l.date === d && HOME_KINDS.includes(l.kind))?.kind as SessionKind) ?? null) : null,
     );
     const kinds = assignKinds(roles, roleOn(addDays(monday, -1)), pinned);
+    const focusWeek = isFocusWeek(roles);
     dates.forEach((d, i) => {
       if (d < from || d > to) return;
       const type = kinds[i];
-      const log = type === 'rest' ? undefined : logs.find((l) => l.date === d && l.kind === type);
+      const log = type === 'rest' || type === 'movilidad' ? undefined : logs.find((l) => l.date === d && l.kind === type);
       const trip = tripOn(trips, d);
+      const logged = log?.status ?? (type === 'movilidad' && mobility.has(d) ? 'done' : undefined);
+      // Lo ya registrado conserva cómo se hizo; lo demás sigue la regla de la semana. De viaje no hay sesión enfocada.
+      const focus = isHomeKind(type) && (log?.status === 'done' ? log.focus === 1 : focusWeek && !trip);
       days.push({
         date: d,
         type,
         log,
         trip,
-        status: dayStatus(type, d, todayDate, log?.status, !!trip),
+        status: dayStatus(type, d, todayDate, logged, !!trip),
         overridden: overrides.has(d),
+        focus,
       });
     });
   }
@@ -248,7 +271,7 @@ export async function getPrescriptions(db: SQLiteDatabase, slots: readonly Slot[
 
 export async function getLogsBetween(db: SQLiteDatabase, from: ISODate, to: ISODate) {
   return db.getAllAsync<SessionLog>(
-    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve FROM session_log WHERE date BETWEEN ? AND ? ORDER BY date',
+    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve, focus FROM session_log WHERE date BETWEEN ? AND ? ORDER BY date',
     from,
     to,
   );
@@ -256,14 +279,14 @@ export async function getLogsBetween(db: SQLiteDatabase, from: ISODate, to: ISOD
 
 export async function getRecentLogs(db: SQLiteDatabase, limit = 20) {
   return db.getAllAsync<SessionLog>(
-    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve FROM session_log ORDER BY date DESC, id DESC LIMIT ?',
+    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve, focus FROM session_log ORDER BY date DESC, id DESC LIMIT ?',
     limit,
   );
 }
 
 export async function getSessionLog(db: SQLiteDatabase, date: ISODate, kind: LogKind) {
   return db.getFirstAsync<SessionLog>(
-    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve FROM session_log WHERE date = ? AND kind = ?',
+    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve, focus FROM session_log WHERE date = ? AND kind = ?',
     date,
     kind,
   );
@@ -351,6 +374,8 @@ export async function saveHomeSession(
   light = false,
   /** Variante del bloque de prueba en los ejercicios afectados: cambia lo que se pide hoy, no el plan. */
   variants: Record<string, Variant> = {},
+  /** Sesión enfocada en los objetivos (se guarda para poder reabrirla igual). */
+  focus = false,
 ): Promise<SlotChange[]> {
   const prescriptions = await getPrescriptions(db, sessionSlots);
   const stages = await getSlotStages(db);
@@ -367,11 +392,12 @@ export async function saveHomeSession(
     if (existing) await tx.runAsync('DELETE FROM session_log WHERE id = ?', existing.id);
 
     const { lastInsertRowId: sessionId } = await tx.runAsync(
-      `INSERT INTO session_log (date, kind, status, feeling, light, created_at) VALUES (?, ?, 'done', ?, ?, ?)`,
+      `INSERT INTO session_log (date, kind, status, feeling, light, focus, created_at) VALUES (?, ?, 'done', ?, ?, ?, ?)`,
       date,
       kind,
       feeling,
       light ? 1 : 0,
+      focus ? 1 : 0,
       now(),
     );
 

@@ -116,3 +116,11 @@ export function stageNote(slotKey: string, stage: number): string | null {
 export function hasNextStage(slotKey: string, stage: number): boolean {
   return stage < (STAGES[slotKey]?.length ?? 0);
 }
+
+/** Sesión de casa enfocada: solo lo que persigue los objetivos. Comparte progresión con las sesiones normales. */
+export const FOCUS_KEYS: readonly string[] = ['A.dominadas', 'B.flexiones', 'A.curl', 'B.inclinadas'];
+
+export function focusSlots(): Slot[] {
+  const all = Object.values(TEMPLATES).flat();
+  return FOCUS_KEYS.map((k) => all.find((s) => s.key === k)!);
+}

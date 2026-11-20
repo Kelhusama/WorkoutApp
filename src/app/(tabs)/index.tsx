@@ -9,16 +9,17 @@ import { getBodyLog } from '@/db/body';
 import { deleteLog, getDoneSessions, getPrescriptions, markMissed } from '@/db/repo';
 import { getBlocks, getSlotVariants } from '@/db/coach';
 import { applyVariant, testsDue, type TestDue } from '@/domain/bandit';
-import { extraKind, readiness, type Readiness } from '@/domain/coach';
+import { WEEK_LOAD_INFO, extraKind, readiness, type Readiness, type WeekLoad } from '@/domain/coach';
+import { getWeekLoad, saveWeekLoad } from '@/db/settings';
 import { getPhotos, getRecentFeelings } from '@/db/stats';
 import { monthlyCheck } from '@/domain/physique';
 import { stretchedOn } from '@/db/stretch';
-import { addDays, formatLong, formatShort, today as getToday, weekdayIndex } from '@/domain/dates';
+import { addDays, formatLong, formatShort, today as getToday, weekStart, weekdayIndex } from '@/domain/dates';
 import { prescriptionShort } from '@/domain/format';
 import { needsDeload } from '@/domain/gymTools';
 import { WALK_LABEL } from '@/domain/march';
 import { FEELING_LABEL, TEMPO_LABEL, type Prescription } from '@/domain/progression';
-import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
+import { SESSION_INFO, infoFor, isHomeKind, type SessionKind } from '@/domain/schedule';
 import { ROUTINES, routineAfter, routineMinutes } from '@/domain/stretches';
 import { exerciseFor } from '@/domain/templates';
 import { gearSummary, sessionSlots } from '@/domain/travel';
@@ -26,11 +27,13 @@ import { useMarch } from '@/hooks/useMarch';
 import { useStreak } from '@/hooks/useStreak';
 import { useWeek } from '@/hooks/useWeek';
 import { syncReminders } from '@/notifications/reminders';
-import { Button, Card, Pill, SectionTitle, type IconName } from '@/ui/components';
+import { Button, Card, Pill, SectionTitle, Segmented, type IconName } from '@/ui/components';
 import { GoalsSummary } from '@/ui/goals';
 import { openDay } from '@/ui/navigation';
 import { colors, space, type } from '@/ui/theme';
 import { STATUS_STYLE, WeekStrip } from '@/ui/week';
+
+const LOADS: readonly { id: WeekLoad; label: string }[] = (['menos', 'normal', 'mas'] as const).map((id) => ({ id, label: WEEK_LOAD_INFO[id].label }));
 
 /** Fila de «Plan de hoy»: una cosa, una acción. */
 function PlanRow({
@@ -79,19 +82,22 @@ export default function TodayScreen() {
   const [monthly, setMonthly] = useState<{ due: boolean; detail: string } | null>(null);
   // Tests de máximo que tocan, para que el entrenador pueda comparar bloques.
   const [tests, setTests] = useState<TestDue[]>([]);
+  // Lo que el usuario decide para esta semana: menos, normal o más.
+  const [weekLoad, setWeekLoad] = useState<WeekLoad>('normal');
   const [stretched, setStretched] = useState(true);
   const [showExercises, setShowExercises] = useState(false);
   // Sesión extra en día de descanso: cuál propone el entrenador y si conviene que sea ligera.
   const [extra, setExtra] = useState<{ kind: SessionKind; ready: Readiness } | null>(null);
   const [showMore, setShowMore] = useState(false);
 
-  const kind = day && day.type !== 'gym' && day.type !== 'rest' ? (day.type as SessionKind) : null;
+  const kind: SessionKind | null = day && isHomeKind(day.type) ? day.type : null;
+  const focus = day?.focus ?? false;
   const trip = day?.trip;
   const gear = trip?.gear;
   // De viaje los ejercicios se adaptan al material disponible.
   const slots = useMemo(
-    () => (kind ? sessionSlots(kind, gear ? { mochila: gear.mochila, mesa: gear.mesa, gimnasio: gear.gimnasio } : null) : []),
-    [kind, gear?.mochila, gear?.mesa, gear?.gimnasio], // eslint-disable-line react-hooks/exhaustive-deps
+    () => (kind ? sessionSlots(kind, gear ? { mochila: gear.mochila, mesa: gear.mesa, gimnasio: gear.gimnasio } : null, focus) : []),
+    [kind, focus, gear?.mochila, gear?.mesa, gear?.gimnasio], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   useFocusEffect(
@@ -110,14 +116,19 @@ export default function TodayScreen() {
       getRecentFeelings(db).then((f) => setDeload(needsDeload(f)));
       if (kind) stretchedOn(db, todayDate, routineAfter(kind)).then(setStretched);
       getBlocks(db).then((b) => setTests(testsDue(b, todayDate)));
-      getDoneSessions(db, addDays(todayDate, -30)).then((done) => setExtra({ kind: extraKind(done), ready: readiness(done, todayDate) }));
+      (async () => {
+        const load = await getWeekLoad(db, weekStart(todayDate));
+        const done = await getDoneSessions(db, addDays(todayDate, -30));
+        setWeekLoad(load);
+        setExtra({ kind: extraKind(done), ready: readiness(done, todayDate, load) });
+      })();
     }, [db, slots, kind, todayDate, gear]),
   );
 
   const needsWeighIn = lastWeighIn === null || (lastWeighIn != null && lastWeighIn <= addDays(todayDate, -7));
 
   const skipToday = () => {
-    if (!day || day.type === 'rest') return;
+    if (!day || day.type === 'rest' || day.type === 'movilidad') return;
     Alert.alert('¿Hoy no entrenas?', 'La sesión se marcará como fallada. Puedes deshacerlo después.', [
       { text: 'Cancelar', style: 'cancel' },
       {
@@ -134,13 +145,13 @@ export default function TodayScreen() {
   };
 
   const undoMissed = async () => {
-    if (!day || day.type === 'rest') return;
+    if (!day || day.type === 'rest' || day.type === 'movilidad') return;
     await deleteLog(db, todayDate, day.type as SessionKind | 'gym');
     reload();
     syncReminders(db);
   };
 
-  const info = day ? SESSION_INFO[day.type] : null;
+  const info = day ? infoFor(day.type, focus) : null;
   const status = day ? STATUS_STYLE[day.status] : null;
   const routine = kind ? ROUTINES[routineAfter(kind)] : null;
 
@@ -173,7 +184,7 @@ export default function TodayScreen() {
           </View>
 
           {day.type === 'rest' && <Text style={type.caption}>Hoy toca descansar. El músculo crece mientras te recuperas.</Text>}
-          {day.type === 'rest' && extra && (
+          {(day.type === 'rest' || (day.type === 'movilidad' && weekLoad === 'mas')) && extra && weekLoad !== 'menos' && (
             <>
               <Text style={type.caption}>
                 Si aun así quieres entrenar, te propongo la sesión «{SESSION_INFO[extra.kind].title}»
@@ -190,9 +201,9 @@ export default function TodayScreen() {
 
           {day.type !== 'rest' && day.status === 'pending' && (
             <Button
-              label={day.type === 'gym' ? 'Registrar gimnasio' : 'Registrar sesión'}
-              icon="checkmark-circle"
-              onPress={() => openDay(day.type, todayDate)}
+              label={day.type === 'gym' ? 'Registrar gimnasio' : day.type === 'movilidad' ? 'Empezar movilidad' : 'Registrar sesión'}
+              icon={day.type === 'movilidad' ? 'body' : 'checkmark-circle'}
+              onPress={() => openDay(day.type, todayDate, focus)}
             />
           )}
           {day.status === 'done' && (
@@ -200,7 +211,12 @@ export default function TodayScreen() {
               <Text style={[type.body, { color: colors.success }]}>
                 ¡Hecho!{day.log?.feeling ? ` Sensación: ${FEELING_LABEL[day.log.feeling].toLowerCase()}.` : ''}
               </Text>
-              <Button label="Editar registro" variant="secondary" icon="create-outline" onPress={() => openDay(day.type, todayDate)} />
+              <Button
+                label={day.type === 'movilidad' ? 'Ver flexibilidad' : 'Editar registro'}
+                variant="secondary"
+                icon={day.type === 'movilidad' ? 'body' : 'create-outline'}
+                onPress={() => openDay(day.type, todayDate, focus)}
+              />
             </>
           )}
           {day.status === 'missed' && <Button label="Deshacer el fallo" variant="secondary" icon="arrow-undo" onPress={undoMissed} />}
@@ -264,7 +280,7 @@ export default function TodayScreen() {
                       onPress={() => router.push({ pathname: '/viaje', params: { date: todayDate } })}
                     />
                   )}
-                  {day.type !== 'rest' && day.status === 'pending' && <Button label="Hoy no entreno" variant="ghost" onPress={skipToday} />}
+                  {day.type !== 'rest' && day.type !== 'movilidad' && day.status === 'pending' && <Button label="Hoy no entreno" variant="ghost" onPress={skipToday} />}
                 </View>
               )}
             </>
@@ -344,9 +360,25 @@ export default function TodayScreen() {
         />
       )}
 
+      <SectionTitle>Esta semana toca</SectionTitle>
+      <Card style={{ gap: space.sm }}>
+        <Segmented
+          label="Cuánto toca esta semana"
+          options={LOADS}
+          value={weekLoad}
+          onChange={async (l) => {
+            setWeekLoad(l);
+            await saveWeekLoad(db, weekStart(todayDate), l);
+            const done = await getDoneSessions(db, addDays(todayDate, -30));
+            setExtra({ kind: extraKind(done), ready: readiness(done, todayDate, l) });
+          }}
+        />
+        <Text style={type.caption}>{WEEK_LOAD_INFO[weekLoad].detail}</Text>
+      </Card>
+
       <SectionTitle>Esta semana</SectionTitle>
       <Card style={{ gap: space.md }}>
-        <WeekStrip days={days} onPressDay={(d) => (d.type !== 'rest' && d.date <= todayDate ? openDay(d.type, d.date) : router.push('/calendario'))} />
+        <WeekStrip days={days} onPressDay={(d) => (d.type !== 'rest' && d.date <= todayDate ? openDay(d.type, d.date, d.focus) : router.push('/calendario'))} />
         {streak && (streak.weeks > 0 || streak.passUsed) && (
           <View style={styles.streak}>
             <Ionicons name="flame" size={16} color={colors.accent} />

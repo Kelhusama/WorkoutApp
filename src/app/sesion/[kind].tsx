@@ -8,16 +8,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDoneSessions, getPrescriptions, getSessionLog, getSlotStages, getSessionReserves, getSessionSets, getTripOn, saveHomeSession, type SlotChange } from '@/db/repo';
 import { getSlotVariants } from '@/db/coach';
+import { getWeekLoad } from '@/db/settings';
 import { VARIANT_INFO, applyVariant, type Variant } from '@/domain/bandit';
 import { lightSets, readiness, type Readiness, type Reserve } from '@/domain/coach';
 import { getBests } from '@/db/stats';
-import { addDays, formatLong, today as getToday } from '@/domain/dates';
+import { addDays, formatLong, today as getToday, weekStart } from '@/domain/dates';
 import { EXERCISES } from '@/domain/exercises';
 import { detectRecords, type NewRecord } from '@/domain/stats';
 import { ROUTINES, routineAfter, routineMinutes } from '@/domain/stretches';
 import { amountText, describeChange, prescriptionText } from '@/domain/format';
 import type { Feeling, Prescription } from '@/domain/progression';
-import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
+import { infoFor, type SessionKind } from '@/domain/schedule';
 import { LEG_KEYS, exerciseFor, stageNote, type Slot } from '@/domain/templates';
 import { sessionSlots } from '@/domain/travel';
 import { Button, Card, FeelingPicker, SectionTitle, Segmented } from '@/ui/components';
@@ -30,11 +31,13 @@ import { colors, space, type } from '@/ui/theme';
 export default function SessionScreen() {
   const db = useSQLiteContext();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ kind: string; date?: string }>();
+  const params = useLocalSearchParams<{ kind: string; date?: string; focus?: string }>();
   const kind = (['A', 'B', 'C'].includes(params.kind) ? params.kind : 'A') as SessionKind;
   const date = params.date ?? getToday();
   const [slots, setSlots] = useState<Slot[]>([]);
   const [travelling, setTravelling] = useState(false);
+  // Sesión enfocada: solo los ejercicios de los objetivos (semanas con uno o dos días de casa).
+  const [focus, setFocus] = useState(false);
 
   const [targets, setTargets] = useState<Record<string, Prescription> | null>(null);
   const [values, setValues] = useState<Record<string, number[]>>({});
@@ -58,7 +61,11 @@ export default function SessionScreen() {
     (async () => {
       // De viaje, los ejercicios se adaptan al material disponible ese día.
       const trip = await getTripOn(db, date);
-      const slots = sessionSlots(kind, trip?.gear);
+      const log = await getSessionLog(db, date, kind);
+      // Al editar se respeta cómo se guardó; de viaje mandan los ejercicios adaptados.
+      const isFocus = !trip && (log?.status === 'done' ? log.focus === 1 : params.focus === '1');
+      const slots = sessionSlots(kind, trip?.gear, isFocus);
+      setFocus(isFocus);
       const base = await getPrescriptions(db, slots);
       // De viaje los ejercicios son otros y el bloque no se aplica.
       const blockVariants = trip ? {} : await getSlotVariants(db);
@@ -66,9 +73,8 @@ export default function SessionScreen() {
       for (const s of slots) t[s.key] = applyVariant(base[s.key], s, blockVariants[s.key] ?? 'base');
       setVariants(blockVariants);
       setStages(trip ? {} : await getSlotStages(db));
-      const log = await getSessionLog(db, date, kind);
       const saved = log?.status === 'done' ? await getSessionSets(db, log.id) : {};
-      const ready = readiness(await getDoneSessions(db, addDays(date, -30)), date);
+      const ready = readiness(await getDoneSessions(db, addDays(date, -30)), date, await getWeekLoad(db, weekStart(date)));
       // Al editar se respeta cómo se guardó; si no, el entrenador propone según la carga reciente.
       const startLight = log?.status === 'done' ? log.light === 1 : ready.light;
       const initial: Record<string, number[]> = {};
@@ -85,7 +91,7 @@ export default function SessionScreen() {
         setFeeling(log.feeling);
       }
     })();
-  }, [db, kind, date]);
+  }, [db, kind, date, params.focus]);
 
   const legs = LEG_KEYS[kind];
   const activeSlots = light ? slots.filter((s) => !legs.includes(s.key)) : slots;
@@ -108,7 +114,7 @@ export default function SessionScreen() {
       const results = activeSlots.map((s) => ({ slotKey: s.key, exerciseId: s.exerciseId, values: values[s.key] ?? [], reserve: reserves[s.key] ?? null }));
       // Marcas anteriores a hoy, para saber si esta sesión bate algún récord.
       const before = await getBests(db, date);
-      const result = await saveHomeSession(db, date, kind, feeling, results, activeSlots, light, variants);
+      const result = await saveHomeSession(db, date, kind, feeling, results, activeSlots, light, variants, focus);
       setRecords(detectRecords(before, results));
       setDirty(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -119,7 +125,7 @@ export default function SessionScreen() {
     }
   };
 
-  const info = SESSION_INFO[kind];
+  const info = infoFor(kind, focus);
 
   if (!targets) {
     return (

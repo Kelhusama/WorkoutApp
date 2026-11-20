@@ -58,7 +58,7 @@ export default function DayScreen() {
                 text: 'Borrar',
                 style: 'destructive',
                 onPress: async () => {
-                  if (day.type !== 'rest') await deleteLog(db, date, day.type);
+                  if (day.type !== 'rest' && day.type !== 'movilidad') await deleteLog(db, date, day.type);
                   syncReminders(db);
                   router.back();
                 },
