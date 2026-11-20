@@ -9,12 +9,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getLastBench, getSessionLog, saveGymSession } from '@/db/repo';
 import { getBenchSeries } from '@/db/stats';
 import { syncReminders } from '@/notifications/reminders';
+import { RESERVE_OPTIONS, benchAdvice, type BenchAdvice, type Reserve } from '@/domain/coach';
 import { formatLong, formatShort, today as getToday } from '@/domain/dates';
 import { BAR_KG, platesPerSide, warmupSets } from '@/domain/gymTools';
 import type { Feeling } from '@/domain/progression';
 import { estimate1RM } from '@/domain/strength';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
-import { Button, Card, FeelingPicker, SectionTitle, Stepper, ToggleRow } from '@/ui/components';
+import { Button, Card, FeelingPicker, SectionTitle, Segmented, Stepper, ToggleRow } from '@/ui/components';
 import { colors, radius, space, type } from '@/ui/theme';
 
 const fmtKg = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1).replace('.', ','));
@@ -30,17 +31,23 @@ export default function GymScreen() {
   const [weight, setWeight] = useState(50);
   const [reps, setReps] = useState(5);
   const [last, setLast] = useState<{ date: string; w: number; r: number } | null>(null);
+  const [reserve, setReserve] = useState<Reserve | null>(null);
+  // Lo que propone el entrenador para hoy, según el último día de banca.
+  const [advice, setAdvice] = useState<BenchAdvice | null>(null);
   const [dirty, setDirty] = useState(false);
   const allowLeave = useUnsavedGuard(dirty, 'el registro del gimnasio');
 
   useEffect(() => {
     (async () => {
       const existing = await getSessionLog(db, date, 'gym');
-      const prev = await getLastBench(db);
+      const prev = await getLastBench(db, date);
       if (prev) {
+        const a = benchAdvice({ weight: prev.bench_weight, reps: prev.bench_reps, reserve: prev.bench_reserve });
         setLast({ date: prev.date, w: prev.bench_weight, r: prev.bench_reps });
-        setWeight(prev.bench_weight);
-        setReps(prev.bench_reps);
+        setAdvice(a);
+        // Se precarga lo que propone el entrenador; se corrige con lo que salga de verdad.
+        setWeight(a.weight);
+        setReps(a.reps);
       }
       if (existing?.status === 'done') {
         setFeeling(existing.feeling);
@@ -48,6 +55,7 @@ export default function GymScreen() {
           setDidBench(true);
           setWeight(existing.bench_weight);
           setReps(existing.bench_reps ?? 5);
+          setReserve(existing.bench_reserve);
         }
       }
     })();
@@ -58,7 +66,7 @@ export default function GymScreen() {
     // Mejor 1RM estimado de otros días, para avisar si hoy se bate.
     const previous = (await getBenchSeries(db)).filter((p) => p.date !== date).map((p) => p.value);
     const best = previous.length ? Math.max(...previous) : null;
-    await saveGymSession(db, date, feeling, didBench ? { weight, reps } : null);
+    await saveGymSession(db, date, feeling, didBench ? { weight, reps, reserve } : null);
     if (didBench && best !== null && estimate1RM(weight, reps) > best) {
       Alert.alert('¡Récord de banca!', `1RM estimado: ${fmtKg(estimate1RM(weight, reps))} kg (antes ${fmtKg(best)} kg).`);
     }
@@ -98,6 +106,14 @@ export default function GymScreen() {
 
         {didBench ? (
           <>
+            {advice && (
+              <View style={styles.tools} accessible accessibilityLabel={`El entrenador propone ${fmtKg(advice.weight)} kilos por ${advice.reps}. ${advice.reason}`}>
+                <Text style={type.subtitle}>
+                  Hoy: 3 series de {advice.reps} con {fmtKg(advice.weight)} kg
+                </Text>
+                <Text style={type.caption}>{advice.reason}</Text>
+              </View>
+            )}
             <Text style={type.caption}>Tu mejor serie de hoy</Text>
             <Stepper
               label="peso"
@@ -121,6 +137,16 @@ export default function GymScreen() {
               step={1}
               min={1}
               suffix=" reps"
+            />
+            <Text style={type.overline}>En esa serie, ¿cuántas más habrías podido hacer?</Text>
+            <Segmented
+              label="Lo que te quedaba en la mejor serie"
+              options={RESERVE_OPTIONS}
+              value={reserve === null ? null : (String(reserve) as `${Reserve}`)}
+              onChange={(v) => {
+                setDirty(true);
+                setReserve(Number(v) as Reserve);
+              }}
             />
             <View style={styles.e1rm}>
               <Ionicons name="analytics" size={20} color={colors.accent} />

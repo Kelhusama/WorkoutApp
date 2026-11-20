@@ -1,5 +1,6 @@
 import type { Point } from './body';
 import { addDays, type ISODate } from './dates';
+import type { Prescription, ProgressionResult, SlotRules } from './progression';
 
 /**
  * Entrenador adaptativo, capas 1 y 2 (docs/ENTRENADOR_ADAPTATIVO.md):
@@ -74,7 +75,7 @@ export function fitStrength(observations: readonly Observation[]): StrengthState
   const scale = Math.max(first.value, 1);
   // Cuánto pueden cambiar de un día a otro el nivel y el ritmo sin que nadie lo vea.
   const qLevel = (0.004 * scale) ** 2;
-  const qRate = (0.0004 * scale) ** 2;
+  const qRate = (0.002 * scale) ** 2;
 
   let x = first.value; // nivel
   let v = 0; // ritmo por día
@@ -193,4 +194,72 @@ export function readiness(done: readonly DoneSession[], today: ISODate): Readine
 export function extraKind(done: readonly DoneSession[]): 'A' | 'B' | 'C' {
   const last = (k: string) => done.filter((s) => s.kind === k).reduce((m, s) => (s.date > m ? s.date : m), '');
   return (['A', 'B', 'C'] as const).reduce((best, k) => (last(k) < last(best) ? k : best), 'A');
+}
+
+// ---------- Capa 3, segunda parte: mesetas y banca ----------
+
+/** Días sin que cambie lo que se pide de un ejercicio para hablar de meseta. */
+export const PLATEAU_DAYS = 21;
+/** Sesiones mínimas en ese tiempo. */
+export const PLATEAU_SESSIONS = 6;
+
+/**
+ * Meseta: tres semanas o más pidiendo lo mismo, con sesiones suficientes,
+ * y sin que el nivel real mejore. Una o dos semanas flojas son ruido.
+ */
+export function isPlateau(p: { daysUnchanged: number; sessions: number; trend: Trend }): boolean {
+  return p.daysUnchanged >= PLATEAU_DAYS && p.sessions >= PLATEAU_SESSIONS && p.trend !== 'mejorando' && p.trend !== 'pocos_datos';
+}
+
+/**
+ * Qué hacer con un ejercicio estancado. La prioridad es el tren superior:
+ * - si va al límite, se baja una repetición para acumular series limpias;
+ * - si sale con margen pero no avanza, una serie más (más estímulo);
+ * - la pierna se deja como está.
+ */
+export function plateauAction(current: Prescription, rules: SlotRules, o: { upper: boolean; atLimit: boolean }): ProgressionResult {
+  if (!o.upper) {
+    return { next: current, change: 'none', reason: 'Lleva semanas igual; se mantiene, porque la prioridad es el tren superior.' };
+  }
+  if (o.atLimit) {
+    if (current.reps > rules.repsMin) {
+      return {
+        next: { ...current, reps: Math.max(rules.repsMin, current.reps - rules.step) },
+        change: 'baja',
+        reason: 'Tres semanas al límite sin avanzar: bajo un poco para que acumules series limpias y vuelvas a subir.',
+      };
+    }
+    return { next: current, change: 'none', reason: 'Estancado en lo más bajo del rango: conviene una semana ligera o una variante más fácil.' };
+  }
+  if (current.sets < rules.maxSets) {
+    return {
+      next: { ...current, sets: current.sets + 1 },
+      change: 'sets',
+      reason: 'Tres semanas sin mejorar de verdad: añado una serie para dar más estímulo.',
+    };
+  }
+  return { next: current, change: 'none', reason: 'Estancado y ya con todas las series: toca cambiar a una variante más difícil.' };
+}
+
+/** Series de trabajo de banca que busca el plan: 3 de 5. */
+export const BENCH_REPS = 5;
+
+export interface BenchAdvice {
+  weight: number;
+  reps: number;
+  reason: string;
+}
+
+/**
+ * Carga de banca para hoy a partir de la mejor serie del último día y de lo que quedaba.
+ * Saltos de 2,5 kg: con margen sube, al límite repite, y si no llegó a las repeticiones, afloja.
+ */
+export function benchAdvice(last: { weight: number; reps: number; reserve: Reserve | null }): BenchAdvice {
+  const at = (delta: number, reason: string): BenchAdvice => ({ weight: Math.max(20, last.weight + delta), reps: BENCH_REPS, reason });
+  if (last.reps <= BENCH_REPS - 2) return at(-2.5, `La última vez solo salieron ${last.reps}: baja 2,5 kg y completa las ${BENCH_REPS}.`);
+  if (last.reps < BENCH_REPS) return at(0, `La última vez te quedaste en ${last.reps}: repite el peso hasta sacar ${BENCH_REPS}.`);
+  if (last.reserve === 0) return at(0, 'La última vez fue al límite: repite el peso y busca que sobre una.');
+  if (last.reserve === 2 || last.reps >= BENCH_REPS + 3) return at(5, 'La última vez te sobraba mucho: sube 5 kg.');
+  if (last.reserve === 1 || last.reps > BENCH_REPS) return at(2.5, 'La última vez salió con margen: sube 2,5 kg.');
+  return at(0, 'Repite el peso; si hoy sale con margen, la próxima sube.');
 }

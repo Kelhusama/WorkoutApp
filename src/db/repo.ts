@@ -1,6 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import type { DoneSession, Reserve } from '@/domain/coach';
+import { PLATEAU_DAYS, PLATEAU_SESSIONS, capacity, fitStrength, isPlateau, plateauAction, type DoneSession, type Observation, type Reserve } from '@/domain/coach';
+import { EXERCISES } from '@/domain/exercises';
 import { addDays, today as getToday, weekdayIndex, weekStart, type ISODate } from '@/domain/dates';
 import {
   isCompleted,
@@ -22,7 +23,8 @@ import {
   type WeekTemplate,
 } from '@/domain/schedule';
 import { estimate1RM } from '@/domain/strength';
-import { initialPrescription, type Slot } from '@/domain/templates';
+import { LEG_KEYS, initialPrescription, type Slot } from '@/domain/templates';
+import { getExerciseHistory, getExerciseReserves } from './stats';
 import { tripOn, type TravelGear, type Trip } from '@/domain/travel';
 
 export type LogKind = SessionKind | 'gym';
@@ -37,6 +39,7 @@ export interface SessionLog {
   bench_reps: number | null;
   /** 1 si fue una sesión ligera. */
   light: number;
+  bench_reserve: Reserve | null;
 }
 
 const now = () => new Date().toISOString();
@@ -244,7 +247,7 @@ export async function getPrescriptions(db: SQLiteDatabase, slots: readonly Slot[
 
 export async function getLogsBetween(db: SQLiteDatabase, from: ISODate, to: ISODate) {
   return db.getAllAsync<SessionLog>(
-    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light FROM session_log WHERE date BETWEEN ? AND ? ORDER BY date',
+    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve FROM session_log WHERE date BETWEEN ? AND ? ORDER BY date',
     from,
     to,
   );
@@ -252,14 +255,14 @@ export async function getLogsBetween(db: SQLiteDatabase, from: ISODate, to: ISOD
 
 export async function getRecentLogs(db: SQLiteDatabase, limit = 20) {
   return db.getAllAsync<SessionLog>(
-    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light FROM session_log ORDER BY date DESC, id DESC LIMIT ?',
+    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve FROM session_log ORDER BY date DESC, id DESC LIMIT ?',
     limit,
   );
 }
 
 export async function getSessionLog(db: SQLiteDatabase, date: ISODate, kind: LogKind) {
   return db.getFirstAsync<SessionLog>(
-    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light FROM session_log WHERE date = ? AND kind = ?',
+    'SELECT id, date, kind, status, feeling, bench_weight, bench_reps, light, bench_reserve FROM session_log WHERE date = ? AND kind = ?',
     date,
     kind,
   );
@@ -401,7 +404,40 @@ export async function saveHomeSession(
         );
         if (prev.length > 0 && prev[0].target === target.reps && prev.some((p) => p.value < p.target)) misses = 2;
       }
-      const result = progress(target, slot, { completed, feeling, reserve: r.reserve ?? null, misses, light });
+      let result = progress(target, slot, { completed, feeling, reserve: r.reserve ?? null, misses, light });
+
+      // Meseta: semanas pidiendo lo mismo sin que el nivel real mejore. Entonces decide el entrenador.
+      if (result.change === 'none' && !light) {
+        // Cuántas sesiones seguidas (las más recientes) se ha pedido exactamente lo mismo, y desde cuándo.
+        const past = await tx.getAllAsync<{ date: ISODate; target: number; tempo: number; n: number }>(
+          `SELECT s.date AS date, MIN(l.target) AS target, MIN(l.tempo) AS tempo, COUNT(*) AS n
+             FROM set_log l JOIN session_log s ON s.id = l.session_id
+            WHERE l.slot_key = ? AND s.status = 'done' AND s.light = 0 AND s.date <= ?
+            GROUP BY s.date ORDER BY s.date DESC`,
+          r.slotKey,
+          date,
+        );
+        let sessions = 0;
+        let since = date;
+        for (const p of past) {
+          if (p.target !== target.reps || p.tempo !== target.tempo || p.n < target.sets) break;
+          sessions++;
+          since = p.date;
+        }
+        const daysUnchanged = Math.round((Date.parse(date) - Date.parse(since)) / 86_400_000);
+        if (daysUnchanged >= PLATEAU_DAYS && sessions >= PLATEAU_SESSIONS) {
+          const history = await getExerciseHistory(tx, r.exerciseId);
+          const reserves = await getExerciseReserves(tx, r.exerciseId);
+          const unit = EXERCISES[r.exerciseId]?.measure === 'time' ? 5 : 1;
+          const state = fitStrength(
+            history.map((h) => capacity(h.date, h.values, reserves.get(h.date) ?? null, unit)).filter((o): o is Observation => o !== null),
+          );
+          if (state && isPlateau({ daysUnchanged, sessions, trend: state.trend })) {
+            const atLimit = !completed || r.reserve === 0 || (r.reserve == null && feeling === 'dura');
+            result = plateauAction(target, slot, { upper: !LEG_KEYS[kind].includes(r.slotKey), atLimit });
+          }
+        }
+      }
       changes.push({ slotKey: r.slotKey, exerciseId: r.exerciseId, ...result });
       if (result.change !== 'none' && result.change !== 'variante') {
         // Una serie que falta en una sesión ligera no es un fallo: `progress` ya la deja como está.
@@ -425,26 +461,29 @@ export async function saveGymSession(
   db: SQLiteDatabase,
   date: ISODate,
   feeling: Feeling,
-  bench: { weight: number; reps: number } | null,
+  bench: { weight: number; reps: number; reserve?: Reserve | null } | null,
 ) {
   await db.runAsync(
-    `INSERT INTO session_log (date, kind, status, feeling, bench_weight, bench_reps, created_at)
-     VALUES (?, 'gym', 'done', ?, ?, ?, ?)
+    `INSERT INTO session_log (date, kind, status, feeling, bench_weight, bench_reps, bench_reserve, created_at)
+     VALUES (?, 'gym', 'done', ?, ?, ?, ?, ?)
      ON CONFLICT(date, kind) DO UPDATE SET status = 'done', feeling = excluded.feeling,
-       bench_weight = excluded.bench_weight, bench_reps = excluded.bench_reps`,
+       bench_weight = excluded.bench_weight, bench_reps = excluded.bench_reps, bench_reserve = excluded.bench_reserve`,
     date,
     feeling,
     bench?.weight ?? null,
     bench?.reps ?? null,
+    bench?.reserve ?? null,
     now(),
   );
 }
 
 // ---------- Objetivos ----------
 
-export async function getLastBench(db: SQLiteDatabase) {
-  return db.getFirstAsync<{ date: ISODate; bench_weight: number; bench_reps: number }>(
-    'SELECT date, bench_weight, bench_reps FROM session_log WHERE bench_weight IS NOT NULL ORDER BY date DESC LIMIT 1',
+/** Último día con banca apuntada; con `before`, el último anterior a esa fecha. */
+export async function getLastBench(db: SQLiteDatabase, before: ISODate = '9999-12-31') {
+  return db.getFirstAsync<{ date: ISODate; bench_weight: number; bench_reps: number; bench_reserve: Reserve | null }>(
+    'SELECT date, bench_weight, bench_reps, bench_reserve FROM session_log WHERE bench_weight IS NOT NULL AND date < ? ORDER BY date DESC LIMIT 1',
+    before,
   );
 }
 

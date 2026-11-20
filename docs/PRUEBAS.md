@@ -39,6 +39,8 @@ Para probar: `npx expo start` en la carpeta del proyecto y escanear el QR con Ex
 | [ ] | Foto guiada | Progreso → Fotos → Hacer foto | Que pida permiso, se vea la foto anterior encima, funcione el temporizador y la foto se guarde |
 | [ ] | Cómo voy | Cuerpo | Que cada objetivo tenga sentido con tus medidas y diga qué falta si no hay datos |
 | [ ] | Aviso mensual | Hoy | Que aparezca «Toca revisión mensual» si hace más de un mes de la cinta o las fotos |
+| [ ] | Entrenador: banca | Hoy, un día de gimnasio | Que proponga la carga con su motivo, pregunte lo que quedaba y la próxima vez lo tenga en cuenta |
+| [ ] | Entrenador: mesetas | Al guardar una sesión tras semanas con lo mismo | Solo se ve con semanas de uso: que añada una serie arriba y lo explique |
 | [ ] | Aspecto general | Todas las pantallas | Textos cortados, botones difíciles de pulsar, el teclado tapando campos |
 
 ## Solo con la app instalada (APK)

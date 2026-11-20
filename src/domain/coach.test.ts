@@ -112,3 +112,42 @@ test('sesión extra: la que hace más tiempo que no haces', async () => {
   assert.equal(extraKind([s('2026-11-16', 'A'), s('2026-11-18', 'B')]), 'C');
   assert.equal(extraKind([s('2026-11-16', 'B'), s('2026-11-18', 'C'), s('2026-11-19', 'A'), s('2026-11-17', 'gym')]), 'B');
 });
+
+test('meseta: tres semanas igual, con sesiones suficientes y sin mejora real', async () => {
+  const { isPlateau } = await import('./coach');
+  assert.equal(isPlateau({ daysUnchanged: 24, sessions: 7, trend: 'estable' }), true);
+  assert.equal(isPlateau({ daysUnchanged: 24, sessions: 7, trend: 'bajando' }), true);
+  assert.equal(isPlateau({ daysUnchanged: 24, sessions: 7, trend: 'mejorando' }), false);
+  assert.equal(isPlateau({ daysUnchanged: 14, sessions: 7, trend: 'estable' }), false);
+  assert.equal(isPlateau({ daysUnchanged: 40, sessions: 3, trend: 'estable' }), false);
+});
+
+test('qué se hace con una meseta: más estímulo arriba, la pierna se deja', async () => {
+  const { plateauAction } = await import('./coach');
+  const rules = { repsMin: 8, repsMax: 12, maxSets: 4, step: 1, allowsTempo: true };
+  const p = (sets: number, reps: number) => ({ sets, reps, tempo: 0 as const });
+  const more = plateauAction(p(3, 12), rules, { upper: true, atLimit: false });
+  assert.deepEqual([more.next, more.change], [p(4, 12), 'sets']);
+  assert.equal(plateauAction(p(4, 12), rules, { upper: true, atLimit: false }).change, 'none');
+  const back = plateauAction(p(3, 10), rules, { upper: true, atLimit: true });
+  assert.deepEqual([back.next, back.change], [p(3, 9), 'baja']);
+  assert.equal(plateauAction(p(3, 8), rules, { upper: true, atLimit: true }).change, 'none');
+  const leg = plateauAction(p(2, 12), rules, { upper: false, atLimit: false });
+  assert.equal(leg.change, 'none');
+  assert.match(leg.reason, /tren superior/);
+});
+
+test('banca: la carga de hoy según la última serie y lo que quedaba', async () => {
+  const { benchAdvice } = await import('./coach');
+  const w = (reps: number, reserve: 0 | 1 | 2 | null) => benchAdvice({ weight: 50, reps, reserve }).weight;
+  assert.equal(w(3, null), 47.5); // no llegó ni de lejos
+  assert.equal(w(4, 2), 50); // casi: repite
+  assert.equal(w(5, 0), 50); // al límite
+  assert.equal(w(5, 1), 52.5);
+  assert.equal(w(5, 2), 55);
+  assert.equal(w(5, null), 50); // sin dato: prudencia
+  assert.equal(w(6, null), 52.5);
+  assert.equal(w(8, null), 55);
+  assert.equal(benchAdvice({ weight: 20, reps: 2, reserve: null }).weight, 20); // nunca por debajo de la barra
+  assert.equal(benchAdvice({ weight: 50, reps: 5, reserve: 1 }).reps, 5);
+});

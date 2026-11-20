@@ -114,8 +114,12 @@ Hoy la app progresa con una escalera fija (`src/domain/progression.ts`): repetic
   - **Cada cambio lleva su porqué**, que se ve al guardar la sesión.
   - **Sesión ligera** («¿Cómo llegas hoy?» → Cansado): solo tren superior, un tercio menos de series y sin mover el plan. El entrenador la propone si llevas 4 sesiones en 7 días, tres días seguidos o dos sesiones duras recientes.
   - **Sesión extra** en día de descanso (pantalla Hoy): propone la sesión que hace más tiempo que no haces y dice si conviene ligera.
+- ✅ **Capa 3, segunda parte** (20/11/2026):
+  - **Mesetas**: si un ejercicio lleva 21 días o más y 6 sesiones o más pidiendo lo mismo y el filtro no ve mejora real, decide el entrenador. Tren superior con margen → una serie más; tren superior al límite → baja una repetición para acumular series limpias; pierna → se deja como está (prioridad al tren superior). Cuando ya no quedan series que añadir, avisa de que toca cambiar de variante.
+  - **Banca**: el gimnasio pregunta lo que quedaba en la mejor serie y propone la carga de hoy (3 de 5) en saltos de 2,5 kg: con margen sube, al límite repite, si no salieron las repeticiones afloja.
+  - **Ajuste del filtro**: tardaba demasiado en ver que se había dejado de mejorar (seguía diciendo «mejorando» tras 14 sesiones planas). Ahora lo ve a las seis; a cambio, el margen del ritmo es más ancho.
 - **Pendiente, por orden**:
-  1. Llevar el nivel real a los objetivos (dominadas, flexiones, banca) y a la pantalla Hoy, y pedir la reserva también en el gimnasio.
-  2. **Capa 3, segunda parte**: usar el nivel real para detectar mesetas (3–4 semanas sin mejora) y cambiar rango o variante; ajustar el volumen semanal con prioridad al tren superior; ajuste de carga en banca.
+  1. Llevar el nivel real a los objetivos (dominadas, flexiones, banca) y a la pantalla Hoy.
+  2. Cambio de variante automático al agotar la escalera (hoy solo avisa) y volumen semanal total por músculo.
   3. **Capa 4**: probar variantes por bloques de 4 semanas.
   4. Experimento de la red neuronal contra el filtro.
