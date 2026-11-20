@@ -95,3 +95,37 @@ test('sesiones de la semana y texto de la dosis', () => {
   assert.equal(doseText('peso_muerto', buildPlan()[4].doses.peso_muerto), '3 series de 3 repeticiones con 92,5 kg');
   assert.match(LIFT_INFO.dominada.rules, /hasta abajo/);
 });
+
+test('días de dominadas: entre semana, con descanso para los codos', async () => {
+  const { isPullupDay, pullupDaysText, isElbowCareDay } = await import('./event');
+  const plan = buildPlan();
+  assert.equal(pullupDaysText(plan[0]), 'lunes, martes, jueves y viernes');
+  assert.equal(pullupDaysText(plan[4]), 'lunes, miércoles y viernes');
+  assert.equal(pullupDaysText(plan[7]), 'lunes y miércoles');
+  // Primera semana (21–27 nov): lunes 23, martes 24, jueves 26 y viernes 27.
+  const first = ['2026-11-21', '2026-11-22', '2026-11-23', '2026-11-24', '2026-11-25', '2026-11-26', '2026-11-27'];
+  assert.deepEqual(first.filter((d) => isPullupDay(d)), ['2026-11-23', '2026-11-24', '2026-11-26', '2026-11-27']);
+  // Última semana: lunes 11 y miércoles 13; el 14 y el 15, descanso. El día de la prueba no hay plan.
+  assert.deepEqual(['2027-01-11', '2027-01-12', '2027-01-13', '2027-01-14', '2027-01-15', '2027-01-16'].map((d) => isPullupDay(d)), [true, false, true, false, false, false]);
+  // Cuidado de codos dos días por semana.
+  assert.deepEqual(first.filter((d) => isElbowCareDay(d)), ['2026-11-24', '2026-11-27']);
+  assert.deepEqual(['2026-12-21', '2026-12-23', '2026-12-25'].filter((d) => isElbowCareDay(d)), ['2026-12-23', '2026-12-25']);
+});
+
+test('avisos de dominadas: varios al día hasta que se apuntan', async () => {
+  const { planTrialReminders } = await import('./event');
+  const times = ['12:00', '09:00', '10:00'];
+  const now = new Date(2026, 10, 23, 9, 30); // lunes 23 a las 9:30
+  const all = planTrialReminders([], times, now, '2026-11-23', 5);
+  // Hoy quedan los de las 10 y las 12; martes, jueves y viernes, los tres.
+  assert.equal(all.length, 2 + 3 + 3 + 3);
+  assert.deepEqual(all.slice(0, 2).map((r) => [r.id, r.at.getHours()]), [['rem-dom-2026-11-23-1', 10], ['rem-dom-2026-11-23-2', 12]]);
+  assert.match(all[0].title, /^Dominadas · 6 series de 1 repetición, sin lastre$/);
+  assert.match(all[1].body, /Último aviso/);
+  // Al apuntar las de hoy, los avisos de hoy desaparecen.
+  const after = planTrialReminders([log('2026-11-23', 'dominada', 0, 1)], times, now, '2026-11-23', 5);
+  assert.equal(after.length, 9);
+  assert.ok(after.every((r) => !r.id.includes('2026-11-23')));
+  // Sin horas no hay avisos.
+  assert.deepEqual(planTrialReminders([], [], now, '2026-11-23', 5), []);
+});

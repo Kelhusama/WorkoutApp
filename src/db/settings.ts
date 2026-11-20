@@ -38,3 +38,12 @@ export async function getWeekLoad(db: SQLiteDatabase, monday: string): Promise<'
 export async function saveWeekLoad(db: SQLiteDatabase, monday: string, load: 'menos' | 'normal' | 'mas') {
   await set(db, `week_load.${monday}`, load);
 }
+
+/** ¿Está activo el plan de la prueba (avisos de dominadas)? */
+export async function getTrialActive(db: SQLiteDatabase): Promise<boolean> {
+  return (await get(db, 'trial_active')) === '1';
+}
+
+export async function saveTrialActive(db: SQLiteDatabase, active: boolean) {
+  await set(db, 'trial_active', active ? '1' : '0');
+}

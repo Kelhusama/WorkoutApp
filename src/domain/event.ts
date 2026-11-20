@@ -1,4 +1,4 @@
-import { addDays, type ISODate } from './dates';
+import { addDays, fromISODate, weekdayIndex, type ISODate } from './dates';
 
 /**
  * Prueba del 16 de enero de 2027: peso muerto y dominadas con lastre, a tres repeticiones.
@@ -126,7 +126,7 @@ const TEMPLATE: Record<number, { phase: Phase; title: string; doses: Record<Lift
     phase: 'descarga',
     title: 'Descarga',
     doses: {
-      dominada: d(2, 3, 2, 4, 'Mitad de trabajo, con algo menos de lastre que tu tope. Último día, el 11 o el 12; el 14 y el 15, descanso.'),
+      dominada: d(2, 3, 2, 4, 'Mitad de trabajo, con algo menos de lastre que tu tope. Último día, el miércoles 13; el 14 y el 15, descanso.'),
       peso_muerto: d(1, 2, 2, 85, 'Solo para mantener el gesto. Hazlo a principios de semana.'),
     },
   },
@@ -240,4 +240,96 @@ export function doseText(lift: Lift, dose: Dose): string {
   const what = `${dose.sets} series de ${dose.reps} ${dose.reps === 1 ? 'repetición' : 'repeticiones'}`;
   if (lift === 'dominada') return `${what}, ${dose.weight > 0 ? `con ${kg} kg de lastre` : 'sin lastre'}`;
   return `${what} con ${kg} kg`;
+}
+
+// ---------- Días de dominadas, avisos y sesión guiada ----------
+
+/**
+ * Días de la semana para las dominadas (0 = lunes), siempre entre semana y dejando descanso
+ * a los codos: cuatro días → L, M, J y V; tres → L, X y V; dos → L y X.
+ */
+const PULLUP_WEEKDAYS: Record<number, readonly number[]> = { 4: [0, 1, 3, 4], 3: [0, 2, 4], 2: [0, 2], 1: [0] };
+
+/** ¿Tocan dominadas ese día según el plan? */
+export function isPullupDay(date: ISODate, eventDate: ISODate = EVENT_DATE): boolean {
+  const week = todayPlan(date, eventDate).week;
+  if (!week) return false;
+  return (PULLUP_WEEKDAYS[week.doses.dominada.days] ?? []).includes(weekdayIndex(date));
+}
+
+const DAY_NAMES = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+
+/** «lunes, martes, jueves y viernes». */
+export function pullupDaysText(week: WeekPlan): string {
+  const names = (PULLUP_WEEKDAYS[week.doses.dominada.days] ?? []).map((i) => DAY_NAMES[i]);
+  return names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`;
+}
+
+export interface TrialReminder {
+  id: string;
+  at: Date;
+  title: string;
+  body: string;
+}
+
+const NUDGES = [
+  'Unos 20 minutos, con calentamiento y descansos guiados.',
+  'Siguen pendientes. Cuanto antes las hagas, más frescas salen.',
+  'Último aviso de hoy. Si no puedes, mañana no las dobles: sigue con el plan.',
+];
+
+/**
+ * Avisos de dominadas para los próximos días: en cada día que toca y en el que aún no hay nada
+ * apuntado, uno por cada hora configurada (hasta tres). Al apuntar la sesión dejan de salir.
+ * `times` en formato HH:MM.
+ */
+export function planTrialReminders(logs: readonly TrialLog[], times: readonly string[], now: Date, today: ISODate, horizonDays = 14): TrialReminder[] {
+  const done = new Set(logs.filter((l) => l.lift === 'dominada').map((l) => l.date));
+  const hours = times
+    .map((t) => /^(\d{1,2}):(\d{2})$/.exec(t.trim()))
+    .filter((m): m is RegExpExecArray => m !== null)
+    .map((m) => ({ h: Number(m[1]), m: Number(m[2]) }))
+    .filter((t) => t.h < 24 && t.m < 60)
+    .sort((a, b) => a.h * 60 + a.m - (b.h * 60 + b.m))
+    .slice(0, 3);
+  const out: TrialReminder[] = [];
+  for (let i = 0; i < horizonDays; i++) {
+    const date = addDays(today, i);
+    if (!isPullupDay(date) || done.has(date)) continue;
+    const week = todayPlan(date).week!;
+    const dose = prescription('dominada', week, logs);
+    hours.forEach((t, k) => {
+      const at = fromISODate(date);
+      at.setHours(t.h, t.m, 0, 0);
+      if (at <= now) return;
+      out.push({ id: `rem-dom-${date}-${k}`, at, title: `Dominadas · ${doseText('dominada', dose)}`, body: NUDGES[Math.min(k, NUDGES.length - 1)] });
+    });
+  }
+  return out;
+}
+
+/** Descanso entre series de dominadas, en segundos. */
+export const PULLUP_REST_SECONDS = 150;
+
+/** Calentamiento antes de las series: unos 3–4 minutos. */
+export const PULLUP_WARMUP: readonly string[] = [
+  'Círculos de hombros y de brazos, 30 segundos hacia cada lado.',
+  'Cuélgate de la barra 20 segundos, relajado.',
+  'Colgado y con los brazos estirados, sube y baja los hombros 8 veces (sin doblar los codos).',
+  'Una bajada lenta de 5 segundos: sube con un salto y baja frenando.',
+];
+
+/** Cuidado de codos, dos días por semana (martes y viernes; si esa semana no hay martes, el miércoles). */
+export const ELBOW_CARE: readonly string[] = [
+  'Curl de muñeca inverso con la mancuerna o una botella: 2 series de 15, suaves.',
+  'Cuélgate relajado 2 veces, 20–30 segundos, dejando que el cuerpo estire.',
+  'Si el codo molesta por dentro, mañana descansa de dominadas.',
+];
+
+export function isElbowCareDay(date: ISODate): boolean {
+  if (!isPullupDay(date)) return false;
+  const week = todayPlan(date).week!;
+  const days = PULLUP_WEEKDAYS[week.doses.dominada.days] ?? [];
+  const wd = weekdayIndex(date);
+  return wd === 4 || wd === (days.includes(1) ? 1 : 2);
 }

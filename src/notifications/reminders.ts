@@ -3,8 +3,10 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import { Platform } from 'react-native';
 
 import { loadDays } from '@/db/repo';
-import { getReminderSettings } from '@/db/settings';
+import { getTrialLogs } from '@/db/event';
+import { getReminderSettings, getTrialActive } from '@/db/settings';
 import { addDays, today } from '@/domain/dates';
+import { planTrialReminders } from '@/domain/event';
 import { REMINDER_PREFIX, planReminders } from '@/domain/reminders';
 
 const CHANNEL = 'recordatorios';
@@ -51,12 +53,19 @@ async function doSync(db: SQLiteDatabase) {
       .filter((n) => n.identifier.startsWith(REMINDER_PREFIX))
       .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
   );
-  if (!settings.enabled) return;
+  const trialActive = await getTrialActive(db);
+  if (!settings.enabled && !trialActive) return;
   if (!(await ensurePermission())) return;
 
   const from = today();
+  const now = new Date();
   const { days } = await loadDays(db, from, addDays(from, HORIZON_DAYS - 1));
-  for (const r of planReminders(days, settings, new Date())) {
+  // Avisos de sesión en casa y, si el plan de la prueba está activo, los de dominadas (a las mismas horas).
+  const reminders = [
+    ...(settings.enabled ? planReminders(days, settings, now) : []),
+    ...(trialActive ? planTrialReminders(await getTrialLogs(db), settings.times, now, from, HORIZON_DAYS) : []),
+  ];
+  for (const r of reminders) {
     await Notifications.scheduleNotificationAsync({
       identifier: r.id,
       content: { title: r.title, body: r.body, data: { screen: 'hoy' } },

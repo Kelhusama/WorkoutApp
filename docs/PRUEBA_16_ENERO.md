@@ -23,7 +23,7 @@ Las cifras son estimaciones con la fórmula de Epley a partir de las series que 
 | 5 · Series de tres | 19–25 dic | 3 días, 4 × 3 con 2 kg | 3 × 3 con 92,5 kg |
 | 6 · Más lastre | 26 dic – 1 ene | 3 días, 4 × 3 con 4 kg | 3 × 3 con 95 kg |
 | 7 · Buscar el tope | 2–8 ene | 3 días, 4 × 3 con 6 kg o lo que salga limpio | 2 × 3 con 97,5 kg |
-| 8 · Descarga | 9–15 ene | 2 días, 3 × 2 con 4 kg; descanso el 14 y el 15 | 2 × 2 con 85 kg |
+| 8 · Descarga | 9–15 ene | 2 días (lunes 11 y miércoles 13), 3 × 2 con 4 kg; descanso el 14 y el 15 | 2 × 2 con 85 kg |
 
 - En dominadas, nunca al fallo y 2–3 minutos entre series. El lastre sube de 2 en 2 kg, solo si todas las series salieron limpias y sobraba una.
 - En peso muerto, solo se sube si todas las repeticiones salieron con la espalda recta.
@@ -38,6 +38,9 @@ No hay ensayos serios sobre programas de dominadas de este tipo: es práctica de
 - **Apuntar cada sesión**: kilos, repeticiones, series y lo que quedaba (tabla `trial_log`, incluida en la copia de seguridad).
 - **El plan se ajusta a lo apuntado** (`prescription` en `src/domain/event.ts`): en dominadas el lastre no pasa del demostrado más 2 kg; en peso muerto se repite el peso si la última vez fue al límite.
 - **Hoy** muestra una fila con lo que falta esta semana.
+- **Días de dominadas**, siempre entre semana: con cuatro días, lunes, martes, jueves y viernes; con tres, lunes, miércoles y viernes; con dos, lunes y miércoles.
+- **Plan activo** (interruptor en el apartado): avisos los días de dominadas a las horas de *Perfil y avisos* (por defecto 9:00, 10:00 y 12:00), hasta tres al día y solo mientras no se hayan apuntado.
+- **Sesión guiada** (`src/app/dominadas.tsx`): calentamiento de 3–4 minutos, series de una en una con 2:30 de descanso cronometrado y vibración, registro al terminar y enlace a los estiramientos de dorsal, bíceps y antebrazo. Martes y viernes (o miércoles y viernes) añade 3 minutos de cuidado de codos.
 - La fecha (16/01/2027) y los objetivos están fijos en el código; no se pueden cambiar desde la app.
 
 ## Riesgos

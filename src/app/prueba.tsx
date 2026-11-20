@@ -1,11 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { addTrialLog, deleteTrialLog, getLastBodyWeight, getTrialLogs, type SavedTrialLog } from '@/db/event';
+import { getReminderSettings, getTrialActive, saveTrialActive } from '@/db/settings';
+import { ensurePermission, syncReminders } from '@/notifications/reminders';
 import { RESERVE_OPTIONS, type Reserve } from '@/domain/coach';
 import { formatLong, formatShort, today as getToday } from '@/domain/dates';
 import {
@@ -19,11 +21,13 @@ import {
   doneThisWeek,
   doseText,
   estimate3RM,
+  isPullupDay,
   prescription,
+  pullupDaysText,
   todayPlan,
   type Lift,
 } from '@/domain/event';
-import { Button, Card, Pill, ProgressBar, SectionTitle, Segmented, Stepper } from '@/ui/components';
+import { Button, Card, Pill, ProgressBar, SectionTitle, Segmented, Stepper, ToggleRow } from '@/ui/components';
 import { LineChart } from '@/ui/LineChart';
 import { colors, radius, space, type } from '@/ui/theme';
 
@@ -44,10 +48,16 @@ export default function TrialScreen() {
   const [body, setBody] = useState<number | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [showPlan, setShowPlan] = useState(false);
+  // Plan activo: avisos los días de dominadas, a las horas de Perfil y avisos.
+  const [active, setActive] = useState(false);
+  const [times, setTimes] = useState<string[]>([]);
+  const [denied, setDenied] = useState(false);
 
   const load = useCallback(async () => {
     setLogs(await getTrialLogs(db));
     setBody((await getLastBodyWeight(db))?.weight ?? null);
+    setActive(await getTrialActive(db));
+    setTimes((await getReminderSettings(db)).times);
   }, [db]);
   useFocusEffect(
     useCallback(() => {
@@ -59,9 +69,19 @@ export default function TrialScreen() {
   const plan = buildPlan();
   const bodyKg = body ?? ASSUMED_BODY_KG;
 
+  const toggle = async (on: boolean) => {
+    // Sin permiso de notificaciones no hay avisos: se dice, en vez de dejar el interruptor encendido en falso.
+    const ok = on ? await ensurePermission() : true;
+    setDenied(on && !ok);
+    setActive(on && ok);
+    await saveTrialActive(db, on && ok);
+    syncReminders(db);
+  };
+
   const save = async () => {
     if (!draft) return;
     await addTrialLog(db, { date: today, ...draft });
+    syncReminders(db);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setDraft(null);
     load();
@@ -75,6 +95,7 @@ export default function TrialScreen() {
         style: 'destructive',
         onPress: async () => {
           await deleteTrialLog(db, l.id);
+          syncReminders(db);
           load();
         },
       },
@@ -99,6 +120,20 @@ export default function TrialScreen() {
         )}
         {now.phase === 'pasado' && <Text style={type.body}>Una semana suave y vuelta al plan normal.</Text>}
       </Card>
+
+      {now.week && (
+        <Card style={{ gap: space.sm }}>
+          <ToggleRow title="Plan activo" detail="Avisos los días de dominadas, hasta que las apuntes" value={active} onChange={toggle} />
+          <Text style={type.caption}>
+            {active
+              ? `Esta semana tocan dominadas el ${pullupDaysText(now.week)}. Avisos a las ${times.join(', ')}; las horas se cambian en Perfil y avisos.`
+              : `Al activarlo, te avisaré el ${pullupDaysText(now.week)}, hasta tres veces al día mientras no las hayas apuntado.`}
+          </Text>
+          {denied && (
+            <Text style={[type.caption, { color: colors.danger }]}>No hay permiso para mostrar avisos. Actívalo en los ajustes del móvil y vuelve a encenderlo.</Text>
+          )}
+        </Card>
+      )}
 
       {LIFTS.map((lift) => {
         const info = LIFT_INFO[lift];
@@ -143,10 +178,18 @@ export default function TrialScreen() {
                 </View>
                 <Text style={styles.dose}>{doseText(lift, dose)}</Text>
                 <Text style={type.caption}>{dose.note}</Text>
+                {lift === 'dominada' && !editing && (
+                  <Button
+                    label={isPullupDay(today) ? 'Empezar la sesión guiada' : 'Hacer una sesión guiada hoy'}
+                    icon="play"
+                    variant={isPullupDay(today) && !logs.some((l) => l.lift === 'dominada' && l.date === today) ? 'primary' : 'secondary'}
+                    onPress={() => router.push('/dominadas')}
+                  />
+                )}
                 {!editing ? (
                   <Button
-                    label={done >= dose.days ? 'Apuntar otra sesión' : 'Apuntar la sesión de hoy'}
-                    variant={done >= dose.days ? 'secondary' : 'primary'}
+                    label={lift === 'dominada' ? 'Apuntar a mano' : done >= dose.days ? 'Apuntar otra sesión' : 'Apuntar la sesión de hoy'}
+                    variant={lift === 'dominada' || done >= dose.days ? 'secondary' : 'primary'}
                     icon="create-outline"
                     onPress={() => setDraft({ lift, weight: dose.weight, reps: dose.reps, sets: dose.sets, reserve: null })}
                   />

@@ -13,7 +13,8 @@ const NOTIFICATION_ID = 'descanso';
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 const label = (s: number) => (s % 60 === 0 ? `${s / 60} min` : s < 60 ? `${s} s` : mmss(s));
 
-async function scheduleEnd(seconds: number) {
+/** Programa el aviso de fin de descanso, por si la app queda en segundo plano. */
+export async function scheduleEnd(seconds: number) {
   if (Platform.OS === 'web') return;
   try {
     await Notifications.cancelScheduledNotificationAsync(NOTIFICATION_ID);
@@ -28,7 +29,7 @@ async function scheduleEnd(seconds: number) {
   }
 }
 
-function cancelEnd() {
+export function cancelEnd() {
   if (Platform.OS !== 'web') Notifications.cancelScheduledNotificationAsync(NOTIFICATION_ID).catch(() => {});
 }
 

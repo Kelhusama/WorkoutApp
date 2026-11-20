@@ -16,7 +16,7 @@ import { monthlyCheck } from '@/domain/physique';
 import { stretchedOn } from '@/db/stretch';
 import { addDays, formatLong, formatShort, today as getToday, weekStart, weekdayIndex } from '@/domain/dates';
 import { getTrialLogs } from '@/db/event';
-import { EVENT_NAME, LIFTS, doneThisWeek, doseText, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
+import { EVENT_NAME, LIFTS, doneThisWeek, doseText, isPullupDay, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
 import { prescriptionShort } from '@/domain/format';
 import { needsDeload } from '@/domain/gymTools';
 import { WALK_LABEL } from '@/domain/march';
@@ -302,6 +302,14 @@ export default function TodayScreen() {
           title={`De viaje hasta el ${formatShort(trip.to)}`}
           detail={`${gearSummary(trip.gear)} · sesiones adaptadas`}
           onPress={() => router.push({ pathname: '/viaje', params: { id: String(trip.id) } })}
+        />
+      )}
+      {trial.week && isPullupDay(todayDate) && !trialLogs.some((l) => l.lift === 'dominada' && l.date === todayDate) && (
+        <PlanRow
+          icon="play-circle"
+          title="Hoy tocan dominadas"
+          detail={`${doseText('dominada', trialDose('dominada', trial.week, trialLogs))} · sesión guiada de unos 20 minutos`}
+          onPress={() => router.push('/dominadas')}
         />
       )}
       {trial.week &&

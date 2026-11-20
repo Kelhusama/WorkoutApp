@@ -40,6 +40,7 @@ export default function RootLayout() {
           <Stack.Screen name="estirar/[rutina]" options={{ title: 'Estirar' }} />
           <Stack.Screen name="revision" options={{ title: 'Revisión semanal' }} />
           <Stack.Screen name="prueba" options={{ title: 'Prueba del 16 de enero' }} />
+          <Stack.Screen name="dominadas" options={{ title: 'Dominadas' }} />
         </Stack>
       </ThemeProvider>
     </SQLiteProvider>
