@@ -71,10 +71,11 @@ test('lo que toca hoy: el plan, corregido por lo último apuntado', () => {
 });
 
 test('dónde está hoy cada ejercicio, expresado como en la prueba', () => {
-  // Punto de partida: 80 kg × 8 equivalen a unos 92 kg × 3; tres dominadas sin lastre son 0 kg.
+  // Punto de partida: 80 kg × 8 equivalen a unos 92 kg × 3; el punto de partida en dominadas son cuatro sin lastre.
   assert.equal(estimate3RM(80, 8), 92);
   assert.equal(currentLevel('peso_muerto', [], '2026-11-20'), 92);
-  assert.equal(currentLevel('dominada', [], '2026-11-20'), 0);
+  // Cuatro dominadas sin lastre con 80 kg de peso equivalen a unos 2,5 kg de lastre a tres.
+  assert.equal(currentLevel('dominada', [], '2026-11-20'), 2.5);
   // Cinco dominadas sin lastre con 80 kg de peso equivalen a unos 5 kg de lastre a tres.
   assert.equal(currentLevel('dominada', [log('2026-12-10', 'dominada', 0, 5)], '2026-12-12', 80), 5);
   // Pesar menos ayuda: la misma serie con 76 kg da menos lastre equivalente, pero cada kilo perdido es uno menos que subir.

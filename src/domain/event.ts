@@ -33,9 +33,9 @@ export const LIFT_INFO: Record<Lift, { label: string; target: number; unit: stri
   },
 };
 
-/** De dónde se parte (20/11/2026): 3 dominadas estrictas sin lastre y peso muerto de 80 kg × 8. */
+/** De dónde se parte (20/11/2026): 4 dominadas estrictas sin lastre, bajando hasta abajo, y peso muerto de 80 kg × 8. */
 export const START: Record<Lift, { weight: number; reps: number }> = {
-  dominada: { weight: 0, reps: 3 },
+  dominada: { weight: 0, reps: 4 },
   peso_muerto: { weight: 80, reps: 8 },
 };
 

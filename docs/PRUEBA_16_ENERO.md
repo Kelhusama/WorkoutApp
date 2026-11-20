@@ -5,7 +5,7 @@ Prueba de equipo, a **tres repeticiones**. Al usuario le tocan dos levantamiento
 | Prueba | Objetivo | Punto de partida (20/11/2026) | Estimación para el día |
 |---|---|---|---|
 | Peso muerto | 100 kg × 3 | 80 kg × 8, que equivale a unos 92 kg × 3 | 100–105 kg × 3: **alcanzable** |
-| Dominadas con lastre | 12 kg × 3 | 3 estrictas sin lastre | 3 con 2–5 kg: **12 kg no es realista** |
+| Dominadas con lastre | 12 kg × 3 | 4 estrictas sin lastre (medidas el 20/11), unos 2,5 kg × 3 | 3 con 6–10 kg; **12 kg, solo si todo sale bien y baja 2–3 kg de peso** |
 | Colgarse (si cae) | — | — | Se entrena al final de las sesiones de dominadas |
 
 Las cifras son estimaciones con la fórmula de Epley a partir de las series que contó el usuario, no medidas. El punto débil del equipo son las dominadas.
