@@ -33,6 +33,7 @@ import { Button, Card, Pill, SectionTitle, Segmented, type IconName } from '@/ui
 import { GoalsSummary } from '@/ui/goals';
 import { openDay } from '@/ui/navigation';
 import { colors, space, type, font } from '@/ui/theme';
+import { Pintadera } from '@/ui/Pintadera';
 import { STATUS_STYLE, WeekStrip } from '@/ui/week';
 
 const LOADS: readonly { id: WeekLoad; label: string }[] = (['menos', 'normal', 'mas'] as const).map((id) => ({ id, label: WEEK_LOAD_INFO[id].label }));
@@ -52,14 +53,18 @@ function PlanRow({
   tint?: string;
 }) {
   const body: ReactNode = (
-    <Card style={styles.planRow}>
+    <View style={styles.planRow}>
       <Ionicons name={icon} size={22} color={tint} />
       <View style={{ flex: 1 }}>
-        <Text style={type.subtitle}>{title}</Text>
-        <Text style={type.caption}>{detail}</Text>
+        <Text style={type.subtitle} numberOfLines={1}>
+          {title}
+        </Text>
+        <Text style={type.caption} numberOfLines={2}>
+          {detail}
+        </Text>
       </View>
       {onPress && <Ionicons name="chevron-forward" size={18} color={colors.faint} />}
-    </Card>
+    </View>
   );
   if (!onPress) return <View accessible accessibilityLabel={`${title}. ${detail}`}>{body}</View>;
   return (
@@ -172,46 +177,49 @@ export default function TodayScreen() {
     <ScrollView
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={{ padding: space.lg, paddingTop: insets.top + space.lg, paddingBottom: space.xxl, gap: space.md }}>
-      <View style={styles.headerRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={type.overline}>Hoy</Text>
-          <Text style={[type.hero, { marginTop: 2 }]}>{formatLong(todayDate)}</Text>
-        </View>
+      <View style={styles.topRow}>
+        <Text style={[type.overline, { flex: 1 }]}>{formatLong(todayDate)}</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Perfil y avisos" onPress={() => router.push('/perfil')} style={styles.round}>
           <Ionicons name="person-circle-outline" size={26} color={colors.text} />
         </Pressable>
       </View>
+
+      {trial.week ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${eventName()}. Faltan ${trial.daysLeft} días. Semana ${9 - trial.week.weeksLeft} de 8. Abrir el plan`}
+          onPress={() => router.push('/prueba')}
+          style={({ pressed }) => [styles.hero, pressed && { opacity: 0.7 }]}>
+          <Pintadera size={124} done={8 - trial.week.weeksLeft} current={8 - trial.week.weeksLeft} label={`Semana ${9 - trial.week.weeksLeft} de 8 del plan`} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.heroNumber}>{trial.daysLeft}</Text>
+            <Text style={type.title}>días para la prueba</Text>
+            <Text style={type.caption}>
+              Semana {9 - trial.week.weeksLeft} de 8: {trial.week.title.toLowerCase()}
+            </Text>
+          </View>
+        </Pressable>
+      ) : (
+        <Text style={type.hero}>{trial.phase === 'dia' ? 'Hoy es la prueba' : info ? info.title : 'Hoy'}</Text>
+      )}
+      {trial.week && (
+        <Text style={type.caption}>
+          Esta semana llevas{' '}
+          {LIFTS.map((lift) => `${Math.min(doneThisWeek(lift, trial.week!, trialLogs), trialDose(lift, trial.week!, trialLogs).days)} de ${trialDose(lift, trial.week!, trialLogs).days} ${lift === 'dominada' ? 'días de dominadas' : 'de peso muerto'}`).join(' y ')}.
+        </Text>
+      )}
 
       {/* La prueba manda: sus dominadas van antes que la sesión del día */}
       {trial.week && isPullupDay(todayDate) && !trialLogs.some((l) => l.lift === 'dominada' && l.date === todayDate) && (
         <PlanRow
           icon="play-circle"
           title="Lo primero de hoy: dominadas"
-          detail={`${doseText('dominada', trialDose('dominada', trial.week, trialLogs))} · agarre ${GRIP_INFO[gripFor(todayDate) ?? TEST_GRIP].label.toLowerCase()} · sesión guiada de unos 20 minutos, antes que cualquier otra cosa`}
+          detail={`${doseText('dominada', trialDose('dominada', trial.week, trialLogs))}. Agarre ${GRIP_INFO[gripFor(todayDate) ?? TEST_GRIP].label.toLowerCase()}.`}
           onPress={() => router.push('/dominadas')}
         />
       )}
-      {trial.week &&
-        (() => {
-          // Lo que falta esta semana para la prueba, en una línea.
-          const left = LIFTS.map((lift) => ({ lift, dose: trialDose(lift, trial.week!, trialLogs), done: doneThisWeek(lift, trial.week!, trialLogs) })).filter(
-            (x) => x.done < x.dose.days,
-          );
-          return (
-            <PlanRow
-              icon="trophy"
-              title={`${eventName()} · faltan ${trial.daysLeft} días`}
-              detail={
-                left.length === 0
-                  ? 'Todo lo de esta semana está hecho.'
-                  : left.map((x) => `${x.lift === 'dominada' ? 'Dominadas' : 'Peso muerto'} (${x.done} de ${x.dose.days}): ${doseText(x.lift, x.dose)}`).join(' · ')
-              }
-              onPress={() => router.push('/prueba')}
-            />
-          );
-        })()}
       {platesWarning(todayDate) && (
-        <PlanRow icon="alert-circle" tint={colors.warn} title="Te hacen falta discos" detail={platesWarning(todayDate)!} onPress={() => router.push('/prueba')} />
+        <PlanRow icon="alert-circle" tint={colors.warn} title="Te hacen falta discos" detail="Para el cinturón, antes de que empiece el lastre. Toca para ver cuáles." onPress={() => router.push('/prueba')} />
       )}
       {trial.phase === 'dia' && <PlanRow icon="trophy" title="Hoy es la prueba" detail="Calienta largo y empieza con un peso que sabes que sale." onPress={() => router.push('/prueba')} />}
 
@@ -224,7 +232,7 @@ export default function TodayScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={type.title}>{info.title}</Text>
-              <Text style={type.caption}>{info.subtitle}</Text>
+              <Text style={type.caption}>{info.subtitle.replace(/ · /g, ', ')}</Text>
             </View>
             {day.type !== 'rest' && <Pill label={status.label} color={status.color} bg={status.bg} />}
           </View>
@@ -456,7 +464,19 @@ const styles = StyleSheet.create({
   round: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   icon: { width: 48, height: 48, borderRadius: 14, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
   linkRow: { flexDirection: 'row', alignItems: 'center', minHeight: 48 },
-  planRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 64 },
+  // Fila sin caja: solo una línea fina la separa de la siguiente.
+  planRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    minHeight: 56,
+    paddingVertical: space.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: space.lg },
+  heroNumber: { fontSize: 72, lineHeight: 70, ...font.display, color: colors.accent },
+  topRow: { flexDirection: 'row', alignItems: 'center', minHeight: 48 },
   streak: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   exRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   exPresc: { fontSize: 15, ...font.w700, color: colors.text, fontVariant: ['tabular-nums'] },
