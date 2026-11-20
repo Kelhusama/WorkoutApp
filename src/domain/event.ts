@@ -39,6 +39,17 @@ export const START: Record<Lift, { weight: number; reps: number }> = {
   peso_muerto: { weight: 80, reps: 8 },
 };
 
+export type Grip = 'prono' | 'supino' | 'neutro';
+
+export const GRIP_INFO: Record<Grip, { label: string; how: string }> = {
+  prono: { label: 'Prono', how: 'Palmas hacia fuera, manos a la anchura de los hombros. Es el más exigente y el que se entrena más.' },
+  supino: { label: 'Supino', how: 'Palmas hacia ti, manos a la anchura de los hombros. Trabaja más el bíceps y suele salir algo más fácil.' },
+  neutro: { label: 'Neutro', how: 'Palmas enfrentadas, en los agarres paralelos de la barra. El más amable con codos y hombros.' },
+};
+
+/** Agarre que se da por hecho para la prueba mientras no se diga otro: es el que más se repite. */
+export const TEST_GRIP: Grip = 'prono';
+
 export type Phase = 'base' | 'fuerza' | 'pico' | 'descarga' | 'dia' | 'pasado';
 
 export interface Dose {
@@ -157,6 +168,8 @@ export interface TrialLog {
   sets: number;
   /** Lo que quedaba en la última serie: 0 nada · 1 una o dos · 2 tres o más. */
   reserve: 0 | 1 | 2 | null;
+  /** Agarre con el que se hicieron las dominadas, si se sabe. */
+  grip?: Grip | null;
 }
 
 export interface Today {
@@ -302,7 +315,13 @@ export function planTrialReminders(logs: readonly TrialLog[], times: readonly st
       const at = fromISODate(date);
       at.setHours(t.h, t.m, 0, 0);
       if (at <= now) return;
-      out.push({ id: `rem-dom-${date}-${k}`, at, title: `Dominadas · ${doseText('dominada', dose)}`, body: NUDGES[Math.min(k, NUDGES.length - 1)] });
+      const grip = gripFor(date);
+      out.push({
+        id: `rem-dom-${date}-${k}`,
+        at,
+        title: `Dominadas · ${doseText('dominada', dose)}`,
+        body: `${grip ? `Agarre ${GRIP_INFO[grip].label.toLowerCase()}. ` : ''}${NUDGES[Math.min(k, NUDGES.length - 1)]}`,
+      });
     });
   }
   return out;
@@ -345,4 +364,30 @@ export const TRIAL_COVERS: readonly string[] = ['A.dominadas', 'A.negativas', 'C
 export function withoutTrialWork<T extends { key: string }>(slots: readonly T[], active: boolean, date: ISODate, eventDate: ISODate = EVENT_DATE): T[] {
   if (!active || !todayPlan(date, eventDate).week) return [...slots];
   return slots.filter((s) => !TRIAL_COVERS.includes(s.key));
+}
+
+/**
+ * Agarre de cada día de dominadas: el de la prueba se repite más, y los otros dos reparten
+ * el esfuerzo entre músculos y dan un respiro a los codos. En la descarga, solo el de la prueba.
+ * Con tres días por semana, el del medio alterna supino y neutro de una semana a otra.
+ */
+export function gripFor(date: ISODate, eventDate: ISODate = EVENT_DATE): Grip | null {
+  if (!isPullupDay(date, eventDate)) return null;
+  const week = todayPlan(date, eventDate).week!;
+  const days = PULLUP_WEEKDAYS[week.doses.dominada.days] ?? [];
+  const i = days.indexOf(weekdayIndex(date));
+  if (week.phase === 'descarga') return TEST_GRIP;
+  if (days.length >= 4) return ([TEST_GRIP, 'supino', 'neutro', TEST_GRIP] as const)[i];
+  if (days.length === 3) return i === 1 ? (week.weeksLeft % 2 === 0 ? 'supino' : 'neutro') : TEST_GRIP;
+  return TEST_GRIP;
+}
+
+/** «lunes prono, martes supino, jueves neutro y viernes prono». */
+export function gripsText(week: WeekPlan): string {
+  const parts: string[] = [];
+  for (let d = week.from; d <= week.to; d = addDays(d, 1)) {
+    const g = gripFor(d);
+    if (g) parts.push(`${DAY_NAMES[weekdayIndex(d)]} ${GRIP_INFO[g].label.toLowerCase()}`);
+  }
+  return parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}`;
 }

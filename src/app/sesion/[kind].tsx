@@ -69,8 +69,9 @@ export default function SessionScreen() {
       const isFocus = !trip && (log?.status === 'done' ? log.focus === 1 : params.focus === '1');
       // Con el plan de la prueba activo, las dominadas ya se hacen allí. Una sesión ya guardada se abre como se hizo.
       const trialOn = log?.status !== 'done' && !trip && (await getTrialActive(db));
-      const slots = withoutTrialWork(sessionSlots(kind, trip?.gear, isFocus), trialOn, date);
-      setTrialOn(trialOn && slots.length < sessionSlots(kind, null, isFocus).length);
+      const slots = withoutTrialWork(sessionSlots(kind, trip?.gear, isFocus, trialOn), trialOn, date);
+      // Se avisa siempre que el plan haya cambiado la sesión: sin dominadas, o enfocada en flexiones y mancuerna.
+      setTrialOn(trialOn && (isFocus || slots.length < sessionSlots(kind, null, false).length));
       setFocus(isFocus);
       const base = await getPrescriptions(db, slots);
       // De viaje los ejercicios son otros y el bloque no se aplica.
@@ -233,7 +234,7 @@ export default function SessionScreen() {
         </Text>
         {trialOn && (
           <Text style={[type.caption, { color: colors.info, marginTop: 4 }]}>
-            <Ionicons name="trophy" size={12} color={colors.info} /> Sin dominadas: ya las haces en el plan de la prueba del 16 de enero.
+            <Ionicons name="trophy" size={12} color={colors.info} /> Sin dominadas: ya las haces en el plan de la prueba. Aquí, flexiones y mancuerna.
           </Text>
         )}
         {travelling && (

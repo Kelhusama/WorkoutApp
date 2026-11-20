@@ -43,6 +43,8 @@ No hay ensayos serios sobre programas de dominadas de este tipo: es práctica de
 - **Sesión guiada** (`src/app/dominadas.tsx`): calentamiento de 3–4 minutos, series de una en una con 2:30 de descanso cronometrado y vibración, registro al terminar y enlace a los estiramientos de dorsal, bíceps y antebrazo. Martes y viernes (o miércoles y viernes) añade 3 minutos de cuidado de codos.
 - **Sin doble carga**: con el plan activo, las sesiones de casa no traen dominadas ni negativas (`TRIAL_COVERS`), y tampoco se pide el test de dominadas del entrenador. Se quedan flexiones, curl y el resto. Al desactivar el plan o pasar la prueba, vuelven.
 - **Las dominadas mandan** (revisión de coherencia, 20/11/2026): en Hoy y en Entrenar la prueba va lo primero; los días de dominadas solo avisan de las dominadas, no de la sesión de casa; si ese día hay sesión de casa, se abre en ligera; y con el plan activo no se propone sesión extra salvo que la semana esté marcada como «Más».
+- **Agarres** (20/11/2026): cada día de dominadas tiene el suyo. Con cuatro días: lunes prono, martes supino, jueves neutro y viernes prono. Con tres: prono, supino o neutro (alternan por semanas) y prono. En la descarga, solo prono. El prono se da por hecho como agarre de la prueba (`TEST_GRIP`); **pendiente de confirmar con el usuario**. El agarre se puede cambiar en la sesión guiada y se guarda con cada sesión.
+- **Sesión de casa con el plan activo**: la sesión enfocada pasa a ser tres flexiones (estrictas, inclinadas y en pica) y tres ejercicios con la mancuerna (curl, martillo y press), sin dominadas.
 - La fecha (16/01/2027) y los objetivos están fijos en el código; no se pueden cambiar desde la app.
 
 ## Riesgos

@@ -7,18 +7,19 @@ export type SavedTrialLog = TrialLog & { id: number };
 
 /** Sesiones apuntadas para la prueba, de la más antigua a la más reciente. */
 export async function getTrialLogs(db: SQLiteDatabase): Promise<SavedTrialLog[]> {
-  return db.getAllAsync<SavedTrialLog>('SELECT id, date, lift, weight, reps, sets, reserve FROM trial_log ORDER BY date, id');
+  return db.getAllAsync<SavedTrialLog>('SELECT id, date, lift, weight, reps, sets, reserve, grip FROM trial_log ORDER BY date, id');
 }
 
 export async function addTrialLog(db: SQLiteDatabase, log: TrialLog): Promise<number> {
   const r = await db.runAsync(
-    'INSERT INTO trial_log (date, lift, weight, reps, sets, reserve) VALUES (?, ?, ?, ?, ?, ?)',
+    'INSERT INTO trial_log (date, lift, weight, reps, sets, reserve, grip) VALUES (?, ?, ?, ?, ?, ?, ?)',
     log.date,
     log.lift,
     log.weight,
     log.reps,
     log.sets,
     log.reserve,
+    log.grip ?? null,
   );
   return r.lastInsertRowId;
 }

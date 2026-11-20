@@ -10,7 +10,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { addTrialLog, getTrialLogs } from '@/db/event';
 import { RESERVE_OPTIONS, type Reserve } from '@/domain/coach';
 import { today as getToday } from '@/domain/dates';
-import { ELBOW_CARE, LIFT_INFO, PULLUP_REST_SECONDS, PULLUP_WARMUP, doseText, isElbowCareDay, prescription, todayPlan, type Dose } from '@/domain/event';
+import {
+  ELBOW_CARE,
+  GRIP_INFO,
+  LIFT_INFO,
+  PULLUP_REST_SECONDS,
+  PULLUP_WARMUP,
+  TEST_GRIP,
+  doseText,
+  gripFor,
+  isElbowCareDay,
+  prescription,
+  todayPlan,
+  type Dose,
+  type Grip,
+} from '@/domain/event';
 import { ROUTINES, routineMinutes } from '@/domain/stretches';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { syncReminders } from '@/notifications/reminders';
@@ -19,6 +33,8 @@ import { cancelEnd, scheduleEnd } from '@/ui/RestTimer';
 import { colors, space, type } from '@/ui/theme';
 
 type Step = 'calentar' | 'series' | 'apuntar' | 'hecho';
+
+const GRIPS = (['prono', 'supino', 'neutro'] as const).map((id) => ({ id, label: GRIP_INFO[id].label }));
 
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
@@ -36,6 +52,8 @@ export default function PullupSession() {
   const [left, setLeft] = useState(0);
   const [reps, setReps] = useState(1);
   const [reserve, setReserve] = useState<Reserve | null>(null);
+  // Agarre del día según el plan; se puede cambiar si la barra o el codo piden otro.
+  const [grip, setGrip] = useState<Grip>(gripFor(today) ?? TEST_GRIP);
   const rang = useRef(false);
   const allowLeave = useUnsavedGuard(done > 0 && step !== 'hecho', 'la sesión de dominadas');
 
@@ -106,7 +124,7 @@ export default function PullupSession() {
   };
 
   const save = async () => {
-    await addTrialLog(db, { date: today, lift: 'dominada', weight: dose.weight, reps, sets: Math.max(1, done), reserve });
+    await addTrialLog(db, { date: today, lift: 'dominada', weight: dose.weight, reps, sets: Math.max(1, done), reserve, grip });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     syncReminders(db);
     allowLeave();
@@ -121,6 +139,12 @@ export default function PullupSession() {
         <Text style={type.caption}>Hoy</Text>
         <Text style={styles.dose}>{doseText('dominada', dose)}</Text>
         <Text style={type.caption}>{dose.note}</Text>
+      </Card>
+
+      <Card style={{ gap: space.sm }}>
+        <Text style={type.subtitle}>Agarre de hoy: {GRIP_INFO[grip].label.toLowerCase()}</Text>
+        <Segmented label="Agarre" options={GRIPS} value={grip} onChange={setGrip} />
+        <Text style={type.caption}>{GRIP_INFO[grip].how}</Text>
       </Card>
 
       {step === 'calentar' && (

@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 18;
+const LATEST = 19;
 
 export async function migrate(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -311,6 +311,15 @@ export async function migrate(db: SQLiteDatabase) {
       CREATE INDEX IF NOT EXISTS idx_trial_log_date ON trial_log (date);
     `);
     version = 18;
+  }
+
+  if (version === 18) {
+    // Agarre con el que se hicieron las dominadas del plan.
+    const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(trial_log)');
+    if (!cols.some((c) => c.name === 'grip')) {
+      await db.execAsync('ALTER TABLE trial_log ADD COLUMN grip TEXT');
+    }
+    version = 19;
   }
 
   await db.execAsync(`PRAGMA user_version = ${LATEST}`);

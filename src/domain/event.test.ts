@@ -138,8 +138,24 @@ test('con el plan activo, las sesiones de casa no repiten las dominadas', async 
   assert.ok(!keys(a).some((k) => k.includes('dominadas') || k.includes('negativas')));
   assert.ok(keys(a).includes('A.curl') && keys(a).includes('A.remo'));
   assert.deepEqual(keys(withoutTrialWork(focusSlots(), true, '2026-11-24')), ['B.flexiones', 'A.curl', 'B.inclinadas']);
+  // La sesión enfocada pensada para el plan: tres flexiones y tres con mancuerna, sin dominadas.
+  assert.deepEqual(keys(focusSlots(true)), ['B.flexiones', 'B.inclinadas', 'B.pica', 'A.curl', 'C.martillo', 'C.press']);
+  assert.deepEqual(withoutTrialWork(focusSlots(true), true, '2026-11-24'), focusSlots(true));
   // La sesión de empuje no cambia; sin el plan activo o pasada la prueba, tampoco cambia nada.
   assert.deepEqual(withoutTrialWork(TEMPLATES.B, true, '2026-11-24'), TEMPLATES.B);
   assert.deepEqual(withoutTrialWork(TEMPLATES.A, false, '2026-11-24'), TEMPLATES.A);
   assert.deepEqual(withoutTrialWork(TEMPLATES.A, true, '2027-01-20'), TEMPLATES.A);
+});
+
+test('agarres: el de la prueba se repite más y los otros reparten', async () => {
+  const { gripFor, gripsText, TEST_GRIP } = await import('./event');
+  assert.equal(TEST_GRIP, 'prono');
+  const plan = buildPlan();
+  assert.equal(gripsText(plan[0]), 'lunes prono, martes supino, jueves neutro y viernes prono');
+  assert.deepEqual(['2026-11-23', '2026-11-24', '2026-11-25', '2026-11-26', '2026-11-27'].map((d) => gripFor(d)), ['prono', 'supino', null, 'neutro', 'prono']);
+  // Con tres días, el del medio alterna entre semanas.
+  assert.equal(gripsText(plan[3]), 'lunes prono, miércoles neutro y viernes prono');
+  assert.equal(gripsText(plan[4]), 'lunes prono, miércoles supino y viernes prono');
+  // En la descarga, solo el de la prueba.
+  assert.equal(gripsText(plan[7]), 'lunes prono y miércoles prono');
 });

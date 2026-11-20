@@ -20,7 +20,11 @@ import {
   currentLevel,
   doneThisWeek,
   doseText,
+  GRIP_INFO,
+  TEST_GRIP,
   estimate3RM,
+  gripFor,
+  gripsText,
   isPullupDay,
   prescription,
   pullupDaysText,
@@ -80,7 +84,7 @@ export default function TrialScreen() {
 
   const save = async () => {
     if (!draft) return;
-    await addTrialLog(db, { date: today, ...draft });
+    await addTrialLog(db, { date: today, ...draft, grip: draft.lift === 'dominada' ? (gripFor(today) ?? TEST_GRIP) : null });
     syncReminders(db);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setDraft(null);
@@ -178,6 +182,12 @@ export default function TrialScreen() {
                 </View>
                 <Text style={styles.dose}>{doseText(lift, dose)}</Text>
                 <Text style={type.caption}>{dose.note}</Text>
+                {lift === 'dominada' && (
+                  <Text style={type.caption}>
+                    <Text style={{ fontWeight: '700', color: colors.text }}>Agarres de la semana:</Text> {gripsText(now.week)}. El prono se repite más porque
+                    es el que doy por hecho para la prueba ({GRIP_INFO[TEST_GRIP].how.split('.')[0].toLowerCase()}).
+                  </Text>
+                )}
                 {lift === 'dominada' && !editing && (
                   <Button
                     label={isPullupDay(today) ? 'Empezar la sesión guiada' : 'Hacer una sesión guiada hoy'}
@@ -296,6 +306,7 @@ export default function TrialScreen() {
                     <Text style={type.subtitle}>
                       {l.lift === 'dominada' ? 'Dominadas' : 'Peso muerto'} · {l.sets} × {l.reps}
                       {l.lift === 'dominada' ? (l.weight > 0 ? ` con ${kg(l.weight)} kg` : ' sin lastre') : ` con ${kg(l.weight)} kg`}
+                      {l.grip ? ` · ${GRIP_INFO[l.grip].label.toLowerCase()}` : ''}
                     </Text>
                     <Text style={type.caption}>{formatLong(l.date)}</Text>
                   </View>

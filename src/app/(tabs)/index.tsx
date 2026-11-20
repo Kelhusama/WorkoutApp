@@ -16,7 +16,7 @@ import { monthlyCheck } from '@/domain/physique';
 import { stretchedOn } from '@/db/stretch';
 import { addDays, formatLong, formatShort, today as getToday, weekStart, weekdayIndex } from '@/domain/dates';
 import { getTrialLogs } from '@/db/event';
-import { EVENT_NAME, LIFTS, doneThisWeek, doseText, isPullupDay, withoutTrialWork, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
+import { EVENT_NAME, GRIP_INFO, LIFTS, TEST_GRIP, gripFor, doneThisWeek, doseText, isPullupDay, withoutTrialWork, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
 import { prescriptionShort } from '@/domain/format';
 import { needsDeload } from '@/domain/gymTools';
 import { WALK_LABEL } from '@/domain/march';
@@ -103,7 +103,7 @@ export default function TodayScreen() {
   const slots = useMemo(
     () =>
       kind
-        ? withoutTrialWork(sessionSlots(kind, gear ? { mochila: gear.mochila, mesa: gear.mesa, gimnasio: gear.gimnasio } : null, focus), trialActive && !gear, todayDate)
+        ? withoutTrialWork(sessionSlots(kind, gear ? { mochila: gear.mochila, mesa: gear.mesa, gimnasio: gear.gimnasio } : null, focus, trialActive), trialActive && !gear, todayDate)
         : [],
     [kind, focus, trialActive, todayDate, gear?.mochila, gear?.mesa, gear?.gimnasio], // eslint-disable-line react-hooks/exhaustive-deps
   );
@@ -185,7 +185,7 @@ export default function TodayScreen() {
         <PlanRow
           icon="play-circle"
           title="Lo primero de hoy: dominadas"
-          detail={`${doseText('dominada', trialDose('dominada', trial.week, trialLogs))} · sesión guiada de unos 20 minutos. Hazlas antes que cualquier otra cosa`}
+          detail={`${doseText('dominada', trialDose('dominada', trial.week, trialLogs))} · agarre ${GRIP_INFO[gripFor(todayDate) ?? TEST_GRIP].label.toLowerCase()} · sesión guiada de unos 20 minutos, antes que cualquier otra cosa`}
           onPress={() => router.push('/dominadas')}
         />
       )}

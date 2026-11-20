@@ -70,8 +70,9 @@ export function travelSlots(kind: SessionKind, gear: TravelGear): Slot[] {
 
 /** Ejercicios de la sesión: los de casa, o los adaptados si ese día hay viaje. */
 /** Ejercicios de una sesión de casa: adaptados al viaje, los de la sesión enfocada o los normales. */
-export function sessionSlots(kind: SessionKind, gear: TravelGear | null | undefined, focus = false): Slot[] {
-  return gear ? travelSlots(kind, gear) : focus ? focusSlots() : TEMPLATES[kind];
+/** `pullupPlan`: el plan de dominadas de la prueba está activo, así que la sesión enfocada no las repite. */
+export function sessionSlots(kind: SessionKind, gear: TravelGear | null | undefined, focus = false, pullupPlan = false): Slot[] {
+  return gear ? travelSlots(kind, gear) : focus ? focusSlots(pullupPlan) : TEMPLATES[kind];
 }
 
 export function gearSummary(g: TravelGear): string {

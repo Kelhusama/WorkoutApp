@@ -120,7 +120,13 @@ export function hasNextStage(slotKey: string, stage: number): boolean {
 /** Sesión de casa enfocada: solo lo que persigue los objetivos. Comparte progresión con las sesiones normales. */
 export const FOCUS_KEYS: readonly string[] = ['A.dominadas', 'B.flexiones', 'A.curl', 'B.inclinadas'];
 
-export function focusSlots(): Slot[] {
+/**
+ * Con el plan de dominadas activo, la sesión enfocada deja las dominadas a ese plan y se dedica
+ * a lo demás: tres tipos de flexión y tres ejercicios con la mancuerna.
+ */
+export const FOCUS_KEYS_WITH_PULLUP_PLAN: readonly string[] = ['B.flexiones', 'B.inclinadas', 'B.pica', 'A.curl', 'C.martillo', 'C.press'];
+
+export function focusSlots(pullupPlan = false): Slot[] {
   const all = Object.values(TEMPLATES).flat();
-  return FOCUS_KEYS.map((k) => all.find((s) => s.key === k)!);
+  return (pullupPlan ? FOCUS_KEYS_WITH_PULLUP_PLAN : FOCUS_KEYS).map((k) => all.find((s) => s.key === k)!);
 }
