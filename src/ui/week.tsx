@@ -11,7 +11,7 @@ import { colors, radius, space, type, font } from './theme';
 
 export const STATUS_STYLE: Record<DayStatus, { label: string; color: string; bg: string }> = {
   done: { label: 'Hecho', color: colors.success, bg: colors.successSoft },
-  missed: { label: 'Fallado', color: colors.danger, bg: colors.dangerSoft },
+  missed: { label: 'Sin hacer', color: colors.warn, bg: colors.cardHigh },
   pending: { label: 'Por hacer', color: colors.accent, bg: colors.accentSoft },
   future: { label: 'Pendiente', color: colors.muted, bg: colors.cardHigh },
   rest: { label: 'Descanso', color: colors.faint, bg: colors.cardHigh },
@@ -53,7 +53,7 @@ export function WeekStrip({ days, onPressDay }: { days: PlannedDay[]; onPressDay
                   <Polygon points="38,0 38,38 0,38" fill={colors.text} />
                 </Svg>
               ) : d.status === 'missed' ? (
-                <Ionicons name="close" size={16} color={colors.danger} />
+                <Ionicons name="remove" size={16} color={colors.warn} />
               ) : d.status === 'excused' ? (
                 <Ionicons name="airplane" size={15} color={colors.info} />
               ) : (
@@ -103,8 +103,13 @@ export function DayRow({ day, onPress, onChange }: { day: PlannedDay; onPress?: 
           {day.trip ? ' De viaje · ' : ''}
           {detail}
         </Text>
+        {/* El estado va debajo: al lado no cabe en un móvil estrecho y partía el título. */}
+        {day.type !== 'rest' && (
+          <View style={{ alignSelf: 'flex-start', marginTop: 6 }}>
+            <Pill label={s.label} color={s.color} bg={s.bg} />
+          </View>
+        )}
       </View>
-      {day.type !== 'rest' && <Pill label={s.label} color={s.color} bg={s.bg} />}
       {onChange && (
         <Pressable accessibilityRole="button" accessibilityLabel={`Cambiar lo que se hace el ${formatLong(day.date).toLowerCase()}`} onPress={onChange} style={styles.swap}>
           <Ionicons name="swap-horizontal" size={18} color={colors.muted} />

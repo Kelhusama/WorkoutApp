@@ -63,7 +63,7 @@ export function MonthGrid({
                 {d.status === 'done' ? (
                   <Ionicons name="checkmark" size={14} color={colors.success} />
                 ) : d.status === 'missed' ? (
-                  <Ionicons name="close" size={14} color={colors.danger} />
+                  <Ionicons name="remove" size={14} color={colors.warn} />
                 ) : d.status === 'excused' ? (
                   <Ionicons name="airplane" size={13} color={colors.info} />
                 ) : (
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
 
 export const MONTH_LEGEND = [
   { label: 'Hecho', color: colors.success },
-  { label: 'Fallado', color: colors.danger },
+  { label: 'Sin hacer', color: colors.warn },
   { label: 'Pendiente', color: colors.muted },
   { label: 'Viaje', color: colors.info },
 ];

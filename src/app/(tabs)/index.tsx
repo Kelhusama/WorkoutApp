@@ -149,11 +149,10 @@ export default function TodayScreen() {
 
   const skipToday = () => {
     if (!day || day.type === 'rest' || day.type === 'movilidad') return;
-    Alert.alert('¿Hoy no entrenas?', 'La sesión se marcará como fallada. Puedes deshacerlo después.', [
+    Alert.alert('¿Hoy no entrenas?', 'Queda apuntada como sin hacer. Un día suelto no cambia el plan: mañana seguimos. Puedes deshacerlo después.', [
       { text: 'Cancelar', style: 'cancel' },
       {
-        text: 'Marcar como fallada',
-        style: 'destructive',
+        text: 'Hoy no entreno',
         onPress: async () => {
           await markMissed(db, todayDate, day.type as SessionKind | 'gym');
           setShowMore(false);
@@ -283,7 +282,12 @@ export default function TodayScreen() {
               />
             </>
           )}
-          {day.status === 'missed' && <Button label="Deshacer el fallo" variant="secondary" icon="arrow-undo" onPress={undoMissed} />}
+          {day.status === 'missed' && (
+            <>
+              <Text style={type.body}>Hoy no ha podido ser. Un día suelto no cambia el plan: lo que cuenta es volver mañana.</Text>
+              <Button label="Al final sí voy a entrenar" variant="secondary" icon="arrow-undo" onPress={undoMissed} />
+            </>
+          )}
 
           {kind && prescriptions && day.status !== 'done' && (
             <>

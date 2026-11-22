@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { DEFAULT_REMINDERS, parseTime, planReminders, shiftTime } from './reminders';
+import { DEFAULT_REMINDERS, parseTime, planLogReminders, planReminders, shiftTime } from './reminders';
 
 // Miércoles 11/11/2026 con gimnasio el jueves: X = A (tirón), J = gym, V = C.
 const days = [
@@ -52,4 +52,19 @@ test('horas: lectura y desplazamiento', () => {
   assert.equal(parseTime('25:00'), null);
   assert.equal(shiftTime('09:00', 30), '09:30');
   assert.equal(shiftTime('00:00', -30), '23:30');
+});
+
+test('aviso de la noche: solo días de gimnasio sin apuntar y que no hayan pasado', () => {
+  const week = [
+    { date: '2026-11-11', type: 'gym' as const, status: 'pending' as const },
+    { date: '2026-11-12', type: 'gym' as const, status: 'done' as const },
+    { date: '2026-11-13', type: 'A' as const, status: 'future' as const },
+    { date: '2026-11-14', type: 'gym' as const, status: 'future' as const },
+  ];
+  const r = planLogReminders(week, DEFAULT_REMINDERS, new Date(2026, 10, 11, 8, 0));
+  assert.deepEqual(r.map((x) => x.id), ['rem-log-2026-11-11', 'rem-log-2026-11-14']);
+  assert.equal(r[0].at.getHours(), 21);
+  // Pasadas las nueve de la noche, el de hoy ya no se programa.
+  assert.equal(planLogReminders(week, DEFAULT_REMINDERS, new Date(2026, 10, 11, 21, 30)).length, 1);
+  assert.equal(planLogReminders(week, { ...DEFAULT_REMINDERS, enabled: false }, new Date(2026, 10, 11, 8)).length, 0);
 });

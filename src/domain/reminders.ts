@@ -18,6 +18,32 @@ export interface Reminder {
   body: string;
 }
 
+/** Hora del aviso de la noche para apuntar el gimnasio. */
+export const LOG_TIME = '21:00';
+
+/**
+ * Un aviso por la noche los días de gimnasio que siguen sin apuntar: lo que no se registra,
+ * el entrenador no lo puede tener en cuenta.
+ */
+export function planLogReminders(days: { date: ISODate; type: DayType; status: DayStatus }[], settings: ReminderSettings, now: Date): Reminder[] {
+  if (!settings.enabled) return [];
+  const t = parseTime(LOG_TIME)!;
+  const out: Reminder[] = [];
+  for (const d of days) {
+    if (d.type !== 'gym' || (d.status !== 'pending' && d.status !== 'future')) continue;
+    const at = fromISODate(d.date);
+    at.setHours(t.h, t.m, 0, 0);
+    if (at <= now) continue;
+    out.push({
+      id: `${REMINDER_PREFIX}log-${d.date}`,
+      at,
+      title: '¿Has ido hoy al gimnasio?',
+      body: 'Apúntalo en un minuto: así el entrenador cuenta con ello. Y si no has ido, márcalo y mañana seguimos.',
+    });
+  }
+  return out;
+}
+
 export function parseTime(t: string): { h: number; m: number } | null {
   const match = /^(\d{1,2}):(\d{2})$/.exec(t.trim());
   if (!match) return null;
@@ -33,9 +59,9 @@ export function shiftTime(t: string, minutes: number): string {
 }
 
 const MESSAGES = [
-  (title: string) => `Hoy toca ${title}: unos 15 minutos en casa.`,
-  (title: string) => `¿Sacas ahora los 15 minutos de ${title}?`,
-  (title: string) => `Último aviso: ${title} sigue pendiente. Si hoy no puedes, márcalo en la app.`,
+  (title: string) => `Hoy toca ${title}: 15 minutos en casa que te acercan al 16 de enero. ¡A por ellos!`,
+  (title: string) => `Tú puedes: 15 minutos de ${title} y lo tienes hecho.`,
+  (title: string) => `Último aviso: aún estás a tiempo de ${title}. Y si hoy no puede ser, márcalo y mañana seguimos.`,
 ];
 
 /**

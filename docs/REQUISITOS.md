@@ -43,7 +43,7 @@ Los hitos se muestran como progreso y celebran al alcanzarse.
 
 ### Reglas
 - **R1** — Nunca una sesión de tirón fuerte (A) el día siguiente al gimnasio.
-- **R2** — Si una sesión no se hace, se marca como **fallada** y el plan **no se reorganiza**.
+- **R2** — Si una sesión no se hace, queda como **sin hacer** (antes «fallada»; se suavizó el texto) y el plan **no se reorganiza**.
 - **R3** ✅ — Los días marcados como **viaje** usan alternativas según el material y no cuentan como fallo si no se entrena.
 - **R4** — Si pasan más de 10 días sin registrar press de banca, se recuerda hacerlo al final del gimnasio (3×5).
 

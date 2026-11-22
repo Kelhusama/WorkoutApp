@@ -7,7 +7,7 @@ import { getTrialLogs } from '@/db/event';
 import { getReminderSettings, getTrialActive } from '@/db/settings';
 import { addDays, today } from '@/domain/dates';
 import { isPullupDay, planTrialReminders } from '@/domain/event';
-import { REMINDER_PREFIX, planReminders } from '@/domain/reminders';
+import { REMINDER_PREFIX, planLogReminders, planReminders } from '@/domain/reminders';
 
 const CHANNEL = 'recordatorios';
 /** Días por delante que se programan. Se vuelve a calcular cada vez que se abre la app. */
@@ -64,6 +64,8 @@ async function doSync(db: SQLiteDatabase) {
   const reminders = [
     // Con el plan activo, los días de dominadas solo avisan de las dominadas: van primero.
     ...(settings.enabled ? planReminders(trialActive ? days.filter((d) => !isPullupDay(d.date)) : days, settings, now) : []),
+    // Por la noche, si un día de gimnasio sigue sin apuntar.
+    ...planLogReminders(days, settings, now),
     ...(trialActive ? planTrialReminders(await getTrialLogs(db), settings.times, now, from, HORIZON_DAYS) : []),
   ];
   for (const r of reminders) {

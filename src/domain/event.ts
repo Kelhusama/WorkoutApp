@@ -391,9 +391,9 @@ export interface TrialReminder {
 }
 
 const NUDGES = [
-  'Unos 20 minutos, con calentamiento y descansos guiados.',
-  'Siguen pendientes. Cuanto antes las hagas, más frescas salen.',
-  'Último aviso de hoy. Si no puedes, mañana no las dobles: sigue con el plan.',
+  'Unos 20 minutos, con calentamiento y descansos guiados. Cada sesión suma para el 16 de enero.',
+  'Te están esperando. Cuanto antes las hagas, más frescas salen. ¡Tú puedes!',
+  'Último aviso de hoy: aún estás a tiempo. Si no puede ser, mañana no las dobles: sigue con el plan.',
 ];
 
 /**
