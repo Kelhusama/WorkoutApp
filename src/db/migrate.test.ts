@@ -152,3 +152,18 @@ test('la copia de seguridad funciona también sobre una base antigua a la que le
   assert.equal(backup.tables.session_log.length, 1);
   assert.equal(backup.tables.trial_log.length, 1);
 });
+
+test('v22: un viaje guardado con «mochila» pasa a «mancuerna» sin perder nada', async () => {
+  const db = createTestDb();
+  await migrate(db);
+  // Se simula una base de la versión anterior: sin la columna nueva y con un viaje apuntado a la antigua.
+  await db.execAsync(`
+    ALTER TABLE trip DROP COLUMN mancuerna;
+    INSERT INTO trip (from_date, to_date, mochila, mesa, gimnasio) VALUES ('2026-12-01', '2026-12-05', 1, 0, 0);
+    INSERT INTO trip (from_date, to_date, mochila, mesa, gimnasio) VALUES ('2026-12-10', '2026-12-12', 0, 1, 1);
+    PRAGMA user_version = 21;
+  `);
+  await migrate(db);
+  const rows = await db.getAllAsync<{ mancuerna: number; mochila: number; gimnasio: number }>('SELECT mancuerna, mochila, gimnasio FROM trip ORDER BY from_date');
+  assert.deepEqual(rows.map((r) => [r.mancuerna, r.mochila, r.gimnasio]), [[1, 1, 0], [0, 0, 1]]);
+});

@@ -9,7 +9,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getDoneSessions, getPrescriptions, getSessionLog, getSlotStages, getSessionReserves, getSessionSets, getTripOn, saveHomeSession, type SlotChange } from '@/db/repo';
 import { getSlotVariants } from '@/db/coach';
 import { getTrialActive, getWeekLoad } from '@/db/settings';
-import { isPullupDay, withoutTrialWork } from '@/domain/event';
+import { isPullupDay, pullFatigue, withoutTrialWork } from '@/domain/event';
+import { getTrialLogs } from '@/db/event';
 import { VARIANT_INFO, applyVariant, type Variant } from '@/domain/bandit';
 import { lightSets, readiness, type Readiness, type Reserve } from '@/domain/coach';
 import { getBests } from '@/db/stats';
@@ -96,6 +97,12 @@ export default function SessionScreen() {
         : trialOn && isPullupDay(date) && kind !== 'B'
           ? { light: true, reason: 'Hoy tocan dominadas del plan: hazlas primero y deja esta sesión en corta, que también tira de brazos.' }
           : readiness(await getDoneSessions(db, addDays(date, -30)), date, await getWeekLoad(db, weekStart(date)));
+      // Las dominadas del plan también cansan: si los brazos van cargados, las sesiones que tiran (no la de empuje) salen cortas.
+      const tired = !trip && kind !== 'B' && !ready.light ? pullFatigue(await getTrialLogs(db), date) : null;
+      if (tired) {
+        ready.light = true;
+        ready.reason = tired;
+      }
       // Al editar se respeta cómo se guardó; si no, el entrenador propone según la carga reciente.
       const startLight = log?.status === 'done' ? log.light === 1 : ready.light;
       const initial: Record<string, number[]> = {};

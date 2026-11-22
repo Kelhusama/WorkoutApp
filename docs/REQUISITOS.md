@@ -332,6 +332,13 @@ El objetivo de 80 kg en press de banca queda **para más adelante**: todavía no
 - **Tiempo estimado**: 3 s por repetición, el descanso recomendado tras cada serie y 20 s por ejercicio para colocarse.
 - **Dominadas**: los agarres los fija el plan, sin selector. La primera mitad de las series en prono (el de la prueba) y el resto en el agarre del día; los días de prono, todas en prono.
 
+## Revisión del 22/11/2026
+
+- **Fatiga de tirón**: las dominadas del plan cuentan para aflojar. Si las dos últimas sesiones acabaron al límite, o hay cinco días de dominadas en una semana, las sesiones de casa que tiran de brazos (Tirón y Mixta) salen en corta y la sesión de dominadas lo avisa. La de Empuje no se toca.
+- **Quitado**: la red neuronal (sin meses de datos no aportaba nada) y los ocho ejercicios de viaje con toalla, mesa y mochila.
+- **Base de datos v22**: el viaje guarda «mancuerna» en su propia columna. Las antiguas (mochila, mesa) se conservan sin usar: migrar nunca quita nada.
+- **Pendiente de decidir**: apagar el experimento de variantes mientras dure el plan de dominadas; medir el tiempo real de cada sesión para corregir la estimación.
+
 ## Para seguir (por orden)
 0. **Entrenador adaptativo**: volumen semanal por músculo y progresión por peso si se compran mancuernas ajustables (de momento, no; y nunca banco). Hecho también el paso automático a versiones más duras. Hechas las capas 1 a 4, el aviso de test, la previsión con margen y el experimento de la red neuronal: reserva, nivel real, plan que cambia solo, sesión ligera y extra, mesetas, carga de banca y bloques de prueba entre tests.
 1. **Usabilidad que queda**: tipografía propia.

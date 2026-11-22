@@ -118,8 +118,7 @@ interface TripRow {
   id: number;
   from_date: ISODate;
   to_date: ISODate;
-  mochila: number;
-  mesa: number;
+  mancuerna: number;
   gimnasio: number;
 }
 
@@ -127,14 +126,13 @@ const toTrip = (r: TripRow): Trip => ({
   id: r.id,
   from: r.from_date,
   to: r.to_date,
-  // La columna «mochila» guarda ahora si hay una mancuerna; «mesa» se conserva pero ya no se usa.
-  gear: { mancuerna: !!r.mochila, gimnasio: !!r.gimnasio },
+  gear: { mancuerna: !!r.mancuerna, gimnasio: !!r.gimnasio },
 });
 
 /** Viajes que tocan el rango de fechas (o todos si no se indica), por orden. */
 export async function getTrips(db: SQLiteDatabase, from: ISODate = '0000-01-01', to: ISODate = '9999-12-31'): Promise<Trip[]> {
   const rows = await db.getAllAsync<TripRow>(
-    'SELECT id, from_date, to_date, mochila, mesa, gimnasio FROM trip WHERE to_date >= ? AND from_date <= ? ORDER BY from_date',
+    'SELECT id, from_date, to_date, mancuerna, gimnasio FROM trip WHERE to_date >= ? AND from_date <= ? ORDER BY from_date',
     from,
     to,
   );
@@ -155,11 +153,10 @@ export async function saveTrip(
   await db.withExclusiveTransactionAsync(async (tx) => {
     await tx.runAsync('DELETE FROM trip WHERE (to_date >= ? AND from_date <= ?) OR id = ?', from, to, trip.id ?? -1);
     const r = await tx.runAsync(
-      'INSERT INTO trip (from_date, to_date, mochila, mesa, gimnasio) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO trip (from_date, to_date, mancuerna, gimnasio) VALUES (?, ?, ?, ?)',
       from,
       to,
       trip.gear.mancuerna ? 1 : 0,
-      0,
       trip.gear.gimnasio ? 1 : 0,
     );
     id = r.lastInsertRowId;

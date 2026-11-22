@@ -31,7 +31,7 @@ test('récords: solo cuando se supera una marca anterior', () => {
   const r = detectRecords(prev, [
     { exerciseId: 'flexion_estricta', values: [7, 6, 6, 5] }, // serie y total
     { exerciseId: 'curl_martillo', values: [12, 12, 12] }, // iguala: no es récord
-    { exerciseId: 'remo_toalla', values: [10, 10] }, // primera vez: no cuenta
+    { exerciseId: 'remo_mancuerna', values: [10, 10] }, // primera vez: no cuenta
   ]);
   assert.deepEqual(r, [
     { exerciseId: 'flexion_estricta', kind: 'serie', value: 7, previous: 6 },
@@ -40,12 +40,12 @@ test('récords: solo cuando se supera una marca anterior', () => {
 });
 
 test('récords: un ejercicio repetido en la sesión suma sus series', () => {
-  const prev = new Map([['remo_toalla', { bestSet: 12, bestTotal: 40 }]]);
+  const prev = new Map([['remo_mancuerna', { bestSet: 12, bestTotal: 40 }]]);
   const r = detectRecords(prev, [
-    { exerciseId: 'remo_toalla', values: [12, 12] },
-    { exerciseId: 'remo_toalla', values: [10, 10] },
+    { exerciseId: 'remo_mancuerna', values: [12, 12] },
+    { exerciseId: 'remo_mancuerna', values: [10, 10] },
   ]);
-  assert.deepEqual(r, [{ exerciseId: 'remo_toalla', kind: 'total', value: 44, previous: 40 }]);
+  assert.deepEqual(r, [{ exerciseId: 'remo_mancuerna', kind: 'total', value: 44, previous: 40 }]);
 });
 
 const days = (s: string) =>

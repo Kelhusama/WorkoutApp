@@ -461,6 +461,31 @@ export const ELBOW_CARE: readonly string[] = [
   'Si el codo molesta por dentro, mañana descansa de dominadas.',
 ];
 
+/** Sesiones de dominadas en 7 días a partir de las cuales se considera que hay más carga de la planificada. */
+export const PULL_OVERLOAD_SESSIONS = 5;
+
+/**
+ * ¿Van los brazos cargados de tanta dominada? Mira las sesiones de dominadas apuntadas antes de hoy:
+ * - las dos últimas (dentro de la semana) acabaron al límite, sin nada en reserva; o
+ * - hay más sesiones en 7 días de las que pide el plan.
+ * Devuelve el motivo, o null si no hay nada que avisar. No mira la sensación general: solo el tirón,
+ * que es lo que cargan los codos.
+ */
+export function pullFatigue(logs: readonly TrialLog[], today: ISODate): string | null {
+  const recent = logs
+    .filter((l) => l.lift === 'dominada' && l.date < today && l.date >= addDays(today, -7))
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
+  const lastTwo = recent.slice(0, 2);
+  if (lastTwo.length === 2 && lastTwo.every((l) => l.reserve === 0)) {
+    return 'Tus dos últimas sesiones de dominadas acabaron al límite: hoy afloja en todo lo que tire de brazos.';
+  }
+  const days = new Set(recent.map((l) => l.date)).size;
+  if (days >= PULL_OVERLOAD_SESSIONS) {
+    return `Llevas ${days} días de dominadas en una semana, más de lo que pide el plan: hoy afloja en todo lo que tire de brazos.`;
+  }
+  return null;
+}
+
 /** De viaje solo hay barra si el hotel tiene gimnasio. Sin barra, las dominadas del plan se paran ese día. */
 export function pullupsPausedBy(gear: { gimnasio: boolean } | null | undefined): boolean {
   return gear != null && !gear.gimnasio;

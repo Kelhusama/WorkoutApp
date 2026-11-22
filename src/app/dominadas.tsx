@@ -22,6 +22,7 @@ import {
   gripPlan,
   gripPlanText,
   hangDose,
+  pullFatigue,
   isElbowCareDay,
   prescription,
   todayPlan,
@@ -68,10 +69,16 @@ export default function PullupSession() {
   useEffect(() => {
     (async () => {
       const week = todayPlan(today).week;
-      const d = week ? prescription('dominada', week, await getTrialLogs(db)) : null;
+      const logs = await getTrialLogs(db);
+      const d = week ? prescription('dominada', week, logs) : null;
       setDose(d);
       if (d) setReps(d.reps);
-      setWarning(pullWarning(await getGymWork(db, addDays(today, -2)), today));
+      // Aviso si ayer u hoy hubo tirón en el gimnasio, o si las últimas sesiones de dominadas fueron al límite.
+      const tired = pullFatigue(logs, today);
+      setWarning(
+        pullWarning(await getGymWork(db, addDays(today, -2)), today) ??
+          (tired ? tired.replace('hoy afloja en todo lo que tire de brazos', 'hoy para una serie antes si la técnica se rompe, y no añadas lastre') : null),
+      );
       const h = hangDose(await getHangLogs(db), today);
       setHang(h);
       if (!h.max) setHangSeconds(h.seconds);

@@ -7,7 +7,6 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { getExerciseHistory, getExerciseReserves } from '@/db/stats';
 import { capacity, fitStrength, projectWindow, trendText, type Observation, type Reserve } from '@/domain/coach';
 import { formatLong, formatShort, today, type ISODate } from '@/domain/dates';
-import { EXAM_MIN, exam } from '@/domain/neural';
 import { EXERCISES } from '@/domain/exercises';
 import { amountText } from '@/domain/format';
 import { exerciseStats, seriesOf, type SessionSets } from '@/domain/stats';
@@ -44,8 +43,6 @@ export default function ExerciseScreen() {
     [history, reserves, timed],
   );
   const strength = fitStrength(observations);
-  // Experimento: la red neuronal, examinada contra el filtro con tus datos pasados.
-  const test = useMemo(() => exam(observations), [observations]);
   const round = (v: number) => String(Math.round(v * 10) / 10).replace('.', ',');
   const goalValue = stats && strength && strength.trend === 'mejorando' ? Math.ceil((strength.level * 1.25) / (timed ? 5 : 1)) * (timed ? 5 : 1) : null;
   const eta = strength && goalValue ? projectWindow(strength, goalValue, today()) : null;
@@ -105,21 +102,6 @@ export default function ExerciseScreen() {
                   </Text>
                 )}
                 {strength.n >= 2 && <LineChart points={strength.series} height={150} format={round} />}
-                <View style={styles.exam}>
-                  <Text style={type.overline}>Experimento: red neuronal</Text>
-                  {test ? (
-                    <Text style={type.caption}>
-                      Al predecir tus últimas {test.n} sesiones, la red falla {round(test.neural)} de media y el filtro {round(test.kalman)} (decir «lo
-                      mismo que la última vez» falla {round(test.last)}). {test.winner === 'neural' ? 'Aquí gana la red' : 'Aquí manda el filtro'}: para la
-                      próxima sesión prevé {round(test.next)}
-                      {timed ? ' s' : ''}.
-                    </Text>
-                  ) : (
-                    <Text style={type.caption}>
-                      Con {EXAM_MIN} sesiones de este ejercicio se examina una red neuronal contra el filtro y se usa la que más acierte. Llevas {observations.length}.
-                    </Text>
-                  )}
-                </View>
                 {reserves.size === 0 && (
                   <Text style={type.caption}>
                     Apunta en cada sesión cuántas te quedaban en la última serie y esta estimación será más precisa.
@@ -189,6 +171,5 @@ const styles = StyleSheet.create({
   tileValue: { fontSize: 20, ...font.display, color: colors.text, fontVariant: ['tabular-nums'], marginTop: 4 },
   histRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.md },
   divider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  exam: { gap: 4, paddingTop: space.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   bullet: { flexDirection: 'row', gap: space.sm },
 });

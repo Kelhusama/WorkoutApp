@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 21;
+const LATEST = 22;
 
 export interface MigrateOptions {
   /**
@@ -342,6 +342,13 @@ export async function migrate(db: SQLiteDatabase, options: MigrateOptions = {}) 
   await step(20, async () => {
     // Qué se trabajó en el gimnasio (tirón, empuje, pierna), para medir la carga real.
     await addColumn(db, 'session_log', 'gym_work', 'TEXT');
+  });
+
+  await step(21, async () => {
+    // De viaje ya solo se pregunta si hay una mancuerna. Se guardaba en «mochila»: pasa a su propia columna.
+    // Las columnas antiguas (mochila, mesa) se quedan, sin usar: migrar nunca quita nada.
+    await addColumn(db, 'trip', 'mancuerna', 'INTEGER NOT NULL DEFAULT 0');
+    await db.execAsync('UPDATE trip SET mancuerna = mochila WHERE mancuerna = 0 AND mochila = 1');
   });
 
 }

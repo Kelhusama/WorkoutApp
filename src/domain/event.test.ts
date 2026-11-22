@@ -262,3 +262,21 @@ test('los agarres de la sesión los fija el plan: primero prono, luego el del d�
   assert.equal(gripPlanText(gripPlan(1, '2026-11-26')), '1 serie en prono');
   assert.equal(gripPlanText(gripPlan(4, '2026-11-26')), '2 series en prono y 2 en neutro');
 });
+
+test('fatiga de tirón: dos sesiones al límite o más días de los planificados', async () => {
+  const { pullFatigue } = await import('./event');
+  const today = '2026-11-27';
+  // Una semana normal de plan (cuatro días, con margen) no avisa.
+  const normal = ['2026-11-23', '2026-11-24', '2026-11-26'].map((d) => log(d, 'dominada', 0, 1, 1));
+  assert.equal(pullFatigue(normal, today), null);
+  // Las dos últimas al límite: aviso. Con una sola, no.
+  assert.match(pullFatigue([log('2026-11-24', 'dominada', 0, 1, 0), log('2026-11-26', 'dominada', 0, 1, 0)], today)!, /al límite/);
+  assert.equal(pullFatigue([log('2026-11-24', 'dominada', 0, 1, 1), log('2026-11-26', 'dominada', 0, 1, 0)], today), null);
+  // Si pasó más de una semana, ya no cuentan.
+  assert.equal(pullFatigue([log('2026-11-10', 'dominada', 0, 1, 0), log('2026-11-12', 'dominada', 0, 1, 0)], today), null);
+  // Cinco días de dominadas en una semana: más de lo que pide el plan.
+  const many = ['2026-11-21', '2026-11-22', '2026-11-23', '2026-11-24', '2026-11-26'].map((d) => log(d, 'dominada', 0, 1, 2));
+  assert.match(pullFatigue(many, today)!, /5 días/);
+  // El peso muerto no cuenta, ni lo de hoy.
+  assert.equal(pullFatigue([log('2026-11-25', 'peso_muerto', 80, 5, 0), log('2026-11-26', 'peso_muerto', 80, 5, 0), log(today, 'dominada', 0, 1, 0)], today), null);
+});

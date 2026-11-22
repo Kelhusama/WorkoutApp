@@ -127,51 +127,6 @@ export const ILLUSTRATIONS: Record<string, Illustration> = {
   },
 
   // ---------- Alternativas de viaje ----------
-  remo_invertido: {
-    start: { hip: [110, 185], torso: 186, hand: [66, 128], elbowBend: 1, foot: [172, 196], kneeBend: -1 },
-    end: { hip: [112, 166], torso: 207, hand: [66, 128], elbowBend: 1, foot: [172, 196], kneeBend: -1 },
-    props: [FLOOR, { kind: 'bench', x: 34, y: 120, w: 150, h: 80 }],
-    focus: ['back', 'upperArm'],
-    bothArms: true,
-    caption: 'Bajo una mesa robusta, cuerpo recto y talones en el suelo. Lleva el pecho al borde.',
-  },
-  remo_toalla: {
-    start: { hip: [112, 140], torso: -112, hand: [146, 96], elbowBend: 1, foot: [150, 196], kneeBend: -1 },
-    end: { hip: [124, 134], torso: -100, hand: [150, 97], elbowBend: 1, foot: [150, 196], kneeBend: -1 },
-    props: [FLOOR, { kind: 'door', x: 186, knobY: 100 }],
-    focus: ['back', 'upperArm'],
-    bothArms: true,
-    towelTo: [183, 100],
-    caption: 'Toalla en el pomo de una puerta cerrada. Inclínate atrás y tira del pecho hacia la puerta.',
-  },
-  remo_mochila: { ...row, held: 'backpack', caption: 'Como el remo con mancuerna, pero con la mochila cargada.' },
-  curl_mochila: { ...curl, held: 'backpack', caption: 'Coge la mochila por el asa y haz el curl sin balancearte.' },
-  press_mochila: { ...press, held: 'backpack', caption: 'Empuja la mochila desde el hombro hasta estirar el brazo.' },
-  curl_isometrico_toalla: {
-    start: { ...standing, hand: [124, 106], elbowBend: 1 },
-    end: { ...standing, hand: [124, 102], elbowBend: 1 },
-    props: [FLOOR],
-    focus: ['upperArm', 'forearm'],
-    towelTo: 'foot',
-    caption: 'Pisa la toalla y tira hacia arriba con el codo a 90°. Aprieta fuerte y aguanta.',
-  },
-  agarre_toalla: {
-    start: { ...standing, hand: [126, 96], elbowBend: 1, farHand: [128, 112] },
-    end: { ...standing, hand: [129, 99], elbowBend: 1, farHand: [125, 109] },
-    props: [FLOOR],
-    focus: ['forearm'],
-    bothArms: true,
-    towelTo: 'farHand',
-    caption: 'Retuerce una toalla con todas tus fuerzas, como si la escurrieras, y aguanta.',
-  },
-  elevaciones_yt: {
-    start: { hip: [84, 189], torso: -3, hand: [187, 192], elbowBend: -1, foot: [11, 193], kneeBend: 1 },
-    end: { hip: [84, 189], torso: -9, hand: [178, 150], elbowBend: -1, foot: [11, 193], kneeBend: 1 },
-    props: [FLOOR],
-    focus: ['shoulder', 'back'],
-    bothArms: true,
-    caption: 'Boca abajo, levanta los brazos estirados formando una Y. Pausa arriba.',
-  },
 
   // ---------- Tren inferior ----------
   elevacion_tibial: {
