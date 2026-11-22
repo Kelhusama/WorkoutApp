@@ -216,6 +216,14 @@ export default function TodayScreen() {
       )}
 
       {/* La prueba manda: sus dominadas van antes que la sesión del día */}
+      {trial.week && !isPullupDay(todayDate) && !pullupsPausedBy(gear) && !trialLogs.some((l) => l.lift === 'dominada' && l.date === todayDate) && (
+        <PlanRow
+          icon="trophy-outline"
+          title="¿Dominadas hoy?"
+          detail="Hoy el plan no las pide, pero puedes hacer la sesión guiada si te apetece."
+          onPress={() => router.push('/dominadas')}
+        />
+      )}
       {trial.week && isPullupDay(todayDate) && pullupsPausedBy(gear) && (
         <Text style={type.caption}>
           De viaje y sin barra: hoy no hay dominadas del plan. No pasa nada por unos días: al volver sigues donde lo dejaste.

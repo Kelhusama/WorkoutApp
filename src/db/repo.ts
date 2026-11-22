@@ -96,15 +96,29 @@ export async function getOverrides(db: SQLiteDatabase, from: ISODate, to: ISODat
   return new Map(rows.map((r) => [r.date, r.role]));
 }
 
-/** Cambia lo que se hace un día concreto; `null` lo devuelve a la semana tipo. */
-export async function setOverride(db: SQLiteDatabase, date: ISODate, role: Role | null) {
+/** Sesión de casa elegida a mano para un día (A, B o C), si la hay. */
+export async function getOverrideKinds(db: SQLiteDatabase, from: ISODate, to: ISODate): Promise<Map<ISODate, SessionKind>> {
+  const rows = await db.getAllAsync<{ date: ISODate; kind: string | null }>(
+    "SELECT date, kind FROM day_override WHERE role = 'casa' AND kind IN ('A','B','C') AND date BETWEEN ? AND ?",
+    from,
+    to,
+  );
+  return new Map(rows.map((r) => [r.date, r.kind as SessionKind]));
+}
+
+/**
+ * Cambia lo que se hace un día concreto; `null` lo devuelve a la semana tipo.
+ * `kind`: qué sesión de casa se quiere ese día; sin ella, la reparte la app.
+ */
+export async function setOverride(db: SQLiteDatabase, date: ISODate, role: Role | null, kind: SessionKind | null = null) {
   if (role === null) {
     await db.runAsync('DELETE FROM day_override WHERE date = ?', date);
   } else {
     await db.runAsync(
-      'INSERT INTO day_override (date, role) VALUES (?, ?) ON CONFLICT(date) DO UPDATE SET role = excluded.role',
+      'INSERT INTO day_override (date, role, kind) VALUES (?, ?, ?) ON CONFLICT(date) DO UPDATE SET role = excluded.role, kind = excluded.kind',
       date,
       role,
+      role === 'casa' ? kind : null,
     );
   }
 }
@@ -193,6 +207,7 @@ export async function loadDays(db: SQLiteDatabase, from: ISODate, to: ISODate) {
   const firstMonday = weekStart(from);
   const lastSunday = addDays(weekStart(to), 6);
   const overrides = await getOverrides(db, addDays(firstMonday, -1), lastSunday);
+  const chosenKinds = await getOverrideKinds(db, firstMonday, lastSunday);
   const logs = await getLogsBetween(db, firstMonday, lastSunday);
   const trips = await getTrips(db, addDays(firstMonday, -1), lastSunday);
   const allWorkouts = await getWorkouts(db, firstMonday, lastSunday);
@@ -229,7 +244,8 @@ export async function loadDays(db: SQLiteDatabase, from: ISODate, to: ISODate) {
     const dates = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
     const roles = dates.map(roleOn);
     const pinned = dates.map((d, i) =>
-      roles[i] === 'casa' ? ((logs.find((l) => l.date === d && HOME_KINDS.includes(l.kind))?.kind as SessionKind) ?? null) : null,
+      // Manda lo ya registrado; si no hay nada, la sesión que se haya elegido a mano para ese día.
+      roles[i] === 'casa' ? ((logs.find((l) => l.date === d && HOME_KINDS.includes(l.kind))?.kind as SessionKind) ?? chosenKinds.get(d) ?? null) : null,
     );
     const kinds = assignKinds(roles, roleOn(addDays(monday, -1)), pinned);
     const focusWeek = isFocusWeek(roles);

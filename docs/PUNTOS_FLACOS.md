@@ -27,6 +27,8 @@ Estado a 22 de noviembre de 2026. Lista viva: lo que está flojo, por qué impor
 
 ## 3. Datos y técnica
 
+- **Sin explicar (22/11/2026): en el navegador de pruebas desaparecieron datos dos veces** (un viaje y tres entrenamientos apuntados a mano), mientras otros cambios posteriores sí se conservaron. Descartado con pruebas: las recargas normales y una actualización de la base de datos los conservan; los tests de migración y de copias pasan. El navegador usa otro motor de almacenamiento que el móvil, así que puede ser solo de ahí, pero no está demostrado. **Hasta aclararlo: exportar una copia antes de instalar cada APK nuevo.**
+
 - **En el navegador la app solo puede estar abierta en una pestaña** y la sesión de Google dura una hora. Es un entorno de pruebas, no para uso diario.
 - **Paso de la base antigua a la nueva (v22)** comprobado con tests, no con una base real con viajes guardados.
 - **Sesiones de viaje antiguas** (con ejercicios de toalla o mesa, ya quitados): si existiera alguna guardada, al editarla se verían los ejercicios actuales, no los que se hicieron. Solo podría pasar en el navegador de pruebas.

@@ -96,18 +96,9 @@ let syncing: Promise<void> = Promise.resolve();
 
 async function doSync(db: SQLiteDatabase) {
   const stamp = new Date().toISOString();
-  // Todo o nada: si algo falla a mitad, la tabla se queda como estaba. Aquí nunca se toca el detalle, solo la tabla general.
-  await db.execAsync('SAVEPOINT sync_workouts');
-  try {
-    await syncSources(db, stamp);
-    await db.execAsync('RELEASE sync_workouts');
-  } catch (e) {
-    await db.execAsync('ROLLBACK TO sync_workouts; RELEASE sync_workouts');
-    throw e;
-  }
-}
-
-async function syncSources(db: SQLiteDatabase, stamp: string) {
+  // Sin transacción a propósito: cada sentencia es atómica por sí sola y repetirlas no duplica nada, así que si
+  // se corta a mitad basta con volver a pasar. Una transacción abierta aquí, mientras la app guarda otra cosa
+  // por la misma conexión, podría hacer fallar ese guardado o deshacerlo. Aquí nunca se toca el detalle.
   for (const s of SOURCES) {
     // Lo que se ha borrado en el detalle deja de ser un entrenamiento.
     await db.runAsync(`DELETE FROM workout WHERE source = ? AND source_id NOT IN (SELECT ${s.id} FROM ${s.from})`, s.table);

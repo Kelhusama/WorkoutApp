@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 23;
+const LATEST = 24;
 
 export interface MigrateOptions {
   /**
@@ -374,6 +374,11 @@ export async function migrate(db: SQLiteDatabase, options: MigrateOptions = {}) 
       CREATE INDEX IF NOT EXISTS idx_workout_date ON workout (date);
       CREATE UNIQUE INDEX IF NOT EXISTS idx_workout_source ON workout (source, source_id) WHERE source IS NOT NULL;
     `);
+  });
+
+  await step(23, async () => {
+    // Al cambiar un día a «casa» se puede elegir qué sesión (A, B o C). Vacío: la reparte la app, como antes.
+    await addColumn(db, 'day_override', 'kind', 'TEXT');
   });
 
 }

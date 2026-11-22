@@ -198,3 +198,30 @@ test('sesión enfocada: con uno o dos días de casa en la semana, y se recuerda 
   await saveTemplate(db, ['gym', 'casa', 'casa', 'casa', 'gym', 'rest', 'rest']);
   assert.equal((await loadDays(db, base, addDays(base, 6))).days[3].focus, true);
 });
+
+test('al cambiar un día a casa se puede elegir la sesión; sin elegir, la reparte la app', async () => {
+  const { getOverrideKinds, setOverride } = await import('./repo');
+  const db = createTestDb();
+  await migrate(db);
+  const SUN = '2026-11-29'; // domingo: descanso en la semana tipo
+  const typeOn = async (d: string) => (await loadDays(db, d, d)).days[0].type;
+  assert.equal(await typeOn(SUN), 'rest');
+  // Elegida a mano: Tirón, aunque la app habría puesto otra.
+  await setOverride(db, SUN, 'casa', 'A');
+  assert.equal(await typeOn(SUN), 'A');
+  assert.equal((await getOverrideKinds(db, SUN, SUN)).get(SUN), 'A');
+  await setOverride(db, SUN, 'casa', 'C');
+  assert.equal(await typeOn(SUN), 'C');
+  // Sin elegir: vuelve a repartirla la app.
+  await setOverride(db, SUN, 'casa');
+  assert.equal((await getOverrideKinds(db, SUN, SUN)).size, 0);
+  assert.ok(['A', 'B', 'C'].includes(await typeOn(SUN)));
+  // Si el día pasa a gimnasio, la sesión elegida no se arrastra.
+  await setOverride(db, SUN, 'casa', 'B');
+  await setOverride(db, SUN, 'gym');
+  assert.equal(await typeOn(SUN), 'gym');
+  assert.equal((await getOverrideKinds(db, SUN, SUN)).size, 0);
+  // Y volver a la semana tipo lo borra todo.
+  await setOverride(db, SUN, null);
+  assert.equal(await typeOn(SUN), 'rest');
+});
