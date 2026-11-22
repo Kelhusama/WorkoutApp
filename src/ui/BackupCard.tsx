@@ -41,10 +41,24 @@ export function BackupCard({ onRestored }: { onRestored?: () => void }) {
       await file.write(JSON.stringify(await exportBackup(db)));
       if (!(await Sharing.isAvailableAsync())) throw new Error('Este dispositivo no permite compartir archivos.');
       await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Guardar copia de Forja del Canario' });
-      // Se da por hecha al abrir el menú de compartir: no hay forma de saber si luego se guardó.
-      await saveLastExport(db, today());
-      setLastExport(today());
-      setNote('Copia creada. Comprueba que ha quedado guardada en Drive o donde la hayas enviado.');
+      // Android no dice si el archivo se llegó a guardar o se cerró el menú sin más: se pregunta.
+      // Solo se da por hecha la copia si el usuario lo confirma.
+      setNote(null);
+      Alert.alert('¿Ha quedado guardada la copia?', 'Si cerraste el menú sin enviarla a ningún sitio, contesta que no: no cuenta como copia.', [
+        {
+          text: 'No, la cancelé',
+          style: 'cancel',
+          onPress: () => setNote('No se ha apuntado ninguna copia. Tus datos siguen solo en este móvil.'),
+        },
+        {
+          text: 'Sí, guardada',
+          onPress: async () => {
+            await saveLastExport(db, today());
+            setLastExport(today());
+            setNote('Copia apuntada. Si puedes, comprueba que el archivo está donde lo enviaste.');
+          },
+        },
+      ]);
     } catch (e) {
       Alert.alert('No se pudo crear la copia', message(e));
     } finally {
@@ -130,7 +144,7 @@ export function BackupCard({ onRestored }: { onRestored?: () => void }) {
           <Button label="Volver a la última copia automática" icon="time-outline" variant="ghost" onPress={restoreAuto} disabled={busy} />
         </>
       )}
-      {note && <Text style={[type.caption, { color: colors.success }]}>{note}</Text>}
+      {note && <Text style={[type.caption, { color: note.startsWith('No se ha apuntado') ? colors.warn : colors.success }]}>{note}</Text>}
     </Card>
   );
 }

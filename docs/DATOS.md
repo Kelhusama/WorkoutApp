@@ -82,7 +82,7 @@ Regla para pasos futuros: solo añadir. Si alguna vez hay que quitar o renombrar
 
 Las dos primeras se restauran desde *Perfil y avisos → Volver a la última copia automática*.
 
-Límite conocido: la app marca la copia manual como hecha al abrir el menú de compartir; no puede saber si luego se guardó de verdad.
+Android no dice si el archivo se llegó a guardar o se cerró el menú sin enviarlo. Por eso, al volver, la app pregunta «¿Ha quedado guardada la copia?» y solo la da por hecha si se confirma.
 
 ## 5. Google: inicio de sesión y Drive
 
