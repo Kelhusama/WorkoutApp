@@ -96,6 +96,18 @@ let syncing: Promise<void> = Promise.resolve();
 
 async function doSync(db: SQLiteDatabase) {
   const stamp = new Date().toISOString();
+  // Todo o nada: si algo falla a mitad, la tabla se queda como estaba. Aquí nunca se toca el detalle, solo la tabla general.
+  await db.execAsync('SAVEPOINT sync_workouts');
+  try {
+    await syncSources(db, stamp);
+    await db.execAsync('RELEASE sync_workouts');
+  } catch (e) {
+    await db.execAsync('ROLLBACK TO sync_workouts; RELEASE sync_workouts');
+    throw e;
+  }
+}
+
+async function syncSources(db: SQLiteDatabase, stamp: string) {
   for (const s of SOURCES) {
     // Lo que se ha borrado en el detalle deja de ser un entrenamiento.
     await db.runAsync(`DELETE FROM workout WHERE source = ? AND source_id NOT IN (SELECT ${s.id} FROM ${s.from})`, s.table);
@@ -134,7 +146,8 @@ export function syncWorkouts(db: SQLiteDatabase): Promise<void> {
 
 /** Entrenamientos entre dos fechas (incluidas), por orden. */
 export async function getWorkouts(db: SQLiteDatabase, from: ISODate, to: ISODate): Promise<Workout[]> {
-  await syncWorkouts(db);
+  // Si poner la tabla al día fallara, se enseña lo que haya: el calendario y la pantalla Hoy no pueden depender de ello.
+  await syncWorkouts(db).catch((e) => console.warn('No se pudieron poner al día los entrenamientos', e));
   const rows = await db.getAllAsync<Row>(`SELECT ${COLUMNS} FROM workout WHERE date BETWEEN ? AND ? ORDER BY date, id`, from, to);
   return rows.map(toWorkout);
 }

@@ -237,7 +237,11 @@ export function todayPlan(today: ISODate, eventDate: ISODate = eventConfig.date)
  */
 function planned(lift: Lift, week: WeekPlan, logs: readonly TrialLog[]): Dose {
   const plan = week.doses[lift];
-  const last = [...logs].filter((l) => l.lift === lift).sort((a, b) => a.date.localeCompare(b.date)).pop();
+  // Lo del día suave (viernes, sin lastre) no dice nada de la fuerza: no cuenta para decidir el lastre siguiente.
+  const last = [...logs]
+    .filter((l) => l.lift === lift && !(lift === 'dominada' && isEasyPullupDay(l.date)))
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .pop();
   if (!last || week.phase === 'descarga') return plan;
   if (lift === 'peso_muerto') {
     const failed = last.reps < Math.min(plan.reps, EVENT_REPS) || last.reserve === 0;

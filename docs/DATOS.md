@@ -35,7 +35,7 @@ Desde la versión 23 de la base de datos, **todo lo que se entrena es un «entre
 - **La tabla general se pone al día sola** con lo apuntado en cada pantalla (`syncWorkouts`): se puede repetir las veces que haga falta sin duplicar. Lo ya apuntado antes de este cambio aparece al abrir la app.
 - **En un día caben los entrenamientos que sean**, también varios del mismo tipo. Los que se apuntan «rápido» no tienen detalle (`source` vacío).
 - **La carga sale por defecto de lo apuntado** (fácil/normal/dura en casa y gimnasio; lo que quedaba en la última serie en dominadas; el esfuerzo en caminatas). Si se corrige a mano, ya no se recalcula.
-- **Un día está «hecho» si se entrena algo**, sea o no lo que tocaba. Los estiramientos de después de una sesión no cuentan como entrenar.
+- **Un día está «hecho» si se entrena algo**, sea o no lo que tocaba. Los estiramientos también cuentan.
 
 ## 2. Qué puede salir mal y qué lo cubre
 

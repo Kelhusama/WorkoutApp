@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { totalLoad, trained } from '../domain/workouts';
+import { exportBackup, importBackup } from './backup';
 import { addTrialLog, deleteTrialLog } from './event';
 import { loadDays, markMissed, saveGymSession } from './repo';
 import { migrate } from './schema';
@@ -41,8 +42,8 @@ test('todo lo apuntado en un día sale como entrenamiento, con su carga por defe
   );
   // Volver a leer no duplica nada.
   assert.equal((await getWorkouts(db, DAY, DAY)).length, 6);
-  // Carga del día: 3 + 1 + 2 + 2 + 1; los estiramientos no suman.
-  assert.equal(totalLoad(w), 9);
+  // Carga del día: 3 + 1 + 2 + 1 + 1 + 2.
+  assert.equal(totalLoad(w), 10);
 });
 
 test('borrar o cambiar el detalle se refleja; lo corregido a mano se respeta', async () => {
@@ -101,9 +102,30 @@ test('calendario: el día está hecho si se entrena algo, aunque no sea lo que t
   assert.equal((await status('2026-11-17')).status, 'missed');
   await addWorkout(db, { date: '2026-11-17', type: 'otro', title: 'Pádel', minutes: 60, load: 2, state: null, notes: null });
   assert.equal((await status('2026-11-17')).status, 'done');
-  // Solo estirar no cuenta como haber entrenado.
+  // Estirar también cuenta como haber entrenado ese día.
   await db.runAsync("INSERT INTO stretch_log (date, routine, stretch_id, seconds) VALUES ('2026-11-18', 'postA', 'a', 60)");
   const wed = await status('2026-11-18');
-  assert.equal(wed.status, 'missed');
+  assert.equal(wed.status, 'done');
   assert.deepEqual(wed.workouts.map((w) => w.type), ['estiramientos']);
+});
+
+test('copia de seguridad: los entrenamientos van y vuelven enteros, sin duplicarse', async () => {
+  const db = await setup();
+  await saveGymSession(db, DAY, 'dura', null, []);
+  await addTrialLog(db, { date: DAY, lift: 'dominada', weight: 2, reps: 3, sets: 4, reserve: 1 });
+  await addWorkout(db, { date: DAY, type: 'otro', title: 'Pádel', minutes: 60, load: 3, state: 'cansado', notes: 'partido largo' });
+  const gym = (await getWorkouts(db, DAY, DAY)).find((x) => x.type === 'gimnasio')!;
+  await updateWorkout(db, gym.id, { minutes: 55, load: 2, state: 'molestias', notes: null });
+  const before = await getWorkouts(db, DAY, DAY);
+
+  const target = await setup();
+  await importBackup(target, await exportBackup(db));
+  const after = await getWorkouts(target, DAY, DAY);
+  assert.deepEqual(after, before);
+  // Una copia de antes de que existiera esta tabla también vale: los entrenamientos con detalle se reconstruyen solos.
+  const old = await exportBackup(db);
+  delete (old.tables as Record<string, unknown>).workout;
+  const fresh = await setup();
+  await importBackup(fresh, old);
+  assert.deepEqual((await getWorkouts(fresh, DAY, DAY)).map((x) => [x.type, x.load]), [['gimnasio', 3], ['dominadas', 2]]);
 });

@@ -142,7 +142,7 @@ export default function CalendarScreen() {
           <MonthGrid days={days} month={monthStart(anchor)} selected={selected} onSelect={setSelected} pullups={pullups} />
           <Legend />
           <Text style={[type.caption, { textAlign: 'center' }]}>
-            Un día está hecho si entrenas algo, sea o no lo que tocaba. «×2» son los entrenamientos de ese día.
+            Un día está hecho si entrenas algo, sea o no lo que tocaba (estirar también cuenta). «×2» son los entrenamientos de ese día.
             {hasPullups ? ' El punto de la esquina son las dominadas del plan: verde hechas, amarillo tocan, naranja sin hacer.' : ''}
           </Text>
         </Card>

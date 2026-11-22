@@ -318,3 +318,15 @@ test('calendario: las dominadas del plan salen como hechas, tocan o sin hacer', 
   // De viaje sin barra no tocan.
   assert.equal(pullupMark('2026-11-26', logs, today, true, true), null);
 });
+
+test('el viernes suave no rebaja el lastre de la semana siguiente', async () => {
+  const { buildPlan, prescription } = await import('./event');
+  // Semana de «Más lastre» (4 kg): del 26 de diciembre al 1 de enero.
+  const week = buildPlan().find((w) => w.weeksLeft === 3)!;
+  const thu = log('2026-12-24', 'dominada', 4, 3, 1); // jueves, limpio con 4 kg
+  const fri = log('2026-12-25', 'dominada', 0, 3, 2); // viernes suave, sin lastre
+  const withFriday = prescription('dominada', week, [thu, fri]);
+  const withoutFriday = prescription('dominada', week, [thu]);
+  assert.deepEqual(withFriday, withoutFriday);
+  assert.ok(withFriday.weight >= 4);
+});

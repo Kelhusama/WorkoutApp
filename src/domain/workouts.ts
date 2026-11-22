@@ -43,7 +43,7 @@ export const STATE_OPTIONS = (['energia', 'normal', 'cansado', 'molestias'] as c
 
 /**
  * Tipos que la app conoce. Para añadir uno nuevo basta con ponerlo aquí: la base de datos no cambia.
- * `counts`: cuenta como haber entrenado ese día (los estiramientos de después de una sesión, no).
+ * `counts`: cuenta como haber entrenado ese día. Hoy cuentan todos, estiramientos incluidos.
  */
 export const WORKOUT_TYPES: Record<string, { label: string; icon: string; counts: boolean }> = {
   casa: { label: 'Sesión de casa', icon: 'home', counts: true },
@@ -52,7 +52,7 @@ export const WORKOUT_TYPES: Record<string, { label: string; icon: string; counts
   peso_muerto: { label: 'Peso muerto', icon: 'trophy-outline', counts: true },
   caminata: { label: 'Caminata', icon: 'walk', counts: true },
   movilidad: { label: 'Movilidad', icon: 'body', counts: true },
-  estiramientos: { label: 'Estiramientos', icon: 'accessibility', counts: false },
+  estiramientos: { label: 'Estiramientos', icon: 'accessibility', counts: true },
   otro: { label: 'Otro deporte', icon: 'fitness', counts: true },
 };
 
