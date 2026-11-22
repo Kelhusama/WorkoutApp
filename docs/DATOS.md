@@ -27,7 +27,7 @@ Mientras se use con Expo Go, la base de datos vive dentro de Expo Go: si se desi
 | Se desinstala la app o Expo Go | Igual que el anterior | **A medias** |
 | Se pierden las fotos de progreso | Nada: no entran en ninguna copia | **No** |
 
-Lo que falta para cerrar los tres últimos es la copia automática en Google Drive (apartado 5).
+Lo que cierra los dos primeros de esos tres es la copia automática en Google Drive (apartado 5), que en el móvil necesita la app instalada (APK).
 
 ## 3. Migraciones de la base de datos
 
@@ -65,18 +65,24 @@ Límite conocido: la app marca la copia manual como hecha al abrir el menú de c
 
 ## 5. Google: inicio de sesión y Drive
 
-**Por qué no se ve en la app**: está programado, pero en una rama aparte (`google-drive`) que no se ha fusionado. El inicio de sesión con Google usa código nativo que **no funciona dentro de Expo Go**; solo en la app instalada (APK). Fusionarlo ahora rompería la app en Expo Go.
+**Estado (22/11/2026)**: fusionado en la rama principal.
 
-**Qué hace esa rama**: inicia sesión con la cuenta de Google y guarda la copia en una carpeta privada de Drive reservada a la app (el usuario no la ve mezclada con sus archivos y la app no puede leer nada más de su Drive).
+**Qué hace**: inicia sesión con la cuenta de Google y guarda la copia en una carpeta privada de Drive reservada a la app (el usuario no la ve mezclada con sus archivos y la app no puede leer nada más de su Drive). Funciona sin conexión: los cambios se suben solos al apuntar algo, o en cuanto vuelva la red. Si en Drive hay una copia que no es de este dispositivo, la app pregunta cuál vale en vez de pisarla.
+
+**Dónde funciona**:
+
+| Dónde | Estado |
+|---|---|
+| Navegador (pruebas en el ordenador) | Probado con una cuenta real: iniciar sesión, guardar y restaurar. La copia probada estaba vacía (sin sesiones). |
+| App instalada (APK) | Programado, **sin probar**. Necesita el APK y las credenciales de Android en Google Cloud (`docs/GOOGLE.md`). |
+| Expo Go | No disponible: la tarjeta dice «Disponible en la app instalada» y el resto de la app funciona igual. Tras la fusión no se ha abierto en Expo Go para confirmarlo. |
 
 **Qué falta, por orden**:
 1. Cuenta gratuita de Expo, para generar el APK.
-2. Proyecto en Google Cloud (gratuito) con la pantalla de consentimiento y las credenciales de Android. Los pasos están en `docs/GOOGLE.md`, dentro de esa rama.
-3. Poner la rama al día: se creó antes de muchos cambios de hoy.
-4. Probarla en el APK y fusionarla.
-5. Hacerla automática: copia a Drive al cerrar una sesión, y restauración al instalar en un móvil nuevo.
-6. Incluir las fotos de progreso.
+2. Credenciales de Android en el proyecto de Google Cloud.
+3. Probar en el APK: inicio de sesión, guardado y restauración en un móvil nuevo.
+4. Incluir las fotos de progreso.
 
-**Riesgo de esa vía**: mientras la app esté «en pruebas» en Google Cloud, el permiso caduca cada 7 días y hay que volver a iniciar sesión. Para evitarlo hay que publicar la pantalla de consentimiento, que para este permiso no requiere revisión de Google (pendiente de confirmar al hacerlo).
+**Riesgo**: mientras la app esté «en pruebas» en Google Cloud, el permiso caduca cada 7 días y hay que volver a iniciar sesión. Para evitarlo hay que publicar la pantalla de consentimiento, que para este permiso no requiere revisión de Google (pendiente de confirmar al hacerlo).
 
-Hasta entonces, el nivel 3 (exportar a Drive a mano cada semana) es lo que protege de perder el móvil.
+Mientras se use Expo Go, el nivel 3 (exportar a Drive a mano cada semana) sigue siendo lo que protege de perder el móvil.

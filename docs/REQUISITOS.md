@@ -327,7 +327,7 @@ El objetivo de 80 kg en press de banca queda **para más adelante**: todavía no
 2. **Pantalla de inicio** con la pintadera (se configura al preparar el APK).
 3. ~~Flexibilidad, retoques~~ ✅ (20/11/2026): el nivel 3 baja a 15–17 min y las sesiones recientes se pueden borrar.
 4. ~~Estiramientos, dosis~~ ✅ (20/11/2026): la zancada pasa a 60 s por lado y los isquios a 45 s; la rutina de tren inferior dura unos 12 min.
-5. **Con el APK**: fusionar la rama `google-drive`, leer la captura eligiendo la imagen y GPS en las caminatas.
+5. **Con el APK**: probar el inicio de sesión de Google y la copia en Drive (ya fusionado; probado solo en el navegador), leer la captura eligiendo la imagen y GPS en las caminatas.
 
 ## Debes (lo que tiene que hacer el usuario)
 

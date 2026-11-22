@@ -157,7 +157,7 @@ Ese mismo ID de cliente web es el que usará después la app de Android, así qu
 
 ### Probar
 
-1. Estar en la rama `google-drive-web` y ejecutar `npx expo start --web --port 8099`.
+1. Ejecutar `npx expo start --web --port 8099`.
 2. Abrir <http://localhost:8099/perfil>, bajar hasta «Copia en Google Drive» y pulsar **Iniciar sesión con Google**.
 3. Google avisará de que la app no está verificada (es normal en modo de prueba): **Configuración avanzada → Ir a la app**. Aceptar el permiso de Drive.
 4. De vuelta en Perfil, **Guardar copia en Drive** y luego **Restaurar desde Drive**.
