@@ -359,6 +359,26 @@ export function doseText(lift: Lift, dose: Dose): string {
   return `${what} con ${kg} kg`;
 }
 
+/**
+ * El viernes es el día suave de dominadas: cierra la semana, viene detrás del jueves y deja el fin de
+ * semana para recuperar. Mismas repeticiones, un tercio menos de series, sin lastre y sin apurar.
+ */
+export function isEasyPullupDay(date: ISODate, eventDate: ISODate = eventConfig.date): boolean {
+  return weekdayIndex(date) === 4 && isPullupDay(date, eventDate);
+}
+
+/** Lo que toca de dominadas un día concreto: lo de la semana, o su versión suave si es viernes. */
+export function pullupDose(date: ISODate, week: WeekPlan, logs: readonly TrialLog[]): Dose {
+  const dose = prescription('dominada', week, logs);
+  if (!isEasyPullupDay(date)) return dose;
+  return {
+    ...dose,
+    sets: Math.min(dose.sets, Math.max(2, Math.ceil((dose.sets * 2) / 3))),
+    weight: 0,
+    note: 'Día suave: sin lastre, menos series y dejando margen en todas. Hoy se pule la técnica, no se busca el límite.',
+  };
+}
+
 // ---------- Días de dominadas, avisos y sesión guiada ----------
 
 /**
@@ -426,7 +446,7 @@ export function planTrialReminders(
     const date = addDays(today, i);
     if (!isPullupDay(date) || done.has(date) || paused.has(date)) continue;
     const week = todayPlan(date).week!;
-    const dose = prescription('dominada', week, logs);
+    const dose = pullupDose(date, week, logs);
     hours.forEach((t, k) => {
       const at = fromISODate(date);
       at.setHours(t.h, t.m, 0, 0);
@@ -435,7 +455,7 @@ export function planTrialReminders(
       out.push({
         id: `rem-dom-${date}-${k}`,
         at,
-        title: `Dominadas · ${doseText('dominada', dose)}`,
+        title: `Dominadas${isEasyPullupDay(date) ? ' (día suave)' : ''} · ${doseText('dominada', dose)}`,
         body: `${grips ? `${grips[0].toUpperCase()}${grips.slice(1)}. ` : ''}${NUDGES[Math.min(k, NUDGES.length - 1)]}`,
       });
     });

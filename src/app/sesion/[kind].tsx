@@ -112,7 +112,7 @@ export default function SessionScreen() {
       setSavedKeys(log?.status === 'done' && Object.keys(saved).length > 0 ? Object.keys(saved) : null);
       setSlots(slots);
       setTravelling(!!trip);
-      setGuided(log?.status !== 'done');
+      setGuided(log?.status !== 'done' && date === getToday());
       setTargets(t);
       setValues(initial);
       setReserves(log?.status === 'done' ? await getSessionReserves(db, log.id) : {});
@@ -131,7 +131,8 @@ export default function SessionScreen() {
   const routines = targets ? buildRoutines(routineItems(slots, targets, order)) : [];
   // Si todo cabe en 20 minutos no hay rutina larga: vale la media.
   const routine = routines.find((r) => r.size === size) ?? routines.find((r) => r.size === 'media');
-  const activeSlots = savedKeys ? slots.filter((s) => savedKeys.includes(s.key)) : routine ? slots.filter((s) => routine.keys.includes(s.key)) : slots;
+  const savedSlots = savedKeys ? slots.filter((s) => savedKeys.includes(s.key)) : [];
+  const activeSlots = savedSlots.length > 0 ? savedSlots : routine ? slots.filter((s) => routine.keys.includes(s.key)) : slots;
   const targetOf = (key: string): Prescription => (light && targets ? { ...targets[key], sets: lightSets(targets[key].sets) } : targets![key]);
 
   const changeSize = (next: RoutineSize) => {
@@ -272,7 +273,7 @@ export default function SessionScreen() {
 
   );
 
-  const modeCard = savedKeys ? null : (
+  const modeCard = savedSlots.length > 0 ? null : (
     <Card style={{ gap: space.md }}>
       <Text style={type.subtitle}>Elige la rutina de hoy</Text>
       {advice?.light && !editing && (

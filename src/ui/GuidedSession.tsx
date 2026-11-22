@@ -242,7 +242,7 @@ export function GuidedSession({ slots, targetOf, values, onSets, intro, outro, o
               top();
             }}
           />
-          <Button label="Prefiero la lista completa" variant="ghost" onPress={onList} />
+          <Button label="Ya la he hecho: apuntarla sin guía" variant="ghost" onPress={onList} />
         </>
       )}
 

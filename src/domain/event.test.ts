@@ -280,3 +280,21 @@ test('fatiga de tirón: dos sesiones al límite o más días de los planificados
   // El peso muerto no cuenta, ni lo de hoy.
   assert.equal(pullFatigue([log('2026-11-25', 'peso_muerto', 80, 5, 0), log('2026-11-26', 'peso_muerto', 80, 5, 0), log(today, 'dominada', 0, 1, 0)], today), null);
 });
+
+test('el viernes es el día suave de dominadas: menos series, sin lastre', async () => {
+  const { buildPlan, isEasyPullupDay, pullupDose, prescription } = await import('./event');
+  const plan = buildPlan();
+  assert.deepEqual(['2026-11-23', '2026-11-24', '2026-11-26', '2026-11-27', '2026-11-28'].map((d) => isEasyPullupDay(d)), [false, false, false, true, false]);
+  for (const week of plan) {
+    const normal = prescription('dominada', week, []);
+    const friday = week.from <= '2026-11-27' && '2026-11-27' <= week.to ? '2026-11-27' : null;
+    if (!friday) continue;
+    const easy = pullupDose(friday, week, []);
+    assert.ok(easy.sets <= normal.sets && easy.sets >= Math.min(2, normal.sets));
+    assert.equal(easy.weight, 0);
+    assert.equal(easy.reps, normal.reps);
+    assert.match(easy.note, /suave/);
+    // El resto de días, lo de la semana.
+    assert.deepEqual(pullupDose('2026-11-23', week, []), normal);
+  }
+});

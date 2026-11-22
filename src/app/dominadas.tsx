@@ -24,7 +24,7 @@ import {
   hangDose,
   pullFatigue,
   isElbowCareDay,
-  prescription,
+  pullupDose,
   todayPlan,
   type Dose,
   type Grip,
@@ -70,7 +70,7 @@ export default function PullupSession() {
     (async () => {
       const week = todayPlan(today).week;
       const logs = await getTrialLogs(db);
-      const d = week ? prescription('dominada', week, logs) : null;
+      const d = week ? pullupDose(today, week, logs) : null;
       setDose(d);
       if (d) setReps(d.reps);
       // Aviso si ayer u hoy hubo tirón en el gimnasio, o si las últimas sesiones de dominadas fueron al límite.
