@@ -79,6 +79,16 @@ export const TEMPLATES: Record<SessionKind, Slot[]> = {
   ],
 };
 
+/**
+ * Orden de importancia dentro de cada sesión, para las rutinas corta y media. Primero lo que empuja
+ * los objetivos (dominadas, flexiones, mancuerna); luego abdomen, pierna y accesorios, que rotan por semanas.
+ */
+export const PRIORITY: Record<SessionKind, readonly string[]> = {
+  A: ['A.dominadas', 'A.negativas', 'A.remo', 'A.curl', 'A.hollow', 'A.gemelo', 'A.tibial'],
+  B: ['B.flexiones', 'B.inclinadas', 'B.pica', 'B.deadbug', 'B.copenhague', 'B.muneca', 'B.abduccion', 'B.muneca_inv'],
+  C: ['C.dominadas', 'C.press', 'C.martillo', 'C.rodillas', 'C.colgarse', 'C.pajaros', 'C.zancada', 'C.pm1'],
+};
+
 /** Claves del bloque de pierna de cada sesión: no necesita material, así que también se hace de viaje. */
 export const LEG_KEYS: Record<SessionKind, string[]> = {
   A: ['A.tibial', 'A.gemelo'],
@@ -109,6 +119,8 @@ export function restSeconds(s: Slot, light = false): number {
   const ex = exerciseFor(s);
   if (ex.measure === 'time' || ex.muscles.includes('Abdomen')) return 45;
   if (ex.equipment === 'barra') return 120;
+  // Accesorios de antebrazo: no hace falta más de un minuto.
+  if (ex.id.startsWith('curl_muneca')) return 60;
   if (ex.equipment === 'ninguno' && !ex.muscles.includes('Pecho') && !ex.muscles.includes('Tríceps') && !ex.muscles.includes('Hombro')) return 60;
   return 90;
 }

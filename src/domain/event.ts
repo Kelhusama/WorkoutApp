@@ -431,12 +431,12 @@ export function planTrialReminders(
       const at = fromISODate(date);
       at.setHours(t.h, t.m, 0, 0);
       if (at <= now) return;
-      const grip = gripFor(date);
+      const grips = gripPlanText(gripPlan(dose.sets, date));
       out.push({
         id: `rem-dom-${date}-${k}`,
         at,
         title: `Dominadas · ${doseText('dominada', dose)}`,
-        body: `${grip ? `Agarre ${GRIP_INFO[grip].label.toLowerCase()}. ` : ''}${NUDGES[Math.min(k, NUDGES.length - 1)]}`,
+        body: `${grips ? `${grips[0].toUpperCase()}${grips.slice(1)}. ` : ''}${NUDGES[Math.min(k, NUDGES.length - 1)]}`,
       });
     });
   }
@@ -504,6 +504,27 @@ export function gripFor(date: ISODate, eventDate: ISODate = eventConfig.date): G
 }
 
 /** «lunes prono, martes supino, jueves neutro y viernes prono». */
+/**
+ * Agarre de cada serie de la sesión de hoy. La primera mitad siempre en el agarre de la prueba, que es
+ * el que hay que dominar y se hace más fresco; el resto, en el agarre del día (supino o neutro), que
+ * reparte la carga del codo. Los días de prono, todas en prono. No se elige: lo marca el plan.
+ */
+export function gripPlan(sets: number, date: ISODate, eventDate: ISODate = eventConfig.date): Grip[] {
+  const accent = gripFor(date, eventDate) ?? TEST_GRIP;
+  const main = accent === TEST_GRIP ? sets : Math.ceil(sets / 2);
+  return Array.from({ length: Math.max(0, sets) }, (_, i) => (i < main ? TEST_GRIP : accent));
+}
+
+/** «3 series en prono y 3 en supino». */
+export function gripPlanText(grips: readonly Grip[]): string {
+  const parts: string[] = [];
+  for (const g of ['prono', 'supino', 'neutro'] as const) {
+    const n = grips.filter((x) => x === g).length;
+    if (n > 0) parts.push(`${parts.length === 0 ? `${n} ${n === 1 ? 'serie' : 'series'}` : n} en ${GRIP_INFO[g].label.toLowerCase()}`);
+  }
+  return parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}`;
+}
+
 export function gripsText(week: WeekPlan): string {
   const parts: string[] = [];
   for (let d = week.from; d <= week.to; d = addDays(d, 1)) {

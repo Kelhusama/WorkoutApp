@@ -322,6 +322,13 @@ El objetivo de 80 kg en press de banca queda **para más adelante**: todavía no
 - **Dominadas del plan y viajes**: de viaje sin gimnasio de hotel no hay barra, así que ese día el plan no avisa ni pide dominadas; vuelven los avisos de la sesión de viaje (con remo).
 - **Tono**: «Sin hacer» en vez de «Fallado»; avisos con ánimo; aviso a las 21:00 para apuntar el gimnasio.
 
+## Añadido el 22/11/2026 (2): rutinas y sesión guiada
+
+- **Sesión guiada** en todas las sesiones de casa y de viaje: un ejercicio cada vez con su dibujo, descanso que arranca solo, cuenta atrás en los aguantes. La lista completa sigue disponible para corregir.
+- **Tres rutinas por sesión**, a elegir antes de empezar, cada una con su tiempo y sus ejercicios: **corta** (unos 10 min, menos series, no mueve el plan), **media** (20 min como mucho, lo esencial; el entrenador ajusta) y **larga** (todo, unos 40 min). Los dos ejercicios principales de cada sesión son fijos; el resto rota cada semana en la media.
+- **Tiempo estimado**: 3 s por repetición, el descanso recomendado tras cada serie y 20 s por ejercicio para colocarse.
+- **Dominadas**: los agarres los fija el plan, sin selector. La primera mitad de las series en prono (el de la prueba) y el resto en el agarre del día; los días de prono, todas en prono.
+
 ## Para seguir (por orden)
 0. **Entrenador adaptativo**: volumen semanal por músculo y progresión por peso si se compran mancuernas ajustables (de momento, no; y nunca banco). Hecho también el paso automático a versiones más duras. Hechas las capas 1 a 4, el aviso de test, la previsión con margen y el experimento de la red neuronal: reserva, nivel real, plan que cambia solo, sesión ligera y extra, mesetas, carga de banca y bloques de prueba entre tests.
 1. **Usabilidad que queda**: tipografía propia.

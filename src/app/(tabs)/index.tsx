@@ -17,7 +17,7 @@ import { monthlyCheck } from '@/domain/physique';
 import { stretchedOn } from '@/db/stretch';
 import { addDays, formatLong, formatShort, today as getToday, weekStart, weekdayIndex } from '@/domain/dates';
 import { getTrialLogs } from '@/db/event';
-import { eventName, platesWarning, GRIP_INFO, LIFTS, TEST_GRIP, gripFor, doneThisWeek, doseText, isPullupDay, pullupsPausedBy, withoutTrialWork, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
+import { eventName, platesWarning, LIFTS, gripPlan, gripPlanText, doneThisWeek, doseText, isPullupDay, pullupsPausedBy, withoutTrialWork, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
 import { prescriptionShort } from '@/domain/format';
 import { needsDeload } from '@/domain/gymTools';
 import { WALK_LABEL } from '@/domain/march';
@@ -225,7 +225,7 @@ export default function TodayScreen() {
         <PlanRow
           icon="play-circle"
           title="Lo primero de hoy: dominadas"
-          detail={`${doseText('dominada', trialDose('dominada', trial.week, trialLogs))}. Agarre ${GRIP_INFO[gripFor(todayDate) ?? TEST_GRIP].label.toLowerCase()}.`}
+          detail={`${doseText('dominada', trialDose('dominada', trial.week, trialLogs))}. Agarres: ${gripPlanText(gripPlan(trialDose('dominada', trial.week, trialLogs).sets, todayDate))}.`}
           onPress={() => router.push('/dominadas')}
         />
       )}

@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDoneSessions, getPrescriptions, getSessionLog, getSlotStages, getSessionReserves, getSessionSets, getTripOn, saveHomeSession, type SlotChange } from '@/db/repo';
@@ -13,17 +13,17 @@ import { isPullupDay, withoutTrialWork } from '@/domain/event';
 import { VARIANT_INFO, applyVariant, type Variant } from '@/domain/bandit';
 import { lightSets, readiness, type Readiness, type Reserve } from '@/domain/coach';
 import { getBests } from '@/db/stats';
-import { addDays, formatLong, today as getToday, weekStart } from '@/domain/dates';
+import { addDays, formatLong, today as getToday, weekNumber, weekStart } from '@/domain/dates';
 import { EXERCISES } from '@/domain/exercises';
 import { detectRecords, type NewRecord } from '@/domain/stats';
 import { ROUTINES, routineAfter, routineMinutes } from '@/domain/stretches';
 import { amountText, describeChange, prescriptionText } from '@/domain/format';
 import type { Feeling, Prescription } from '@/domain/progression';
 import { infoFor, type SessionKind } from '@/domain/schedule';
-import { MAX_SESSION_MINUTES, estimateMinutes } from '@/domain/guide';
-import { LEG_KEYS, exerciseFor, restSeconds, stageNote, type Slot } from '@/domain/templates';
+import { ROUTINE_INFO, buildRoutines, rankKeys, type RoutineSize } from '@/domain/routines';
+import { PRIORITY, exerciseFor, restSeconds, stageNote, type Slot } from '@/domain/templates';
 import { sessionSlots } from '@/domain/travel';
-import { Button, Card, FeelingPicker, SectionTitle, Segmented } from '@/ui/components';
+import { Button, Card, FeelingPicker, SectionTitle } from '@/ui/components';
 import { syncReminders } from '@/notifications/reminders';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { ExerciseCard } from '@/ui/ExerciseCard';
@@ -47,8 +47,11 @@ export default function SessionScreen() {
   const [targets, setTargets] = useState<Record<string, Prescription> | null>(null);
   const [values, setValues] = useState<Record<string, number[]>>({});
   const [reserves, setReserves] = useState<Record<string, Reserve>>({});
-  // Sesión ligera: sin bloque de pierna y con menos series; no mueve el plan.
-  const [light, setLight] = useState(false);
+  // Rutina elegida: corta (ligera, no mueve el plan), media (lo esencial en 20 minutos) o larga (todo).
+  const [size, setSize] = useState<RoutineSize>('media');
+  const light = size === 'corta';
+  // Al editar una sesión guardada se enseñan los ejercicios que se hicieron, no una rutina.
+  const [savedKeys, setSavedKeys] = useState<string[] | null>(null);
   const [advice, setAdvice] = useState<Readiness | null>(null);
   // Bloque de prueba del entrenador: cambia lo que se pide en dominadas o flexiones.
   const [variants, setVariants] = useState<Record<string, Variant>>({});
@@ -96,7 +99,8 @@ export default function SessionScreen() {
       const initial: Record<string, number[]> = {};
       for (const s of slots) initial[s.key] = saved[s.key] ?? Array(startLight ? lightSets(t[s.key].sets) : t[s.key].sets).fill(t[s.key].reps);
       setAdvice(ready);
-      setLight(startLight);
+      setSize(log?.status === 'done' ? (startLight ? 'corta' : 'larga') : startLight ? 'corta' : 'media');
+      setSavedKeys(log?.status === 'done' && Object.keys(saved).length > 0 ? Object.keys(saved) : null);
       setSlots(slots);
       setTravelling(!!trip);
       setGuided(log?.status !== 'done');
@@ -110,18 +114,38 @@ export default function SessionScreen() {
     })();
   }, [db, kind, date, params.focus]);
 
-  const legs = LEG_KEYS[kind];
-  const activeSlots = light ? slots.filter((s) => !legs.includes(s.key)) : slots;
+  // De viaje y en la sesión enfocada manda el orden de la lista; en casa, las prioridades de la sesión, que rotan por semanas.
+  const order = travelling || focus ? slots.map((s) => s.key) : rankKeys(PRIORITY[kind], weekNumber(date));
+  const routines = targets
+    ? buildRoutines(
+        slots.map((s, i) => {
+          const ex = exerciseFor(s);
+          const t = targets[s.key];
+          const base = { amount: t.reps, byTime: ex.measure === 'time', perSide: ex.perArm };
+          const rank = order.indexOf(s.key);
+          return {
+            key: s.key,
+            rank: rank < 0 ? order.length + i : rank,
+            full: { ...base, sets: t.sets, rest: restSeconds(s) },
+            light: { ...base, sets: lightSets(t.sets), rest: restSeconds(s, true) },
+          };
+        }),
+      )
+    : [];
+  // Si todo cabe en 20 minutos no hay rutina larga: vale la media.
+  const routine = routines.find((r) => r.size === size) ?? routines.find((r) => r.size === 'media');
+  const activeSlots = savedKeys ? slots.filter((s) => savedKeys.includes(s.key)) : routine ? slots.filter((s) => routine.keys.includes(s.key)) : slots;
   const targetOf = (key: string): Prescription => (light && targets ? { ...targets[key], sets: lightSets(targets[key].sets) } : targets![key]);
 
-  const changeMode = (toLight: boolean) => {
-    if (!targets || toLight === light) return;
-    setLight(toLight);
+  const changeSize = (next: RoutineSize) => {
+    if (!targets || next === size) return;
+    const toLight = next === 'corta';
+    setSize(next);
     setDirty(true);
-    // Las series precargadas se rehacen para el nuevo modo.
-    const next: Record<string, number[]> = {};
-    for (const s of slots) next[s.key] = Array(toLight ? lightSets(targets[s.key].sets) : targets[s.key].sets).fill(targets[s.key].reps);
-    setValues(next);
+    // Las series precargadas se rehacen para la rutina elegida.
+    const fresh: Record<string, number[]> = {};
+    for (const s of slots) fresh[s.key] = Array(toLight ? lightSets(targets[s.key].sets) : targets[s.key].sets).fill(targets[s.key].reps);
+    setValues(fresh);
   };
 
   const save = async () => {
@@ -227,14 +251,6 @@ export default function SessionScreen() {
     );
   }
 
-  const minutes = estimateMinutes(
-    activeSlots.map((s) => {
-      const ex = exerciseFor(s);
-      const t = targetOf(s.key);
-      return { sets: t.sets, amount: t.reps, byTime: ex.measure === 'time', perSide: ex.perArm, rest: restSeconds(s, light) };
-    }),
-  );
-
   const header = (
       <View>
         <Text style={type.overline}>{formatLong(date)}</Text>
@@ -257,32 +273,38 @@ export default function SessionScreen() {
 
   );
 
-  const modeCard = (
-      <Card style={{ gap: space.sm }}>
-        <Text style={type.subtitle}>¿Cómo llegas hoy?</Text>
-        <Segmented
-          label="Cómo llegas hoy"
-          options={MODES}
-          value={light ? 'ligera' : 'normal'}
-          onChange={(m) => changeMode(m === 'ligera')}
-        />
-        <Text style={type.caption}>
-          {light
-            ? travelling
-              ? 'Sesión ligera: un tercio menos de series y deja 2 o 3 repeticiones sin hacer en cada una. Hoy el plan no cambia.'
-              : 'Sesión ligera: solo tren superior, un tercio menos de series y deja 2 o 3 repeticiones sin hacer en cada una. Hoy el plan no cambia.'
-            : 'Sesión normal: según cómo salga, el entrenador sube, mantiene o baja cada ejercicio.'}
+  const modeCard = savedKeys ? null : (
+    <Card style={{ gap: space.md }}>
+      <Text style={type.subtitle}>Elige la rutina de hoy</Text>
+      {advice?.light && !editing && (
+        <Text style={[type.caption, { color: colors.warn }]}>
+          <Ionicons name="battery-half" size={12} color={colors.warn} /> {advice.reason}
         </Text>
-        {advice?.light && !editing && (
-          <Text style={[type.caption, { color: colors.warn }]}>
-            <Ionicons name="battery-half" size={12} color={colors.warn} /> {advice.reason}
-          </Text>
-        )}
-        <Text style={[type.caption, minutes > MAX_SESSION_MINUTES && { color: colors.warn }]}>
-          <Ionicons name="time-outline" size={12} color={minutes > MAX_SESSION_MINUTES ? colors.warn : colors.muted} /> Unos {minutes} minutos, con los descansos.
-          {minutes > MAX_SESSION_MINUTES && !light ? ` Pasa de ${MAX_SESSION_MINUTES}: si vas justo de tiempo, elige «Cansado» para la versión corta.` : ''}
-        </Text>
-      </Card>
+      )}
+      {routines.map((r) => {
+        const on = r.size === routine?.size;
+        const names = slots.filter((s) => r.keys.includes(s.key)).map((s) => exerciseFor(s).name);
+        return (
+          <Pressable
+            key={r.size}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: on }}
+            accessibilityLabel={`Rutina ${ROUTINE_INFO[r.size].title.toLowerCase()}, unos ${r.minutes} minutos, ${names.length} ejercicios`}
+            onPress={() => changeSize(r.size)}
+            style={({ pressed }) => [styles.routine, on && styles.routineOn, pressed && { opacity: 0.8 }]}>
+            <Ionicons name={on ? 'radio-button-on' : 'radio-button-off'} size={22} color={on ? colors.accent : colors.muted} style={{ marginTop: 2 }} />
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={type.subtitle}>
+                {ROUTINE_INFO[r.size].title} · {r.minutes} min
+              </Text>
+              <Text style={type.caption}>{ROUTINE_INFO[r.size].detail}</Text>
+              <Text style={[type.caption, { color: colors.text }]}>{names.join(' · ')}</Text>
+            </View>
+          </Pressable>
+        );
+      })}
+      <Text style={type.caption}>El tiempo cuenta las series y los descansos. Hagas la que hagas, queda apuntada y el entrenador la tiene en cuenta.</Text>
+    </Card>
   );
 
   const outro = (
@@ -400,4 +422,6 @@ const MODES = [
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   changeRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  routine: { flexDirection: 'row', gap: space.md, padding: space.md, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, minHeight: 56 },
+  routineOn: { borderColor: colors.accent, backgroundColor: colors.cardHigh },
 });

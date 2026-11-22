@@ -19,7 +19,8 @@ import {
   PULLUP_WARMUP,
   TEST_GRIP,
   doseText,
-  gripFor,
+  gripPlan,
+  gripPlanText,
   hangDose,
   isElbowCareDay,
   prescription,
@@ -55,8 +56,6 @@ export default function PullupSession() {
   const [left, setLeft] = useState(0);
   const [reps, setReps] = useState(1);
   const [reserve, setReserve] = useState<Reserve | null>(null);
-  // Agarre del día según el plan; se puede cambiar si la barra o el codo piden otro.
-  const [grip, setGrip] = useState<Grip>(gripFor(today) ?? TEST_GRIP);
   const rang = useRef(false);
   // Colgarse, al final: lo que toca hoy y los segundos que se apuntan.
   const [hang, setHang] = useState<HangDose | null>(null);
@@ -123,6 +122,10 @@ export default function PullupSession() {
     );
   }
 
+  // El agarre de cada serie lo marca el plan: no se elige.
+  const grips = gripPlan(dose.sets, today);
+  const kinds = [...new Set(grips)];
+  const grip: Grip = grips[Math.min(done, grips.length - 1)] ?? TEST_GRIP;
   const resting = restEnds !== null;
   const finishSet = () => {
     Haptics.selectionAsync();
@@ -137,7 +140,7 @@ export default function PullupSession() {
   };
 
   const save = async () => {
-    await addTrialLog(db, { date: today, lift: 'dominada', weight: dose.weight, reps, sets: Math.max(1, done), reserve, grip });
+    await addTrialLog(db, { date: today, lift: 'dominada', weight: dose.weight, reps, sets: Math.max(1, done), reserve, grip: grips[grips.length - 1] ?? TEST_GRIP });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     syncReminders(db);
     allowLeave();
@@ -163,9 +166,15 @@ export default function PullupSession() {
 
       {step !== 'hecho' && (
         <Card style={{ gap: space.sm }}>
-          <Text style={type.subtitle}>Agarre de hoy: {GRIP_INFO[grip].label.toLowerCase()}</Text>
-          <Segmented label="Agarre" options={GRIPS} value={grip} onChange={setGrip} />
-          <Text style={type.caption}>{GRIP_INFO[grip].how}</Text>
+          <Text style={type.subtitle}>Agarres de hoy: {gripPlanText(grips)}</Text>
+          {kinds.map((g) => (
+            <Text key={g} style={type.caption}>
+              <Text style={{ ...font.w700, color: colors.text }}>{GRIP_INFO[g].label}.</Text> {GRIP_INFO[g].how}
+            </Text>
+          ))}
+          {kinds.length > 1 && (
+            <Text style={type.caption}>Primero las del agarre de la prueba, que es el que hay que dominar; después las del otro. En cada serie te digo cuál toca.</Text>
+          )}
         </Card>
       )}
 
@@ -204,7 +213,9 @@ export default function PullupSession() {
                 <Text style={styles.clock} accessibilityLabel={`Quedan ${left} segundos de descanso`}>
                   {mmss(left)}
                 </Text>
-                <Text style={[type.caption, { textAlign: 'center' }]}>Suelta los brazos y respira. La siguiente tiene que salir tan limpia como la primera.</Text>
+                <Text style={[type.caption, { textAlign: 'center' }]}>
+                  Suelta los brazos y respira. La siguiente, en agarre {GRIP_INFO[grip].label.toLowerCase()}, tiene que salir tan limpia como la primera.
+                </Text>
                 <View style={styles.buttons}>
                   <View style={{ flex: 1 }}>
                     <Button label="+30 s" variant="secondary" onPress={() => startRest(left + 30)} />
@@ -216,7 +227,9 @@ export default function PullupSession() {
               </>
             ) : (
               <>
-                <Text style={type.subtitle}>Serie {done + 1}</Text>
+                <Text style={type.subtitle}>
+                  Serie {done + 1} · agarre {GRIP_INFO[grip].label.toLowerCase()}
+                </Text>
                 <Text style={styles.clock}>
                   {dose.reps} {dose.reps === 1 ? 'repetición' : 'repeticiones'}
                 </Text>

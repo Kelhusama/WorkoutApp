@@ -59,8 +59,8 @@ export function shiftTime(t: string, minutes: number): string {
 }
 
 const MESSAGES = [
-  (title: string) => `Hoy toca ${title}: 15 minutos en casa que te acercan al 16 de enero. ¡A por ellos!`,
-  (title: string) => `Tú puedes: 15 minutos de ${title} y lo tienes hecho.`,
+  (title: string) => `Hoy toca ${title}: tienes rutina de 10 o de 20 minutos. Cada una te acerca al 16 de enero.`,
+  (title: string) => `Tú puedes: con la rutina corta de ${title}, en 10 minutos lo tienes hecho.`,
   (title: string) => `Último aviso: aún estás a tiempo de ${title}. Y si hoy no puede ser, márcalo y mañana seguimos.`,
 ];
 

@@ -251,3 +251,14 @@ test('de viaje sin barra, el plan de dominadas no avisa esos días', async () =>
   assert.equal(pullupsPausedBy({ gimnasio: true }), false);
   assert.equal(pullupsPausedBy({ gimnasio: false }), true);
 });
+
+test('los agarres de la sesión los fija el plan: primero prono, luego el del día', async () => {
+  const { gripPlan, gripPlanText } = await import('./event');
+  // Lunes (día de prono): todas en prono.
+  assert.equal(gripPlanText(gripPlan(6, '2026-11-23')), '6 series en prono');
+  // Martes (día de supino): la primera mitad en prono y el resto en supino.
+  assert.deepEqual(gripPlan(5, '2026-11-24'), ['prono', 'prono', 'prono', 'supino', 'supino']);
+  assert.equal(gripPlanText(gripPlan(6, '2026-11-24')), '3 series en prono y 3 en supino');
+  assert.equal(gripPlanText(gripPlan(1, '2026-11-26')), '1 serie en prono');
+  assert.equal(gripPlanText(gripPlan(4, '2026-11-26')), '2 series en prono y 2 en neutro');
+});

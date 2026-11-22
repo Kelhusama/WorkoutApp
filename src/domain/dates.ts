@@ -40,6 +40,11 @@ export function weekStart(s: ISODate): ISODate {
   return addDays(s, -weekdayIndex(s));
 }
 
+/** Número de semana (de lunes a domingo) contado desde una fecha fija: sirve para rotar cosas cada semana. */
+export function weekNumber(s: ISODate): number {
+  return Math.round(fromISODate(weekStart(s)).getTime() / 86_400_000 / 7);
+}
+
 export function formatLong(s: ISODate): string {
   const d = fromISODate(s);
   return `${DAY_LONG[weekdayIndex(s)]} ${d.getDate()} de ${MONTHS[d.getMonth()]}`;
