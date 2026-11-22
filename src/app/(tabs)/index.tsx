@@ -302,7 +302,7 @@ export default function TodayScreen() {
                 onPress={() => setShowExercises((v) => !v)}
                 style={styles.linkRow}>
                 <Text style={[type.subtitle, { flex: 1 }]}>
-                  {slots.length} ejercicios{trip ? ' adaptados al viaje' : ''}
+                  Rutina de 10, 20 o más minutos · hasta {slots.length} ejercicios{trip ? ' de viaje' : ''}
                 </Text>
                 <Ionicons name={showExercises ? 'chevron-up' : 'chevron-down'} size={18} color={colors.muted} />
               </Pressable>

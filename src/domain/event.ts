@@ -529,7 +529,8 @@ export function gripsText(week: WeekPlan): string {
   const parts: string[] = [];
   for (let d = week.from; d <= week.to; d = addDays(d, 1)) {
     const g = gripFor(d);
-    if (g) parts.push(`${DAY_NAMES[weekdayIndex(d)]} ${GRIP_INFO[g].label.toLowerCase()}`);
+    // Los días de supino o neutro, la primera mitad de las series sigue siendo en prono.
+    if (g) parts.push(`${DAY_NAMES[weekdayIndex(d)]} ${g === TEST_GRIP ? '' : `${GRIP_INFO[TEST_GRIP].label.toLowerCase()} y `}${GRIP_INFO[g].label.toLowerCase()}`);
   }
   return parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}`;
 }

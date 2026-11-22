@@ -205,7 +205,7 @@ export default function TrialScreen() {
                 <Text style={type.caption}>{dose.note}</Text>
                 {lift === 'dominada' && (
                   <Text style={type.caption}>
-                    <Text style={{ ...font.w700, color: colors.text }}>Agarres de la semana:</Text> {gripsText(now.week)}. El prono se repite más porque
+                    <Text style={{ ...font.w700, color: colors.text }}>Agarres de la semana:</Text> {gripsText(now.week)}. El prono está todos los días porque
                     es el que doy por hecho para la prueba ({GRIP_INFO[TEST_GRIP].how.split('.')[0].toLowerCase()}).
                   </Text>
                 )}

@@ -93,8 +93,8 @@ export default function SessionScreen() {
       // El día que tocan dominadas del plan, la sesión de casa pasa a segundo plano: ligera.
       const ready: Readiness = trip
         ? { light: true, reason: 'De viaje: sesión corta y ligera. Lo importante es no perder el hilo.' }
-        : trialOn && isPullupDay(date)
-          ? { light: true, reason: 'Hoy tocan dominadas del plan: hazlas primero y deja esta sesión en ligera.' }
+        : trialOn && isPullupDay(date) && kind !== 'B'
+          ? { light: true, reason: 'Hoy tocan dominadas del plan: hazlas primero y deja esta sesión en corta, que también tira de brazos.' }
           : readiness(await getDoneSessions(db, addDays(date, -30)), date, await getWeekLoad(db, weekStart(date)));
       // Al editar se respeta cómo se guardó; si no, el entrenador propone según la carga reciente.
       const startLight = log?.status === 'done' ? log.light === 1 : ready.light;
@@ -142,10 +142,12 @@ export default function SessionScreen() {
     if (!feeling) return;
     setSaving(true);
     try {
-      const results = activeSlots.map((s) => ({ slotKey: s.key, exerciseId: s.exerciseId, values: values[s.key] ?? [], reserve: reserves[s.key] ?? null }));
+      // Un ejercicio saltado (todas sus series a cero) no se apunta: no es lo mismo que intentarlo y no poder.
+      const doneSlots = activeSlots.filter((s) => (values[s.key] ?? []).some((v) => v > 0));
+      const results = doneSlots.map((s) => ({ slotKey: s.key, exerciseId: s.exerciseId, values: values[s.key] ?? [], reserve: reserves[s.key] ?? null }));
       // Marcas anteriores a hoy, para saber si esta sesión bate algún récord.
       const before = await getBests(db, date);
-      const result = await saveHomeSession(db, date, kind, feeling, results, activeSlots, light, variants, focus);
+      const result = await saveHomeSession(db, date, kind, feeling, results, doneSlots, light, variants, focus);
       setRecords(detectRecords(before, results));
       setDirty(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

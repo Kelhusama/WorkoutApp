@@ -151,11 +151,11 @@ test('agarres: el de la prueba se repite más y los otros reparten', async () =>
   const { gripFor, gripsText, TEST_GRIP } = await import('./event');
   assert.equal(TEST_GRIP, 'prono');
   const plan = buildPlan();
-  assert.equal(gripsText(plan[0]), 'lunes prono, martes supino, jueves neutro y viernes prono');
+  assert.equal(gripsText(plan[0]), 'lunes prono, martes prono y supino, jueves prono y neutro y viernes prono');
   assert.deepEqual(['2026-11-23', '2026-11-24', '2026-11-25', '2026-11-26', '2026-11-27'].map((d) => gripFor(d)), ['prono', 'supino', null, 'neutro', 'prono']);
   // Con tres días, el del medio alterna entre semanas.
-  assert.equal(gripsText(plan[3]), 'lunes prono, miércoles neutro y viernes prono');
-  assert.equal(gripsText(plan[4]), 'lunes prono, miércoles supino y viernes prono');
+  assert.equal(gripsText(plan[3]), 'lunes prono, miércoles prono y neutro y viernes prono');
+  assert.equal(gripsText(plan[4]), 'lunes prono, miércoles prono y supino y viernes prono');
   // En la descarga, solo el de la prueba.
   assert.equal(gripsText(plan[7]), 'lunes prono y miércoles prono');
 });
