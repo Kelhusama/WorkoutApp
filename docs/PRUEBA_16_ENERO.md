@@ -40,7 +40,7 @@ No hay ensayos serios sobre programas de dominadas de este tipo: es práctica de
 - **Hoy** muestra una fila con lo que falta esta semana.
 - **Días de dominadas**, siempre entre semana: con cuatro días, lunes, martes, jueves y viernes; con tres, lunes, miércoles y viernes; con dos, lunes y miércoles.
 - **Plan activo** (interruptor en el apartado): avisos los días de dominadas a las horas de *Perfil y avisos* (por defecto 9:00, 10:00 y 12:00), hasta tres al día y solo mientras no se hayan apuntado.
-- **Sesión guiada** (`src/app/dominadas.tsx`): calentamiento de 3–4 minutos, series de una en una con 2:30 de descanso cronometrado y vibración, registro al terminar y enlace a los estiramientos de dorsal, bíceps y antebrazo. Martes y viernes (o miércoles y viernes) añade 3 minutos de cuidado de codos.
+- **Sesión guiada** (`src/app/dominadas.tsx`): calentamiento de 3–4 minutos, series con 2:30 de descanso cronometrado y vibración, registro al terminar y enlace a los estiramientos de dorsal, bíceps y antebrazo. Martes y viernes (o miércoles y viernes) añade 3 minutos de cuidado de codos.
 - **Sin doble carga**: con el plan activo, las sesiones de casa no traen dominadas ni negativas (`TRIAL_COVERS`), y tampoco se pide el test de dominadas del entrenador. Se quedan flexiones, curl y el resto. Al desactivar el plan o pasar la prueba, vuelven.
 - **Las dominadas mandan** (revisión de coherencia, 20/11/2026): en Hoy y en Entrenar la prueba va lo primero; los días de dominadas solo avisan de las dominadas, no de la sesión de casa; si ese día hay sesión de casa, se abre en ligera; y con el plan activo no se propone sesión extra salvo que la semana esté marcada como «Más».
 - **Agarres** (20/11/2026): cada día de dominadas tiene el suyo. Con cuatro días: lunes prono, martes supino, jueves neutro y viernes prono. Con tres: prono, supino o neutro (alternan por semanas) y prono. En la descarga, solo prono. El agarre de la prueba es prono, con las palmas hacia fuera (`TEST_GRIP`), confirmado por el usuario el 20/11/2026. El agarre se puede cambiar en la sesión guiada y se guarda con cada sesión.
@@ -62,3 +62,14 @@ No hay ensayos serios sobre programas de dominadas de este tipo: es práctica de
 - El mayor riesgo es perseguir los 12 kg de lastre subiendo más rápido de lo que aguantan los codos.
 - El usuario venía de una semana de 4 días de gimnasio y algo fatigado: mientras dure el plan conviene recortar remos y jalones pesados y mantener los días de movilidad.
 - Parar o aflojar ante dolor punzante en una articulación, dolor que sigue al día siguiente en el mismo punto, o una repetición que solo sale deformando la técnica.
+
+## Ajustes del 22/11/2026
+
+- **Se empieza de dos en dos**, no de una en una: el punto de partida son 4 dominadas limpias. Semanas sin lastre: 5×2, 6×2 y 6×2 con test.
+- **Sin lastre el plan también se adapta**, por repeticiones: si sobraban tres o más, una más por serie (máximo tres); si fue al límite sin llegar, se baja a lo que salió.
+- **Viernes, día suave**: un tercio menos de series, sin lastre. No cuenta para decidir el lastre siguiente.
+- **Test de máximo**: una sola vez, el jueves de la tercera semana (10 de diciembre). Una serie con todas las limpias. Ese día no hay intento máximo de colgarse ni bajadas lentas.
+- **Bajadas lentas**: dos al acabar, solo los días frescos (lunes y jueves), nunca el viernes, el día del test ni en la descarga, ni con los brazos cargados.
+- **Objetivo realista**: la pantalla de la prueba calcula un rango para el día de la prueba (nivel de hoy más 0,5–1,25 kg por semana de entrenamiento que queda) y lo compara con el objetivo.
+- **Agarres fijados por el plan**: primero prono y luego el del día; no se eligen.
+- **Colgarse**: el intento al máximo, el último día fuerte de la semana (jueves).

@@ -26,6 +26,7 @@ import {
   gripPlanText,
   hangDose,
   pullFatigue,
+  slowNegatives,
   isElbowCareDay,
   pullupDose,
   todayPlan,
@@ -70,6 +71,8 @@ export default function PullupSession() {
   const [hangSaved, setHangSaved] = useState(false);
   // Aviso si ayer u hoy ya hubo tirón en el gimnasio.
   const [warning, setWarning] = useState<string | null>(null);
+  // Bajadas lentas para acabar, los días que tocan.
+  const [negatives, setNegatives] = useState(0);
   const allowLeave = useUnsavedGuard(done > 0 && step !== 'hecho', 'la sesión de dominadas');
 
   useEffect(() => {
@@ -80,6 +83,7 @@ export default function PullupSession() {
       setDose(d);
       if (d) setReps(d.reps);
       // Aviso si ayer u hoy hubo tirón en el gimnasio, o si las últimas sesiones de dominadas fueron al límite.
+      setNegatives(slowNegatives(today, logs));
       const tired = pullFatigue(logs, today);
       setWarning(
         pullWarning(await getGymWork(db, addDays(today, -2)), today) ??
@@ -168,7 +172,7 @@ export default function PullupSession() {
     <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: insets.bottom + space.xxl }}>
       <Card style={{ gap: 4 }}>
         <Text style={type.caption}>Hoy</Text>
-        <Text style={styles.dose}>{doseText('dominada', dose)}</Text>
+        <Text style={styles.dose}>{dose.test ? 'Test de máximo: una serie, todas las limpias' : doseText('dominada', dose)}</Text>
         <Text style={type.caption}>{dose.note}</Text>
       </Card>
 
@@ -249,9 +253,7 @@ export default function PullupSession() {
                 <Text style={type.subtitle}>
                   Serie {done + 1} · agarre {GRIP_INFO[grip].label.toLowerCase()}
                 </Text>
-                <Text style={styles.clock}>
-                  {dose.reps} {dose.reps === 1 ? 'repetición' : 'repeticiones'}
-                </Text>
+                <Text style={styles.clock}>{dose.test ? 'Todas las limpias' : `${dose.reps} ${dose.reps === 1 ? 'repetición' : 'repeticiones'}`}</Text>
                 <Text style={[type.caption, { textAlign: 'center' }]}>
                   {dose.weight > 0 ? `Con ${String(dose.weight).replace('.', ',')} kg en la mochila. ` : ''}Desde brazos estirados hasta la barbilla por encima de la barra.
                 </Text>
@@ -267,12 +269,21 @@ export default function PullupSession() {
 
       {step === 'apuntar' && (
         <>
-          <SectionTitle>3 · ¿Cómo ha salido?</SectionTitle>
+          {negatives > 0 && (
+            <>
+              <SectionTitle>3 · Para acabar: {negatives} bajadas lentas</SectionTitle>
+              <Card style={{ gap: space.sm }}>
+                <Text style={type.body}>Sube con un salto o desde un escalón y baja en 5 segundos, frenando todo el recorrido hasta estirar los brazos. Un minuto de descanso entre las dos.</Text>
+                <Text style={type.caption}>Es de lo que más fuerza da para la dominada con lastre. Si el codo molesta, sáltatelas: hoy no son obligatorias.</Text>
+              </Card>
+            </>
+          )}
+          <SectionTitle>{negatives > 0 ? '4' : '3'} · ¿Cómo ha salido?</SectionTitle>
           <Card style={{ gap: space.sm }}>
             <Text style={type.body}>
               Has hecho {done} {done === 1 ? 'serie' : 'series'}.
             </Text>
-            <Text style={type.caption}>Repeticiones limpias en la peor serie</Text>
+            <Text style={type.caption}>{dose.test ? 'Repeticiones limpias que han salido' : 'Repeticiones limpias en la peor serie'}</Text>
             <Stepper label="repeticiones" value={reps} onChange={setReps} min={1} suffix=" reps" />
             <Text style={type.overline}>En la última serie, ¿cuántas más habrías podido hacer?</Text>
             <Segmented

@@ -30,6 +30,7 @@ import {
   loadsWith,
   platesWarning,
   isPullupDay,
+  realisticTarget,
   prescription,
   pullupDaysText,
   todayPlan,
@@ -193,6 +194,18 @@ export default function TrialScreen() {
               <Text style={styles.level}>{level <= 0 && lift === 'dominada' ? 'Sin lastre' : `${kg(level)} ${info.unit}`}</Text>
               <Text style={type.caption}>Donde estás hoy, a {EVENT_REPS} repeticiones</Text>
               <ProgressBar value={Math.max(0, Math.min(1, level / target))} color={reached ? colors.success : colors.accent} />
+              {lift === 'dominada' && now.week && (() => {
+                const r = realisticTarget(logs, today, bodyKg);
+                const inside = target <= r.high;
+                return (
+                  <Text style={[type.body, { color: inside ? colors.success : colors.warn }]}>
+                    Para el día de la prueba, lo realista: entre {kg(r.low)} y {kg(r.high)} kg.{' '}
+                    <Text style={type.caption}>
+                      {inside ? `Tu objetivo de ${kg(target)} kg cae dentro.` : `Tu objetivo de ${kg(target)} kg queda por encima: se puede bajar en «Fecha y objetivos», o mantenerlo como reto.`} El test de máximo de la tercera semana lo afina.
+                    </Text>
+                  </Text>
+                );
+              })()}
               <Text style={type.caption}>
                 Estimado a partir de tu mejor sesión de las últimas tres semanas
                 {lift === 'dominada' ? ` y de tu peso (${body ? `${kg(body)} kg` : `${ASSUMED_BODY_KG} kg supuestos: apunta tu peso en Cuerpo`})` : ''}. No es una medida.

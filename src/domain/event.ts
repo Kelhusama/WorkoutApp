@@ -87,6 +87,8 @@ export const TEST_GRIP: Grip = 'prono';
 export type Phase = 'base' | 'fuerza' | 'pico' | 'descarga' | 'dia' | 'pasado';
 
 export interface Dose {
+  /** Hoy toca test de máximo: una sola serie con todas las repeticiones limpias que salgan. */
+  test?: boolean;
   /** Días de esta semana. */
   days: number;
   sets: number;
@@ -115,7 +117,7 @@ const TEMPLATE: Record<number, { phase: Phase; title: string; doses: Record<Lift
     phase: 'base',
     title: 'Coger práctica',
     doses: {
-      dominada: d(4, 6, 1, 0, 'De una en una, perfectas, con 2–3 minutos entre series. Nunca al fallo.'),
+      dominada: d(4, 5, 2, 0, 'De dos en dos, perfectas, con 2–3 minutos entre series. Nunca al fallo.'),
       peso_muerto: d(1, 4, 5, 80, 'Técnica limpia, sin prisa por subir.'),
     },
   },
@@ -123,7 +125,7 @@ const TEMPLATE: Record<number, { phase: Phase; title: string; doses: Record<Lift
     phase: 'base',
     title: 'Más repeticiones',
     doses: {
-      dominada: d(4, 5, 2, 0, 'De dos en dos, con 3 minutos entre series. Si la segunda no sale limpia, haz una.'),
+      dominada: d(4, 6, 2, 0, 'Una serie más que la semana pasada. Si la segunda repetición no sale limpia, haz una.'),
       peso_muerto: d(1, 4, 4, 85, 'Sube solo si la semana pasada salió con margen.'),
     },
   },
@@ -131,7 +133,7 @@ const TEMPLATE: Record<number, { phase: Phase; title: string; doses: Record<Lift
     phase: 'base',
     title: 'Volumen sin lastre',
     doses: {
-      dominada: d(4, 6, 2, 0, 'Seis series de dos. El último día de la semana, test de máximo: lo esperable son 4 o 5.'),
+      dominada: d(4, 6, 2, 0, 'Seis series de dos. El jueves, test de máximo: una sola serie con todas las que salgan limpias.'),
       peso_muerto: d(1, 4, 3, 87.5, 'Primeras series de tres.'),
     },
   },
@@ -250,7 +252,20 @@ function planned(lift: Lift, week: WeekPlan, logs: readonly TrialLog[]): Dose {
     }
     return plan;
   }
-  if (plan.weight === 0) return plan;
+  if (plan.weight === 0) {
+    // Sin lastre se ajustan las repeticiones por serie, según lo que quedaba la última vez.
+    // Nunca más de tres por serie: es lo que pide la prueba, y de ahí en adelante se progresa con lastre.
+    if (last.weight > 0 || last.reserve === null) return plan;
+    if (last.reserve === 0 && last.reps < plan.reps) {
+      const reps = Math.max(1, last.reps);
+      return { ...plan, reps, note: `La última vez fue al límite: series de ${reps} hasta que sobre alguna.` };
+    }
+    if (last.reserve === 2 && last.reps >= plan.reps && plan.reps < EVENT_REPS) {
+      const reps = Math.min(EVENT_REPS, Math.max(plan.reps, last.reps) + 1);
+      return { ...plan, reps, note: `La última vez te sobraban tres o más: hoy series de ${reps}. Si la última no sale limpia, vuelve a ${reps - 1}.` };
+    }
+    return plan;
+  }
   const clean = last.reps >= plan.reps && last.reserve !== null && last.reserve >= 1;
   const proven = clean ? last.weight + 2 : last.weight;
   if (proven < plan.weight) {
@@ -355,7 +370,7 @@ export function doneThisWeek(lift: Lift, week: WeekPlan, logs: readonly TrialLog
   return new Set(logs.filter((l) => l.lift === lift && l.date >= week.from && l.date <= week.to).map((l) => l.date)).size;
 }
 
-/** «6 series de 1 repetición, sin lastre» · «3 series de 3 con 92,5 kg». */
+/** «5 series de 2 repeticiones, sin lastre» · «3 series de 3 con 92,5 kg». */
 export function doseText(lift: Lift, dose: Dose): string {
   const kg = String(dose.weight).replace('.', ',');
   const what = `${dose.sets} series de ${dose.reps} ${dose.reps === 1 ? 'repetición' : 'repeticiones'}`;
@@ -371,9 +386,34 @@ export function isEasyPullupDay(date: ISODate, eventDate: ISODate = eventConfig.
   return weekdayIndex(date) === 4 && isPullupDay(date, eventDate);
 }
 
-/** Lo que toca de dominadas un día concreto: lo de la semana, o su versión suave si es viernes. */
+/** Último día fuerte de dominadas de una semana (el jueves, con cuatro días): ahí van los intentos al máximo. */
+export function lastHardPullupDay(week: WeekPlan): ISODate | null {
+  let last: ISODate | null = null;
+  for (let d = week.from; d <= week.to; d = addDays(d, 1)) if (isPullupDay(d) && !isEasyPullupDay(d)) last = d;
+  return last;
+}
+
+/** Semana del test de máximo sin lastre: la última antes de empezar con el lastre. */
+export const MAX_TEST_WEEK = 6;
+
+/** ¿Toca hoy el test de máximo? Una vez en todo el plan, el último día fuerte de la tercera semana. */
+export function isMaxTestDay(date: ISODate, eventDate: ISODate = eventConfig.date): boolean {
+  const week = todayPlan(date, eventDate).week;
+  return !!week && week.weeksLeft === MAX_TEST_WEEK && lastHardPullupDay(week) === date;
+}
+
+/** Lo que toca de dominadas un día concreto: lo de la semana, el test de máximo, o la versión suave del viernes. */
 export function pullupDose(date: ISODate, week: WeekPlan, logs: readonly TrialLog[]): Dose {
   const dose = prescription('dominada', week, logs);
+  if (isMaxTestDay(date)) {
+    return {
+      ...dose,
+      test: true,
+      sets: 1,
+      weight: 0,
+      note: 'Test de máximo: calienta bien, descansa tres minutos y haz una sola serie con todas las que salgan limpias. Para cuando se rompa la técnica, no cuando no puedas más.',
+    };
+  }
   if (!isEasyPullupDay(date)) return dose;
   return {
     ...dose,
@@ -478,7 +518,7 @@ export function planTrialReminders(
       out.push({
         id: `rem-dom-${date}-${k}`,
         at,
-        title: `Dominadas${isEasyPullupDay(date) ? ' (día suave)' : ''} · ${doseText('dominada', dose)}`,
+        title: `Dominadas${isEasyPullupDay(date) ? ' (día suave)' : ''} · ${dose.test ? 'test de máximo' : doseText('dominada', dose)}`,
         body: `${grips ? `${grips[0].toUpperCase()}${grips.slice(1)}. ` : ''}${NUDGES[Math.min(k, NUDGES.length - 1)]}`,
       });
     });
@@ -527,6 +567,33 @@ export function pullFatigue(logs: readonly TrialLog[], today: ISODate): string |
     return `Llevas ${days} días de dominadas en una semana, más de lo que pide el plan: hoy afloja en todo lo que tire de brazos.`;
   }
   return null;
+}
+
+/** Kilos de lastre que se suelen ganar por semana de entrenamiento a este nivel: entre poco y bastante. */
+export const WEEKLY_GAIN_KG = { low: 0.5, high: 1.25 } as const;
+
+/**
+ * Lastre realista para el día de la prueba, a tres repeticiones: donde estás hoy más lo que se suele ganar en las
+ * semanas de entrenamiento que quedan (la última es de descarga y no suma). Es una estimación para decidir con
+ * los pies en el suelo, no una promesa: el test de máximo la afina.
+ */
+export function realisticTarget(logs: readonly TrialLog[], today: ISODate, bodyKg: number = ASSUMED_BODY_KG, eventDate: ISODate = eventConfig.date): { low: number; high: number; weeks: number } {
+  const level = Math.max(0, currentLevel('dominada', logs, today, bodyKg));
+  const weeks = Math.max(0, Math.min(8, weeksLeftOn(today, eventDate)) - 1);
+  const round = (v: number) => Math.round(v * 2) / 2;
+  return { low: round(level + WEEKLY_GAIN_KG.low * weeks), high: round(level + WEEKLY_GAIN_KG.high * weeks), weeks };
+}
+
+/**
+ * Bajadas lentas para acabar la sesión: dan mucha fuerza para la dominada con lastre, pero cargan el codo.
+ * Solo los días frescos (el anterior no hubo dominadas), nunca el viernes suave, el día del test ni en la
+ * descarga, y tampoco si los brazos ya van cargados.
+ */
+export function slowNegatives(date: ISODate, logs: readonly TrialLog[], eventDate: ISODate = eventConfig.date): number {
+  const week = todayPlan(date, eventDate).week;
+  if (!week || week.phase === 'descarga' || !isPullupDay(date, eventDate)) return 0;
+  if (isEasyPullupDay(date, eventDate) || isMaxTestDay(date, eventDate) || isPullupDay(addDays(date, -1), eventDate)) return 0;
+  return pullFatigue(logs, date) ? 0 : 2;
 }
 
 /** De viaje solo hay barra si el hotel tiene gimnasio. Sin barra, las dominadas del plan se paran ese día. */
@@ -636,9 +703,8 @@ export function hangDose(logs: readonly HangLog[], today: ISODate): HangDose {
   const week = todayPlan(today).week;
   // El intento al máximo va el último día fuerte de dominadas de la semana (el jueves, con cuatro días):
   // el viernes es día suave y no es momento de buscar marcas.
-  let lastHard: ISODate | null = null;
-  if (week) for (let d = week.from; d <= week.to; d = addDays(d, 1)) if (isPullupDay(d) && !isEasyPullupDay(d)) lastHard = d;
-  const lastDay = lastHard === today;
+  // Tampoco el día del test de máximo de dominadas: un intento al límite por día.
+  const lastDay = !!week && lastHardPullupDay(week) === today && !isMaxTestDay(today);
   if (best === null) return { max: true, sets: 1, seconds: 0, text: 'Cuélgate una vez hasta que no puedas más y apunta los segundos: será tu marca de partida.' };
   if (lastDay && week?.phase !== 'descarga') {
     return { max: true, sets: 1, seconds: 0, text: `Un intento al máximo. Tu marca es ${best} s: a por un par de segundos más.` };

@@ -28,7 +28,7 @@ test('el plan cubre las ocho semanas anteriores a la prueba, sin huecos', () => 
   assert.deepEqual(plan.map((w) => w.phase), ['base', 'base', 'base', 'fuerza', 'fuerza', 'fuerza', 'pico', 'descarga']);
   // El peso muerto sube poco a poco hasta rozar el objetivo; las dominadas pasan de sueltas a triples con lastre.
   assert.deepEqual(plan.slice(0, 7).map((w) => w.doses.peso_muerto.weight), [80, 85, 87.5, 90, 92.5, 95, 97.5]);
-  assert.deepEqual(plan.map((w) => w.doses.dominada.reps), [1, 2, 2, 2, 3, 3, 3, 2]);
+  assert.deepEqual(plan.map((w) => w.doses.dominada.reps), [2, 2, 2, 2, 3, 3, 3, 2]);
   assert.deepEqual(plan.map((w) => w.doses.dominada.weight), [0, 0, 0, 2, 2, 4, 6, 4]);
   // La descarga pide menos que la semana anterior.
   assert.ok(plan[7].doses.dominada.days * plan[7].doses.dominada.sets < plan[6].doses.dominada.days * plan[6].doses.dominada.sets);
@@ -90,7 +90,7 @@ test('sesiones de la semana y texto de la dosis', () => {
   const logs = [log('2026-11-21', 'dominada', 0, 1), log('2026-11-21', 'dominada', 0, 1), log('2026-11-23', 'dominada', 0, 1), log('2026-11-28', 'dominada', 0, 2), log('2026-11-24', 'peso_muerto', 80, 5)];
   assert.equal(doneThisWeek('dominada', w8, logs), 2);
   assert.equal(doneThisWeek('peso_muerto', w8, logs), 1);
-  assert.equal(doseText('dominada', w8.doses.dominada), '6 series de 1 repetición, sin lastre');
+  assert.equal(doseText('dominada', w8.doses.dominada), '5 series de 2 repeticiones, sin lastre');
   assert.equal(doseText('dominada', buildPlan()[5].doses.dominada), '4 series de 3 repeticiones, con 4 kg de lastre');
   assert.equal(doseText('peso_muerto', buildPlan()[4].doses.peso_muerto), '3 series de 3 repeticiones con 92,5 kg');
   assert.match(LIFT_INFO.dominada.rules, /hasta abajo/);
@@ -120,7 +120,7 @@ test('avisos de dominadas: varios al día hasta que se apuntan', async () => {
   // Hoy quedan los de las 10 y las 12; martes, jueves y viernes, los tres.
   assert.equal(all.length, 2 + 3 + 3 + 3);
   assert.deepEqual(all.slice(0, 2).map((r) => [r.id, r.at.getHours()]), [['rem-dom-2026-11-23-1', 10], ['rem-dom-2026-11-23-2', 12]]);
-  assert.match(all[0].title, /^Dominadas · 6 series de 1 repetición, sin lastre$/);
+  assert.match(all[0].title, /^Dominadas · 5 series de 2 repeticiones, sin lastre$/);
   assert.match(all[1].body, /Último aviso/);
   // Al apuntar las de hoy, los avisos de hoy desaparecen.
   const after = planTrialReminders([log('2026-11-23', 'dominada', 0, 1)], times, now, '2026-11-23', 5);
@@ -329,4 +329,59 @@ test('el viernes suave no rebaja el lastre de la semana siguiente', async () => 
   const withoutFriday = prescription('dominada', week, [thu]);
   assert.deepEqual(withFriday, withoutFriday);
   assert.ok(withFriday.weight >= 4);
+});
+
+test('sin lastre el plan se adapta por repeticiones, sin pasar de tres', async () => {
+  const { buildPlan, prescription } = await import('./event');
+  const w8 = buildPlan()[0];
+  const dose = (reps: number, reserve: 0 | 1 | 2 | null) => prescription('dominada', w8, [log('2026-11-23', 'dominada', 0, reps, reserve)]);
+  // Con margen justo o sin contestar: lo del plan (series de dos).
+  assert.equal(dose(2, 1).reps, 2);
+  assert.equal(dose(2, null).reps, 2);
+  // Sobraban tres o más: una más por serie, y nunca más de tres.
+  assert.equal(dose(2, 2).reps, 3);
+  assert.equal(dose(3, 2).reps, 3);
+  assert.match(dose(2, 2).note, /series de 3/);
+  // Al límite sin llegar a lo pedido: se baja a lo que salió.
+  assert.equal(dose(1, 0).reps, 1);
+  // Al límite pero cumpliendo: se repite lo del plan. El lastre no aparece en estas semanas.
+  assert.equal(dose(2, 0).reps, 2);
+  assert.equal(dose(2, 2).weight, 0);
+});
+
+test('test de máximo: una vez, el jueves de la tercera semana, y ese día no hay máximo de colgarse ni bajadas', async () => {
+  const { buildPlan, hangDose, isMaxTestDay, pullupDose, slowNegatives } = await import('./event');
+  const w6 = buildPlan().find((w) => w.weeksLeft === 6)!;
+  const days: string[] = [];
+  for (let d = '2026-11-21'; d <= '2027-01-16'; d = new Date(Date.parse(d) + 86_400_000).toISOString().slice(0, 10)) if (isMaxTestDay(d)) days.push(d);
+  assert.deepEqual(days, ['2026-12-10']); // jueves
+  const dose = pullupDose('2026-12-10', w6, []);
+  assert.deepEqual([dose.test, dose.sets, dose.weight], [true, 1, 0]);
+  assert.equal(pullupDose('2026-12-08', w6, []).test, undefined);
+  assert.equal(hangDose([{ date: '2026-12-07', seconds: 40 }], '2026-12-10').max, false);
+  assert.equal(slowNegatives('2026-12-10', []), 0);
+});
+
+test('bajadas lentas: solo los días frescos, con los brazos descansados', async () => {
+  const { slowNegatives } = await import('./event');
+  // Semana del 23: lunes y jueves sí; martes (ayer hubo), viernes (suave) y miércoles (no tocan), no.
+  assert.deepEqual(['2026-11-23', '2026-11-24', '2026-11-25', '2026-11-26', '2026-11-27'].map((d) => slowNegatives(d, [])), [2, 0, 0, 2, 0]);
+  // Con los brazos cargados (dos sesiones al límite), tampoco.
+  const tired = [log('2026-11-23', 'dominada', 0, 2, 0), log('2026-11-24', 'dominada', 0, 2, 0)];
+  assert.equal(slowNegatives('2026-11-26', tired), 0);
+  // En la descarga no hay.
+  assert.equal(slowNegatives('2027-01-11', []), 0);
+});
+
+test('objetivo realista: el nivel de hoy más lo que se suele ganar en las semanas que quedan', async () => {
+  const { realisticTarget } = await import('./event');
+  // Punto de partida (4 dominadas con 80 kg ≈ 2,5 kg a tres repeticiones) y 7 semanas de entrenamiento por delante.
+  const start = realisticTarget([], '2026-11-23', 80);
+  assert.deepEqual(start, { low: 6, high: 11.5, weeks: 7 });
+  // Un test de 6 dominadas sube la estimación.
+  const better = realisticTarget([log('2026-12-10', 'dominada', 0, 6, 0)], '2026-12-11', 80);
+  assert.ok(better.low > start.low - 2 && better.high > 9);
+  // En la semana de la prueba ya no se gana nada: lo que hay es lo que hay.
+  const last = realisticTarget([log('2027-01-05', 'dominada', 8, 3, 1)], '2027-01-12', 80);
+  assert.equal(last.low, last.high);
 });
