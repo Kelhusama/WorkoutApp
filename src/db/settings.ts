@@ -75,3 +75,8 @@ export async function hasUserData(db: SQLiteDatabase): Promise<boolean> {
   );
   return (r?.n ?? 0) > 0;
 }
+
+/** Fecha y hora (ISO) de la última copia en Drive guardada o restaurada desde este móvil. */
+export const getDriveLastBackup = (db: SQLiteDatabase) => get(db, 'drive_last_backup');
+
+export const setDriveLastBackup = (db: SQLiteDatabase, iso: string) => set(db, 'drive_last_backup', iso);

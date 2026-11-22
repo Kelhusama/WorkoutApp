@@ -10,6 +10,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import { loadEventConfig } from '@/db/event';
 import { DB_NAME, migrate } from '@/db/schema';
 import { dailySnapshot, writeSnapshot } from '@/db/snapshots';
+import { DriveAutoBackup } from '@/google/DriveAutoBackup';
 import { ReminderSync } from '@/notifications/ReminderSync';
 import { colors, fonts, navTheme } from '@/ui/theme';
 
@@ -39,6 +40,7 @@ export default function RootLayout() {
       <ThemeProvider value={navTheme}>
         <StatusBar style="light" />
         <ReminderSync />
+        <DriveAutoBackup />
         <Stack
           screenOptions={{
             headerStyle: { backgroundColor: colors.bg },

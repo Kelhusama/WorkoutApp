@@ -10,6 +10,7 @@ import { fromISODate, today } from '@/domain/dates';
 import { BackupCard } from '@/ui/BackupCard';
 import { Button, Card, SectionTitle, Segmented } from '@/ui/components';
 import { NumberField, numberToText, parseNumber } from '@/ui/NumberField';
+import { DriveBackupCard } from '@/ui/DriveBackupCard';
 import { RemindersSettings } from '@/ui/RemindersSettings';
 import { colors, radius, space, type, font } from '@/ui/theme';
 
@@ -178,6 +179,7 @@ export default function ProfileScreen() {
 
       <SectionTitle>Tus datos</SectionTitle>
       <BackupCard onRestored={() => router.back()} />
+      <DriveBackupCard onRestored={() => router.back()} />
     </ScrollView>
   );
 }
