@@ -240,7 +240,7 @@ export default function SessionScreen() {
         )}
         {travelling && (
           <Text style={[type.caption, { color: colors.info, marginTop: 4 }]}>
-            <Ionicons name="airplane" size={12} color={colors.info} /> Modo viaje: ejercicios adaptados a lo que tienes a mano.
+            <Ionicons name="airplane" size={12} color={colors.info} /> Modo viaje: una sesión corta y sin material. Solo hace falta una silla firme.
           </Text>
         )}
       </View>
@@ -255,7 +255,9 @@ export default function SessionScreen() {
         />
         <Text style={type.caption}>
           {light
-            ? 'Sesión ligera: solo tren superior, un tercio menos de series y deja 2 o 3 repeticiones sin hacer en cada una. Hoy el plan no cambia.'
+            ? travelling
+              ? 'Sesión ligera: un tercio menos de series y deja 2 o 3 repeticiones sin hacer en cada una. Hoy el plan no cambia.'
+              : 'Sesión ligera: solo tren superior, un tercio menos de series y deja 2 o 3 repeticiones sin hacer en cada una. Hoy el plan no cambia.'
             : 'Sesión normal: según cómo salga, el entrenador sube, mantiene o baja cada ejercicio.'}
         </Text>
         {advice?.light && !editing && (
@@ -269,6 +271,7 @@ export default function SessionScreen() {
         <ExerciseCard
           key={s.key}
           slot={s}
+          openFigure={travelling}
           target={targetOf(s.key)}
           stageNote={stageNote(s.key, stages[s.key] ?? 0) ?? undefined}
           blockNote={variants[s.key] && variants[s.key] !== 'base' ? `Bloque de prueba · ${VARIANT_INFO[variants[s.key]].label}. ${VARIANT_INFO[variants[s.key]].detail} Hasta tu próximo test.` : undefined}

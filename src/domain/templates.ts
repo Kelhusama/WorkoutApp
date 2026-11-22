@@ -99,6 +99,22 @@ export function exerciseFor(s: Slot): Exercise {
   return ex;
 }
 
+/**
+ * Descanso recomendado entre series, en segundos. Coincide con los botones del temporizador.
+ * Aguantes y abdomen, poco; dominadas, lo más largo; el resto, un minuto o minuto y medio.
+ */
+export function restSeconds(s: Slot): number {
+  const ex = exerciseFor(s);
+  if (ex.measure === 'time' || ex.muscles.includes('Abdomen')) return 45;
+  if (ex.equipment === 'barra') return 120;
+  if (ex.equipment === 'ninguno' && !ex.muscles.includes('Pecho') && !ex.muscles.includes('Tríceps') && !ex.muscles.includes('Hombro')) return 60;
+  return 90;
+}
+
+export function restText(seconds: number): string {
+  return seconds < 60 ? `${seconds} s` : seconds % 60 === 0 ? `${seconds / 60} min` : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} min`;
+}
+
 export function unitFor(ex: Exercise): string {
   return ex.measure === 'time' ? ' s' : '';
 }

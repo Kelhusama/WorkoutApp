@@ -46,3 +46,14 @@ test('viaje activo en una fecha y resumen del material', () => {
   assert.equal(gearSummary(NO_GEAR), 'Sin material');
   assert.equal(gearSummary({ mancuerna: true, gimnasio: true }), 'Con una mancuerna y gimnasio de hotel');
 });
+
+test('descanso recomendado: corto en abdomen y aguantes, largo en dominadas', async () => {
+  const { restSeconds, restText } = await import('./templates');
+  const of = (key: string) => restSeconds(Object.values(TEMPLATES).flat().find((s) => s.key === key)!);
+  assert.equal(of('A.hollow'), 45);
+  assert.equal(of('B.deadbug'), 45);
+  assert.equal(of('A.dominadas'), 120);
+  assert.equal(of('B.flexiones'), 90);
+  assert.equal(of('C.zancada'), 60);
+  assert.deepEqual([45, 60, 90, 120].map(restText), ['45 s', '1 min', '1:30 min', '2 min']);
+});

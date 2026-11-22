@@ -6,7 +6,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { RESERVE_OPTIONS, type Reserve } from '@/domain/coach';
 import { amountText, prescriptionText } from '@/domain/format';
 import { TEMPO_LABEL, type Prescription } from '@/domain/progression';
-import { exerciseFor, type Slot } from '@/domain/templates';
+import { exerciseFor, type Slot, restSeconds, restText } from '@/domain/templates';
 import { ExerciseFigure } from '@/illustrations/ExerciseFigure';
 import { Card, Segmented } from './components';
 import { colors, radius, space, type, font } from './theme';
@@ -23,12 +23,14 @@ interface Props {
   blockNote?: string;
   /** Versión más dura en la que va este ejercicio, si ya no es la normal. */
   stageNote?: string;
+  /** Enseña el dibujo abierto desde el principio (sesiones de viaje, con ejercicios menos habituales). */
+  openFigure?: boolean;
 }
 
-export function ExerciseCard({ slot, target, values, onChange, reserve, onReserve, blockNote, stageNote }: Props) {
+export function ExerciseCard({ slot, target, values, onChange, reserve, onReserve, blockNote, stageNote, openFigure = false }: Props) {
   const ex = exerciseFor(slot);
   const step = ex.measure === 'time' ? 5 : 1;
-  const [showHow, setShowHow] = useState(false);
+  const [showHow, setShowHow] = useState(openFigure);
   const hasExtra = values.length > target.sets;
 
   const setValue = (i: number, v: number) => {
@@ -65,6 +67,12 @@ export function ExerciseCard({ slot, target, values, onChange, reserve, onReserv
         </View>
       )}
       {slot.note && <Text style={type.caption}>{slot.note}</Text>}
+      {target.sets > 1 && (
+        <View style={styles.tempo}>
+          <Ionicons name="hourglass-outline" size={16} color={colors.muted} />
+          <Text style={[type.caption, { flex: 1 }]}>Descansa {restText(restSeconds(slot))} entre series. El temporizador está abajo.</Text>
+        </View>
+      )}
 
       <Pressable onPress={() => setShowHow((s) => !s)} style={styles.howBtn} accessibilityRole="button">
         <Ionicons name={showHow ? 'chevron-up' : 'body-outline'} size={18} color={colors.text} />
