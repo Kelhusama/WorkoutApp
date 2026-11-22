@@ -82,8 +82,9 @@ export default function SessionScreen() {
       setStages(trip ? {} : await getSlotStages(db));
       const saved = log?.status === 'done' ? await getSessionSets(db, log.id) : {};
       // El día que tocan dominadas del plan, la sesión de casa pasa a segundo plano: ligera.
-      const ready: Readiness =
-        trialOn && isPullupDay(date)
+      const ready: Readiness = trip
+        ? { light: true, reason: 'De viaje: sesión corta y ligera. Lo importante es no perder el hilo.' }
+        : trialOn && isPullupDay(date)
           ? { light: true, reason: 'Hoy tocan dominadas del plan: hazlas primero y deja esta sesión en ligera.' }
           : readiness(await getDoneSessions(db, addDays(date, -30)), date, await getWeekLoad(db, weekStart(date)));
       // Al editar se respeta cómo se guardó; si no, el entrenador propone según la carga reciente.

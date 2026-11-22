@@ -112,9 +112,9 @@ export default function TodayScreen() {
   const slots = useMemo(
     () =>
       kind
-        ? withoutTrialWork(sessionSlots(kind, gear ? { mochila: gear.mochila, mesa: gear.mesa, gimnasio: gear.gimnasio } : null, focus, trialActive), trialActive && !gear, todayDate)
+        ? withoutTrialWork(sessionSlots(kind, gear ? { mancuerna: gear.mancuerna, gimnasio: gear.gimnasio } : null, focus, trialActive), trialActive && !gear, todayDate)
         : [],
-    [kind, focus, trialActive, todayDate, gear?.mochila, gear?.mesa, gear?.gimnasio], // eslint-disable-line react-hooks/exhaustive-deps
+    [kind, focus, trialActive, todayDate, gear?.mancuerna, gear?.gimnasio], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   useFocusEffect(
@@ -218,7 +218,7 @@ export default function TodayScreen() {
       {/* La prueba manda: sus dominadas van antes que la sesión del día */}
       {trial.week && isPullupDay(todayDate) && pullupsPausedBy(gear) && (
         <Text style={type.caption}>
-          De viaje y sin barra: hoy no hay dominadas del plan. El remo de la sesión de viaje las sustituye, y al volver sigues donde lo dejaste.
+          De viaje y sin barra: hoy no hay dominadas del plan. No pasa nada por unos días: al volver sigues donde lo dejaste.
         </Text>
       )}
       {trial.week && isPullupDay(todayDate) && !pullupsPausedBy(gear) && !trialLogs.some((l) => l.lift === 'dominada' && l.date === todayDate) && (

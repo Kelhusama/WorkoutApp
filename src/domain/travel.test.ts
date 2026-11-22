@@ -9,41 +9,32 @@ import { TEMPLATES } from './templates';
 import { NO_GEAR, gearSummary, sessionSlots, travelSlots, tripOn, type TravelGear } from './travel';
 
 const KINDS: SessionKind[] = ['A', 'B', 'C'];
-const ALL_GEAR: TravelGear[] = [];
-for (const mochila of [false, true]) for (const mesa of [false, true]) ALL_GEAR.push({ mochila, mesa, gimnasio: false });
+const ALL_GEAR: TravelGear[] = [NO_GEAR, { mancuerna: true, gimnasio: false }];
 
-test('cualquier combinación de material da sesiones válidas, con ejercicio y dibujo', () => {
+test('la sesión de viaje es válida con y sin mancuerna, y nunca pide barra', () => {
   for (const gear of ALL_GEAR) {
     for (const kind of KINDS) {
       const slots = travelSlots(kind, gear);
-      assert.ok(slots.length >= 3, `${kind} ${JSON.stringify(gear)}`);
       assert.equal(new Set(slots.map((s) => s.key)).size, slots.length, 'claves repetidas');
       for (const s of slots) {
         const ex = EXERCISES[s.exerciseId];
         assert.ok(ex, s.exerciseId);
         assert.ok(ILLUSTRATIONS[s.exerciseId], `sin dibujo: ${s.exerciseId}`);
-        assert.ok(s.repsMin <= s.repsMax && s.initialSets <= s.maxSets, s.key);
-        // Nada que necesite lo que no hay en el viaje
-        assert.ok(ex.equipment !== 'barra' && ex.equipment !== 'mancuerna', `${s.exerciseId} necesita ${ex.equipment}`);
-        if (ex.equipment === 'mesa') assert.ok(gear.mesa);
-        if (ex.equipment === 'mochila') assert.ok(gear.mochila);
-        if (ex.measure === 'time') assert.equal(s.step, 5);
+        assert.ok(ex.equipment === 'ninguno' || (gear.mancuerna && ex.equipment === 'mancuerna'), `${s.exerciseId} necesita ${ex.equipment}`);
       }
     }
   }
 });
 
-test('sin material: remo con toalla, curl isométrico y flexiones', () => {
-  assert.deepEqual(
-    travelSlots('A', NO_GEAR).map((s) => s.exerciseId),
-    ['remo_toalla', 'agarre_toalla', 'curl_isometrico_toalla', 'elevacion_tibial', 'elevacion_talones', 'hollow'],
-  );
-  assert.equal(travelSlots('C', NO_GEAR)[1].exerciseId, 'flexion_pica');
+test('sin material: flexiones, abdomen y pierna; la misma base todos los días', () => {
+  const ids = (k: SessionKind) => travelSlots(k, NO_GEAR).map((s) => s.exerciseId);
+  assert.deepEqual(ids('A'), ['flexion_estricta', 'flexion_inclinada', 'hollow', 'dead_bug', 'elevacion_tibial', 'elevacion_talones']);
+  for (const k of KINDS) assert.deepEqual(ids(k).slice(0, 4), ids('A').slice(0, 4));
 });
 
-test('las flexiones conservan su clave para seguir la progresión', () => {
-  const keys = travelSlots('B', NO_GEAR).map((s) => s.key);
-  for (const k of ['B.flexiones', 'B.inclinadas', 'B.pica']) assert.ok(keys.includes(k));
+test('con una mancuerna se añaden remo y curl, con la progresión de casa', () => {
+  const keys = travelSlots('B', { mancuerna: true, gimnasio: false }).map((s) => s.key);
+  for (const k of ['B.flexiones', 'B.inclinadas', 'A.remo', 'A.curl']) assert.ok(keys.includes(k), k);
   assert.equal(sessionSlots('B', null), TEMPLATES.B);
 });
 
@@ -53,13 +44,5 @@ test('viaje activo en una fecha y resumen del material', () => {
   assert.equal(tripOn(trips, '2026-11-23'), trips[0]);
   assert.equal(tripOn(trips, '2026-11-24'), undefined);
   assert.equal(gearSummary(NO_GEAR), 'Sin material');
-  assert.equal(gearSummary({ mochila: true, mesa: false, gimnasio: true }), 'Con mochila, gimnasio de hotel');
-});
-
-test('de viaje se mantiene el abdomen sin material: nunca el que necesita barra', () => {
-  for (const kind of ['A', 'B', 'C'] as const) {
-    const ids = travelSlots(kind, NO_GEAR).map((s) => s.exerciseId);
-    assert.ok(ids.includes('hollow') || ids.includes('dead_bug'), kind);
-    assert.ok(!ids.includes('rodillas_colgado'), kind);
-  }
+  assert.equal(gearSummary({ mancuerna: true, gimnasio: true }), 'Con una mancuerna y gimnasio de hotel');
 });

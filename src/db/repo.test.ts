@@ -119,10 +119,10 @@ test('guardar un viaje que se solapa sustituye al anterior; se puede borrar', as
   const db = createTestDb();
   await migrate(db);
   await saveTrip(db, { from: '2026-12-01', to: '2026-12-05', gear: NO_GEAR });
-  const id = await saveTrip(db, { from: '2026-12-04', to: '2026-12-08', gear: { ...NO_GEAR, mesa: true } });
+  const id = await saveTrip(db, { from: '2026-12-04', to: '2026-12-08', gear: { ...NO_GEAR, mancuerna: true } });
   let trips = await getTrips(db);
   assert.equal(trips.length, 1);
-  assert.deepEqual([trips[0].from, trips[0].to, trips[0].gear.mesa], ['2026-12-04', '2026-12-08', true]);
+  assert.deepEqual([trips[0].from, trips[0].to, trips[0].gear.mancuerna], ['2026-12-04', '2026-12-08', true]);
   assert.equal((await getTripOn(db, '2026-12-06'))?.id, id);
   assert.equal(await getTripOn(db, '2026-12-02'), null);
   // Editar el mismo viaje (fechas al revés se ordenan)
@@ -133,7 +133,7 @@ test('guardar un viaje que se solapa sustituye al anterior; se puede borrar', as
   assert.equal((await getTrips(db)).length, 0);
 });
 
-test('la sesión de viaje guarda su propia progresión sin tocar la de casa', async () => {
+test('la sesión de viaje sigue la progresión de casa en las flexiones y no toca las dominadas', async () => {
   const db = createTestDb();
   await migrate(db);
   const slots = travelSlots('A', NO_GEAR);
@@ -142,7 +142,8 @@ test('la sesión de viaje guarda su propia progresión sin tocar la de casa', as
   const changes = await saveHomeSession(db, '2026-12-01', 'A', 'facil', results, slots);
   assert.equal(changes.length, slots.length);
   const after = await getPrescriptions(db, slots);
-  assert.equal(after['V.A.remo_toalla'].reps, before['V.A.remo_toalla'].reps + 1);
+  assert.equal(after['B.flexiones'].reps, before['B.flexiones'].reps + 1);
+  assert.deepEqual((await getPrescriptions(db, TEMPLATES.B))['B.flexiones'], after['B.flexiones']);
   const home = await getPrescriptions(db, TEMPLATES.A);
   assert.deepEqual(home['A.dominadas'], { sets: 5, reps: 2, tempo: 0 });
   // Guardar otra vez el mismo día no vuelve a subir la dificultad

@@ -10,6 +10,7 @@ import { addDays, formatLong, fromISODate, today, type ISODate } from '@/domain/
 import { SESSION_INFO, type SessionKind } from '@/domain/schedule';
 import { exerciseFor } from '@/domain/templates';
 import { NO_GEAR, travelSlots, type TravelGear } from '@/domain/travel';
+import { LEG_KEYS } from '@/domain/templates';
 import { syncReminders } from '@/notifications/reminders';
 import { Button, Card, SectionTitle, ToggleRow } from '@/ui/components';
 import { colors, radius, space, type } from '@/ui/theme';
@@ -112,41 +113,33 @@ export default function TripScreen() {
       <SectionTitle>¿Qué tendrás a mano?</SectionTitle>
       <Card style={{ gap: space.lg }}>
         <ToggleRow
-          icon="bag-handle-outline"
-          title="Mochila con peso"
-          detail="Con libros o botellas: sustituye a la mancuerna"
-          value={gear.mochila}
-          onChange={(v) => setGear({ ...gear, mochila: v })}
-        />
-        <ToggleRow
-          icon="tablet-landscape-outline"
-          title="Mesa robusta"
-          detail="Para remo invertido: sustituye a la barra"
-          value={gear.mesa}
-          onChange={(v) => setGear({ ...gear, mesa: v })}
+          icon="fitness-outline"
+          title="Hay una mancuerna"
+          detail="Añade remo y curl a la sesión"
+          value={gear.mancuerna}
+          onChange={(v) => setGear({ ...gear, mancuerna: v })}
         />
         <ToggleRow
           icon="barbell-outline"
           title="Gimnasio en el hotel"
-          detail="Mantiene tus días de gimnasio; si no, pasan a sesión en casa"
+          detail="Mantiene tus días de gimnasio y las dominadas del plan"
           value={gear.gimnasio}
           onChange={(v) => setGear({ ...gear, gimnasio: v })}
         />
-        <Text style={type.caption}>Sin nada marcado solo necesitas tu cuerpo, una toalla y una puerta.</Text>
+        <Text style={type.caption}>Sin nada marcado solo necesitas tu cuerpo. La sesión de viaje es corta y ligera: flexiones y abdomen. Las dominadas se retoman a la vuelta.</Text>
       </Card>
 
-      <SectionTitle>Así quedan tus sesiones</SectionTitle>
+      <SectionTitle>Así queda tu sesión de viaje</SectionTitle>
       <Card style={{ gap: space.md }}>
-        {KINDS.map((k) => (
-          <View key={k} style={{ gap: 2 }}>
-            <Text style={type.subtitle}>{SESSION_INFO[k].title}</Text>
-            <Text style={type.caption}>
-              {travelSlots(k, gear)
-                .map((s) => exerciseFor(s).name)
-                .join(' · ')}
-            </Text>
-          </View>
-        ))}
+        <Text style={type.body}>
+          {travelSlots('A', gear)
+            .filter((s) => !LEG_KEYS.A.includes(s.key))
+            .map((s) => exerciseFor(s).name)
+            .join(' · ')}
+        </Text>
+        <Text style={type.caption}>
+          Siempre la misma, unos 10–15 minutos. Empieza en modo ligero; si un día vas sobrado, pásala a normal y añade dos ejercicios de pierna.
+        </Text>
       </Card>
 
       <Button label="Guardar viaje" icon="airplane" onPress={save} />

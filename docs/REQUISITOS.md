@@ -120,14 +120,9 @@ El usuario tiene su rutina (halterofilia y ejercicios compuestos, sin trabajo ai
 ## 5. Modo viaje ✅
 
 - **Crear un viaje**: desde *Calendario → Viajes → Añadir viaje*, manteniendo pulsado un día en la vista de mes, o con **«Hoy estoy fuera»** en Hoy. Se eligen las fechas y el material.
-- **Material disponible** (se pueden combinar): mochila con peso, mesa robusta, gimnasio en el hotel. Sin nada marcado basta el cuerpo, una toalla y una puerta.
-- **Sesiones adaptadas**:
-
-| Sesión | Sin material | Con mesa | Con mochila |
-|---|---|---|---|
-| A · Tirón | Remo con toalla en la puerta, escurrir la toalla, curl isométrico con toalla | Remo invertido bajo la mesa | Remo y curl con mochila |
-| B · Empuje | Flexiones (las mismas, con su progresión) y escurrir la toalla | — | — |
-| C · Mixta | Remo con toalla, flexión en pica, curl isométrico, elevaciones en Y, escurrir la toalla | Remo invertido | Press y curl con mochila |
+- **Material disponible** (22/11/2026): por defecto ninguno. Opciones: «hay una mancuerna» y «gimnasio en el hotel». Se quitaron la toalla, la mesa y la mochila: de viaje se busca algo liviano y sin preparar nada.
+- **Una sola sesión de viaje**, siempre la misma, de 10–15 minutos y en modo ligero: flexión estricta, flexión inclinada, barca y bicho muerto. Con mancuerna se añaden remo y curl. En modo normal se suman dos ejercicios de pierna, que rotan según el día. Usa la progresión de casa.
+- **Las dominadas no se sustituyen de viaje**: sin barra se paran y se retoman a la vuelta. Con gimnasio de hotel, el plan sigue.
 
 - Las alternativas llevan **su propia progresión**; las flexiones conservan la de casa.
 - **Sin gimnasio de hotel**, los días de gimnasio pasan a sesión de casa adaptada. Con gimnasio, se mantienen.

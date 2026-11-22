@@ -20,7 +20,7 @@ async function seeded() {
   await saveGymSession(db, '2026-11-02', 'normal', { weight: 50, reps: 5 });
   await saveProfile(db, { heightCm: 180, birthDate: '1990-01-01', sex: 'H', activity: 1.55 });
   await saveBodyEntry(db, { date: '2026-11-01', weight: 83.2, bodyFat: 25.9 });
-  await saveTrip(db, { from: '2026-12-01', to: '2026-12-05', gear: { ...NO_GEAR, mesa: true } });
+  await saveTrip(db, { from: '2026-12-01', to: '2026-12-05', gear: { ...NO_GEAR, mancuerna: true } });
   await saveTemplate(db, ['gym', 'casa', 'gym', 'casa', 'casa', 'rest', 'rest']);
   return db;
 }
@@ -46,7 +46,7 @@ test('exportar e importar en una base de datos nueva conserva todo', async () =>
   );
   // La progresión aplicada (fácil → una repetición más) también viaja en la copia
   assert.equal((await getPrescriptions(target, TEMPLATES.B))['B.flexiones'].reps, 5);
-  assert.equal((await getTrips(target))[0].gear.mesa, true);
+  assert.equal((await getTrips(target))[0].gear.mancuerna, true);
   const { template } = await loadDays(target, '2026-11-02', '2026-11-08');
   assert.equal(template[2], 'gym');
 });

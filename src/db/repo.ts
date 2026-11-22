@@ -127,7 +127,8 @@ const toTrip = (r: TripRow): Trip => ({
   id: r.id,
   from: r.from_date,
   to: r.to_date,
-  gear: { mochila: !!r.mochila, mesa: !!r.mesa, gimnasio: !!r.gimnasio },
+  // La columna «mochila» guarda ahora si hay una mancuerna; «mesa» se conserva pero ya no se usa.
+  gear: { mancuerna: !!r.mochila, gimnasio: !!r.gimnasio },
 });
 
 /** Viajes que tocan el rango de fechas (o todos si no se indica), por orden. */
@@ -157,8 +158,8 @@ export async function saveTrip(
       'INSERT INTO trip (from_date, to_date, mochila, mesa, gimnasio) VALUES (?, ?, ?, ?, ?)',
       from,
       to,
-      trip.gear.mochila ? 1 : 0,
-      trip.gear.mesa ? 1 : 0,
+      trip.gear.mancuerna ? 1 : 0,
+      0,
       trip.gear.gimnasio ? 1 : 0,
     );
     id = r.lastInsertRowId;
