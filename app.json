@@ -57,7 +57,11 @@
     "extra": {
       "google": {
         "webClientId": "984207562493-09in3cdf2kg9ad6s89u5rmbb6rrhc7g2.apps.googleusercontent.com"
+      },
+      "eas": {
+        "projectId": "9014ca94-1997-46ce-bb08-1afdb8440790"
       }
-    }
+    },
+    "owner": "kelhusamas-team"
   }
 }
