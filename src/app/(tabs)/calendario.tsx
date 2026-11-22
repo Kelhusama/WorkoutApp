@@ -1,11 +1,14 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { getTrialLogs } from '@/db/event';
 import { clearWeekOverrides } from '@/db/repo';
+import { getTrialActive } from '@/db/settings';
+import { pullupMark, pullupsPausedBy, type PullupMark, type TrialLog } from '@/domain/event';
 import {
   addDays,
   addMonths,
@@ -40,6 +43,24 @@ export default function CalendarScreen() {
   const to = mode === 'semana' ? addDays(from, 6) : addDays(weekStart(monthEnd(anchor)), 6);
   const { days, reload } = useDays(from, to);
   const db = useSQLiteContext();
+  // Dominadas del plan: van aparte de la sesión del día (gimnasio o casa), así que se enseñan aparte.
+  const [trial, setTrial] = useState<{ logs: TrialLog[]; active: boolean }>({ logs: [], active: false });
+  useFocusEffect(
+    useCallback(() => {
+      Promise.all([getTrialLogs(db), getTrialActive(db)]).then(([logs, active]) => setTrial({ logs, active }));
+    }, [db]),
+  );
+  const pullups: Record<string, PullupMark | null> = {};
+  for (const d of days) pullups[d.date] = pullupMark(d.date, trial.logs, todayDate, trial.active, pullupsPausedBy(d.trip?.gear));
+  const hasPullups = Object.values(pullups).some(Boolean);
+  // Al tocar un día: si ya hay algo apuntado (o es de descanso), se abre la lista de ese día para ver o añadir;
+  // si no, directamente lo que tocaba.
+  const openFor = (d: PlannedDay) =>
+    d.date > todayDate
+      ? undefined
+      : d.workouts.length > 0 || d.type === 'rest'
+        ? () => router.push({ pathname: '/apuntar', params: { date: d.date } })
+        : () => openDay(d.type, d.date, d.focus);
   const changeDay = (d: PlannedDay) =>
     d.log ? undefined : () => router.push({ pathname: '/dia', params: { date: d.date } });
   const weekHasChanges = mode === 'semana' && days.some((d) => d.overridden);
@@ -61,7 +82,7 @@ export default function CalendarScreen() {
     mode === 'semana' ? `${formatShort(from)} – ${formatShort(to)}` : monthTitle(monthStart(anchor));
 
   const inRange = mode === 'semana' ? days : days.filter((d) => d.date.startsWith(anchor.slice(0, 7)));
-  const done = inRange.filter((d) => d.status === 'done').length;
+  const done = inRange.filter((d) => d.status === 'done' && d.type !== 'rest' && d.type !== 'movilidad').length;
   const planned = inRange.filter((d) => d.type !== 'rest' && d.type !== 'movilidad' && d.status !== 'excused' && d.date <= todayDate).length;
   const trips = [...new Map(days.filter((d) => d.trip).map((d) => [d.trip!.id, d.trip!])).values()];
   const newTrip = (date: ISODate) => router.push({ pathname: '/viaje', params: { date } });
@@ -98,6 +119,12 @@ export default function CalendarScreen() {
         </Pressable>
       </View>
 
+      <Button
+        label={mode === 'mes' && selected && selected <= todayDate && selected !== todayDate ? `Apuntar un entrenamiento el ${formatShort(selected)}` : 'Apuntar un entrenamiento'}
+        icon="add-circle"
+        onPress={() => router.push({ pathname: '/apuntar', params: { date: mode === 'mes' && selected && selected <= todayDate ? selected : todayDate } })}
+      />
+
       {!showsToday && (
         <Button
           label={mode === 'semana' ? 'Volver a esta semana' : 'Volver a este mes'}
@@ -112,8 +139,12 @@ export default function CalendarScreen() {
 
       {mode === 'mes' ? (
         <Card style={{ gap: space.md }}>
-          <MonthGrid days={days} month={monthStart(anchor)} selected={selected} onSelect={setSelected} />
+          <MonthGrid days={days} month={monthStart(anchor)} selected={selected} onSelect={setSelected} pullups={pullups} />
           <Legend />
+          <Text style={[type.caption, { textAlign: 'center' }]}>
+            Un día está hecho si entrenas algo, sea o no lo que tocaba. «×2» son los entrenamientos de ese día.
+            {hasPullups ? ' El punto de la esquina son las dominadas del plan: verde hechas, amarillo tocan, naranja sin hacer.' : ''}
+          </Text>
         </Card>
       ) : (
         <View style={{ gap: space.sm }}>
@@ -121,7 +152,8 @@ export default function CalendarScreen() {
             <DayRow
               key={d.date}
               day={d}
-              onPress={d.type !== 'rest' && d.date <= todayDate ? () => openDay(d.type, d.date, d.focus) : undefined}
+              pullup={pullups[d.date]}
+              onPress={openFor(d)}
               onChange={changeDay(d)}
             />
           ))}
@@ -133,11 +165,8 @@ export default function CalendarScreen() {
           <Text style={type.overline}>{formatLong(selectedDay.date)}</Text>
           <DayRow
             day={selectedDay}
-            onPress={
-              selectedDay.type !== 'rest' && selectedDay.date <= todayDate
-                ? () => openDay(selectedDay.type, selectedDay.date)
-                : undefined
-            }
+            pullup={pullups[selectedDay.date]}
+            onPress={openFor(selectedDay)}
             onChange={changeDay(selectedDay)}
           />
         </View>

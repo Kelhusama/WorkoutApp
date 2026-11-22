@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -11,6 +11,9 @@ import { getSlotVariants } from '@/db/coach';
 import { getTrialActive, getWeekLoad } from '@/db/settings';
 import { isPullupDay, pullFatigue, withoutTrialWork } from '@/domain/event';
 import { getTrialLogs } from '@/db/event';
+import { setWorkoutMeta } from '@/db/workouts';
+import type { State } from '@/domain/workouts';
+import { StatePicker } from '@/ui/WorkoutFields';
 import { VARIANT_INFO, applyVariant, type Variant } from '@/domain/bandit';
 import { lightSets, readiness, type Readiness, type Reserve } from '@/domain/coach';
 import { getBests } from '@/db/stats';
@@ -68,6 +71,10 @@ export default function SessionScreen() {
   const [dirty, setDirty] = useState(false);
   // Paso a paso, con dibujo y descanso automático. Una sesión ya guardada se abre como lista, para corregirla.
   const [guided, setGuided] = useState(false);
+  // Cómo estabas hoy, aparte de lo dura que fuera la sesión.
+  const [mood, setMood] = useState<State | null>(null);
+  // Cuándo empezó la sesión guiada, para apuntar lo que dura de verdad.
+  const startedAt = useRef<number | null>(null);
   useUnsavedGuard(dirty, 'las series que has apuntado');
 
   useEffect(() => {
@@ -156,6 +163,10 @@ export default function SessionScreen() {
       // Marcas anteriores a hoy, para saber si esta sesión bate algún récord.
       const before = await getBests(db, date);
       const result = await saveHomeSession(db, date, kind, feeling, results, doneSlots, light, variants, focus);
+      // Lo común a cualquier entrenamiento: cómo estabas y, si se hizo guiada, lo que duró de verdad.
+      const saved = await getSessionLog(db, date, kind);
+      const minutes = startedAt.current ? (Date.now() - startedAt.current) / 60_000 : null;
+      if (saved) await setWorkoutMeta(db, 'session_log', saved.id, { state: mood, minutes: minutes && minutes >= 2 && minutes <= 180 ? minutes : null });
       setRecords(detectRecords(before, results));
       setDirty(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -324,7 +335,15 @@ export default function SessionScreen() {
 
   const outro = (
     <>
-      <SectionTitle>¿Cómo ha ido?</SectionTitle>
+      <SectionTitle>¿Cómo estabas hoy?</SectionTitle>
+      <StatePicker
+        value={mood}
+        onChange={(v) => {
+          setDirty(true);
+          setMood(v);
+        }}
+      />
+      <SectionTitle>¿Cómo ha ido la sesión?</SectionTitle>
       <FeelingPicker
         value={feeling}
         onChange={(v) => {
@@ -363,6 +382,9 @@ export default function SessionScreen() {
           onList={() => setGuided(false)}
           light={light}
           pairs={routine?.pairs ?? []}
+          onStart={() => {
+            startedAt.current = Date.now();
+          }}
           bottomInset={insets.bottom}
         />
       </View>

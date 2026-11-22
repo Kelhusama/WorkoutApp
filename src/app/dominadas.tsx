@@ -9,6 +9,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { addHangLog, addTrialLog, getHangLogs, getTrialLogs } from '@/db/event';
 import { getGymWork } from '@/db/repo';
+import { setWorkoutMeta } from '@/db/workouts';
+import type { State } from '@/domain/workouts';
+import { StatePicker } from '@/ui/WorkoutFields';
 import { RESERVE_OPTIONS, pullWarning, type Reserve } from '@/domain/coach';
 import { addDays, today as getToday } from '@/domain/dates';
 import {
@@ -58,6 +61,9 @@ export default function PullupSession() {
   const [reps, setReps] = useState(1);
   const [reserve, setReserve] = useState<Reserve | null>(null);
   const rang = useRef(false);
+  // Cómo estabas hoy y cuándo empezaron las series, para lo común a cualquier entrenamiento.
+  const [mood, setMood] = useState<State | null>(null);
+  const startedAt = useRef<number | null>(null);
   // Colgarse, al final: lo que toca hoy y los segundos que se apuntan.
   const [hang, setHang] = useState<HangDose | null>(null);
   const [hangSeconds, setHangSeconds] = useState(30);
@@ -147,7 +153,9 @@ export default function PullupSession() {
   };
 
   const save = async () => {
-    await addTrialLog(db, { date: today, lift: 'dominada', weight: dose.weight, reps, sets: Math.max(1, done), reserve, grip: grips[grips.length - 1] ?? TEST_GRIP });
+    const logId = await addTrialLog(db, { date: today, lift: 'dominada', weight: dose.weight, reps, sets: Math.max(1, done), reserve, grip: grips[grips.length - 1] ?? TEST_GRIP });
+    const minutes = startedAt.current ? (Date.now() - startedAt.current) / 60_000 : null;
+    await setWorkoutMeta(db, 'trial_log', logId, { state: mood, minutes: minutes && minutes >= 2 && minutes <= 120 ? minutes : null });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     syncReminders(db);
     allowLeave();
@@ -200,7 +208,11 @@ export default function PullupSession() {
             <Ionicons name="shield-checkmark-outline" size={20} color={colors.info} style={{ marginTop: 2 }} />
             <Text style={[type.caption, { flex: 1 }]}>{LIFT_INFO.dominada.rules}</Text>
           </Card>
-          <Button label="Ya he calentado: empezar las series" icon="play" onPress={() => setStep('series')} />
+          <Button label="Ya he calentado: empezar las series" icon="play" onPress={() => {
+              startedAt.current = Date.now();
+              setStep('series');
+            }}
+          />
         </>
       )}
 
@@ -272,6 +284,8 @@ export default function PullupSession() {
             <Text style={type.caption}>
               {reserve === null ? 'Con esta respuesta el plan decide si subes de lastre. Puedes guardar sin contestar.' : 'Con margen, el plan te deja subir; al límite, repite.'}
             </Text>
+            <Text style={type.overline}>¿Cómo estabas hoy? (opcional)</Text>
+            <StatePicker value={mood} onChange={setMood} />
             <Button label="Guardar la sesión" icon="checkmark-circle" onPress={save} />
           </Card>
         </>

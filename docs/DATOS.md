@@ -16,6 +16,27 @@ Estado a 22 de noviembre de 2026. Objetivo: **no perder nunca el avance**, ni po
 
 Mientras se use con Expo Go, la base de datos vive dentro de Expo Go: si se desinstala Expo Go o se borran sus datos, se pierde. Y al pasar a la app instalada (APK) se empieza con una base vacía: hay que exportar antes y restaurar después.
 
+## 1 bis. Cómo se guarda un entrenamiento
+
+Desde la versión 23 de la base de datos, **todo lo que se entrena es un «entrenamiento»**, sea del tipo que sea. Hay una tabla general (`workout`) con lo común a todos:
+
+| Campo | Qué guarda |
+|---|---|
+| `date` | El día |
+| `type` | El tipo: casa, gimnasio, dominadas, peso_muerto, caminata, movilidad, estiramientos, otro… Es **texto libre**: un tipo nuevo no cambia la base de datos, solo se añade a la lista de `src/domain/workouts.ts` |
+| `title` | Cómo se enseña: «Empuje», «Caminata 8 km» |
+| `minutes` | Duración. En las sesiones guiadas se mide sola |
+| `load` | Carga de la sesión: 1 suave, 2 media, 3 fuerte |
+| `state` | Cómo estabas: con energía, normal, cansado, con molestias |
+| `notes` | Nota libre |
+| `source`, `source_id` | Dónde están los detalles, si los tiene |
+
+- **Los detalles de cada tipo siguen en su tabla** (series y repeticiones, kilos, kilómetros). No se ha movido ni borrado nada.
+- **La tabla general se pone al día sola** con lo apuntado en cada pantalla (`syncWorkouts`): se puede repetir las veces que haga falta sin duplicar. Lo ya apuntado antes de este cambio aparece al abrir la app.
+- **En un día caben los entrenamientos que sean**, también varios del mismo tipo. Los que se apuntan «rápido» no tienen detalle (`source` vacío).
+- **La carga sale por defecto de lo apuntado** (fácil/normal/dura en casa y gimnasio; lo que quedaba en la última serie en dominadas; el esfuerzo en caminatas). Si se corrige a mano, ya no se recalcula.
+- **Un día está «hecho» si se entrena algo**, sea o no lo que tocaba. Los estiramientos de después de una sesión no cuentan como entrenar.
+
 ## 2. Qué puede salir mal y qué lo cubre
 
 | Riesgo | Cobertura actual | ¿Suficiente? |

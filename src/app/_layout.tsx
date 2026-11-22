@@ -146,6 +146,8 @@ export default function RootLayout() {
           <Stack.Screen name="revision" options={{ title: 'Revisión semanal' }} />
           <Stack.Screen name="prueba" options={{ title: 'La prueba' }} />
           <Stack.Screen name="dominadas" options={{ title: 'Dominadas' }} />
+          <Stack.Screen name="apuntar" options={{ title: 'Apuntar entrenamiento' }} />
+          <Stack.Screen name="entrenamiento" options={{ title: 'Entrenamiento' }} />
         </Stack>
       </ThemeProvider>
     </SQLiteProvider>

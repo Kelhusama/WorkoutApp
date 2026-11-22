@@ -379,6 +379,25 @@ export function pullupDose(date: ISODate, week: WeekPlan, logs: readonly TrialLo
   };
 }
 
+export interface PullupMark {
+  state: 'hecho' | 'toca' | 'sin_hacer';
+  /** Día suave (viernes). */
+  easy: boolean;
+}
+
+export const PULLUP_MARK_LABEL: Record<PullupMark['state'], string> = { hecho: 'hechas', toca: 'tocan', sin_hacer: 'sin hacer' };
+
+/**
+ * Las dominadas del plan en un día del calendario: hechas si hay registro; si no, lo que marque el plan
+ * cuando está activo. `paused`: ese día se está de viaje sin barra, así que no tocan.
+ */
+export function pullupMark(date: ISODate, logs: readonly TrialLog[], today: ISODate, active: boolean, paused = false): PullupMark | null {
+  const easy = isEasyPullupDay(date);
+  if (logs.some((l) => l.lift === 'dominada' && l.date === date)) return { state: 'hecho', easy };
+  if (!active || paused || !isPullupDay(date)) return null;
+  return { state: date < today ? 'sin_hacer' : 'toca', easy };
+}
+
 // ---------- Días de dominadas, avisos y sesión guiada ----------
 
 /**

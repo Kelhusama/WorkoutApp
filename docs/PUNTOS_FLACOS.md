@@ -7,13 +7,16 @@ Estado a 22 de noviembre de 2026. Lista viva: lo que está flojo, por qué impor
 | Punto flaco | Por qué importa | Qué lo arregla |
 |---|---|---|
 | **Casi nada probado en el móvil.** Solo los estiramientos. Todo lo demás se ha comprobado en el navegador del ordenador. | Avisos, vibración, cámara, teclado y exportar copia solo existen en el móvil. Puede haber fallos que aquí no se ven. | Una semana de uso real siguiendo `docs/PRUEBAS.md`. **No añadir funciones hasta entonces.** |
-| **Los minutos de cada rutina son una estimación** (3 s por repetición, más descansos y 20 s por ejercicio). | La rutina «de 20 minutos» puede ser de 17 o de 25. | Medir el tiempo real de cada sesión guiada y corregir la estimación con esos datos. |
+| **Los minutos de cada rutina son una estimación** (3 s por repetición, más descansos y 20 s por ejercicio). | La rutina «de 20 minutos» puede ser de 17 o de 25. | Las sesiones guiadas ya apuntan lo que duran de verdad; falta usar ese dato para corregir la estimación. |
 | **Google en el móvil sin probar.** En el navegador funciona (iniciar sesión, guardar, restaurar), con una copia vacía. | La copia automática en la nube es lo que protege de perder el móvil. | Generar el APK (cuenta gratuita de Expo y credenciales de Android en Google Cloud). Mientras, exportar copia a mano cada semana. |
 | **Las fotos de progreso no entran en ninguna copia.** | Si se pierde el móvil, se pierden. | Incluirlas en la copia de Drive. |
 
 ## 2. Entrenamiento
 
 - **La fatiga de tirón depende de que se conteste** «¿cuántas más habrías podido hacer?» al acabar las dominadas. Sin esa respuesta solo ve cuántos días se han hecho.
+- **La carga y el «cómo estabas» de cada entrenamiento se guardan, pero aún no se usan para decidir nada.** El aviso de fatiga sigue mirando solo sesiones de casa, gimnasio y dominadas. Lo lógico es que la carga semanal y los días «cansado» o «con molestias» lo alimenten.
+- **Gimnasio y sesiones de casa con detalle siguen siendo una vez al día cada una.** Una segunda se apunta en modo rápido, sin series.
+- **La duración solo se mide en las sesiones guiadas** de casa y de dominadas; en el resto se pone a mano o queda vacía.
 - **El gimnasio no cuenta para decidir cargas.** Se apunta qué se trabajó (tirón, empuje, pierna), pero el entrenador no lo usa para el volumen semanal ni para subir o bajar.
 - **Con rutinas de 20 minutos, el volumen de pecho y bíceps en casa queda por debajo de la zona de hipertrofia.** Es coherente con priorizar dominadas; el músculo tiene que venir del gimnasio.
 - **El plan de dominadas da por hecho que la prueba cae en sábado.** Si se cambia la fecha, los días de la semana no se recolocan bien.

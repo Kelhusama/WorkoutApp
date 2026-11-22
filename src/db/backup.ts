@@ -26,6 +26,7 @@ const TABLES = [
   'coach_block',
   'trial_log',
   'hang_log',
+  'workout',
 ] as const;
 
 type Row = Record<string, string | number | null>;

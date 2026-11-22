@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DB_NAME = 'forja.db';
-const LATEST = 22;
+const LATEST = 23;
 
 export interface MigrateOptions {
   /**
@@ -349,6 +349,31 @@ export async function migrate(db: SQLiteDatabase, options: MigrateOptions = {}) 
     // Las columnas antiguas (mochila, mesa) se quedan, sin usar: migrar nunca quita nada.
     await addColumn(db, 'trip', 'mancuerna', 'INTEGER NOT NULL DEFAULT 0');
     await db.execAsync('UPDATE trip SET mancuerna = mochila WHERE mancuerna = 0 AND mochila = 1');
+  });
+
+  await step(22, async () => {
+    // Todo lo que se entrena es un «entrenamiento», sea del tipo que sea. Aquí van los campos comunes:
+    // día, tipo, duración, carga (1 suave, 2 media, 3 fuerte) y cómo estabas. Los detalles de cada tipo
+    // siguen en su tabla (source, source_id). El tipo es texto libre: añadir uno nuevo no cambia el esquema.
+    // No hace falta copiar aquí lo ya apuntado: la app lo pone al día sola al abrirse (syncWorkouts).
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS workout (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        minutes INTEGER,
+        load INTEGER CHECK (load IN (1,2,3)),
+        state TEXT,
+        notes TEXT,
+        source TEXT,
+        source_id INTEGER,
+        edited INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_workout_date ON workout (date);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_workout_source ON workout (source, source_id) WHERE source IS NOT NULL;
+    `);
   });
 
 }

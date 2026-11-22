@@ -301,3 +301,20 @@ test('el viernes es el día suave de dominadas: menos series, sin lastre', async
     assert.deepEqual(pullupDose('2026-11-23', week, []), normal);
   }
 });
+
+test('calendario: las dominadas del plan salen como hechas, tocan o sin hacer', async () => {
+  const { pullupMark } = await import('./event');
+  const today = '2026-11-25';
+  const logs = [log('2026-11-23', 'dominada', 0, 1), log('2026-11-22', 'dominada', 0, 1)];
+  assert.deepEqual(pullupMark('2026-11-23', logs, today, true), { state: 'hecho', easy: false });
+  // Martes sin apuntar y ya pasado; jueves aún por venir; viernes, suave.
+  assert.equal(pullupMark('2026-11-24', logs, today, true)?.state, 'sin_hacer');
+  assert.equal(pullupMark('2026-11-26', logs, today, true)?.state, 'toca');
+  assert.deepEqual(pullupMark('2026-11-27', logs, today, true), { state: 'toca', easy: true });
+  // Miércoles no tocan. Con el plan apagado tampoco, salvo lo que ya esté apuntado.
+  assert.equal(pullupMark('2026-11-25', logs, today, true), null);
+  assert.equal(pullupMark('2026-11-26', logs, today, false), null);
+  assert.equal(pullupMark('2026-11-22', logs, today, false)?.state, 'hecho');
+  // De viaje sin barra no tocan.
+  assert.equal(pullupMark('2026-11-26', logs, today, true, true), null);
+});

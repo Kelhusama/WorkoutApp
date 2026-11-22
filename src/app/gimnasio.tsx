@@ -7,6 +7,9 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getLastBench, getSessionLog, saveGymSession } from '@/db/repo';
+import { setWorkoutMeta } from '@/db/workouts';
+import type { State } from '@/domain/workouts';
+import { StatePicker } from '@/ui/WorkoutFields';
 import { getBenchSeries } from '@/db/stats';
 import { syncReminders } from '@/notifications/reminders';
 import { GYM_WORK, RESERVE_OPTIONS, benchAdvice, parseGymWork, type BenchAdvice, type GymWork, type Reserve } from '@/domain/coach';
@@ -64,12 +67,16 @@ export default function GymScreen() {
     })();
   }, [db, date]);
 
+  const [mood, setMood] = useState<State | null>(null);
+
   const save = async () => {
     if (!feeling) return;
     // Mejor 1RM estimado de otros días, para avisar si hoy se bate.
     const previous = (await getBenchSeries(db)).filter((p) => p.date !== date).map((p) => p.value);
     const best = previous.length ? Math.max(...previous) : null;
     await saveGymSession(db, date, feeling, didBench ? { weight, reps, reserve } : null, work);
+    const saved = await getSessionLog(db, date, 'gym');
+    if (saved) await setWorkoutMeta(db, 'session_log', saved.id, { state: mood });
     if (didBench && best !== null && estimate1RM(weight, reps) > best) {
       Alert.alert('¡Récord de banca!', `1RM estimado: ${fmtKg(estimate1RM(weight, reps))} kg (antes ${fmtKg(best)} kg).`);
     }
@@ -93,6 +100,15 @@ export default function GymScreen() {
         onChange={(v) => {
           setDirty(true);
           setFeeling(v);
+        }}
+      />
+
+      <SectionTitle>¿Cómo estabas hoy?</SectionTitle>
+      <StatePicker
+        value={mood}
+        onChange={(v) => {
+          setDirty(true);
+          setMood(v);
         }}
       />
 

@@ -339,6 +339,16 @@ El objetivo de 80 kg en press de banca queda **para más adelante**: todavía no
 - **Base de datos v22**: el viaje guarda «mancuerna» en su propia columna. Las antiguas (mochila, mesa) se conservan sin usar: migrar nunca quita nada.
 - **Pendiente de decidir**: apagar el experimento de variantes mientras dure el plan de dominadas; medir el tiempo real de cada sesión para corregir la estimación.
 
+## Entrenamientos generales (22/11/2026)
+
+- **Todo es un entrenamiento**: una tabla general con día, tipo, duración, carga (suave, media, fuerte) y cómo estabas (con energía, normal, cansado, con molestias). Detalle en `docs/DATOS.md`, apartado 1 bis.
+- **Varios al día, de cualquier tipo**, también repetidos. Se ven todos en el calendario: en la fila del día y, en el mes, con «×2».
+- **Pantalla «Apuntar entrenamiento»** (desde Hoy y desde el calendario): elige el día, ve lo apuntado y añade más, con detalle o rápido.
+- **Al guardar** casa, gimnasio y dominadas se pregunta además cómo estabas. Las sesiones guiadas apuntan lo que duran de verdad.
+- **Un día está hecho si se entrena algo**, aunque no sea lo que tocaba.
+- **Dominadas en el calendario**: punto verde, amarillo o naranja según estén hechas, toquen o se hayan quedado sin hacer.
+- **Los tipos los mantiene el código** (decisión del usuario): para añadir uno, se pide.
+
 ## Para seguir (por orden)
 0. **Entrenador adaptativo**: volumen semanal por músculo y progresión por peso si se compran mancuernas ajustables (de momento, no; y nunca banco). Hecho también el paso automático a versiones más duras. Hechas las capas 1 a 4, el aviso de test, la previsión con margen y el experimento de la red neuronal: reserva, nivel real, plan que cambia solo, sesión ligera y extra, mesetas, carga de banca y bloques de prueba entre tests.
 1. **Usabilidad que queda**: tipografía propia.

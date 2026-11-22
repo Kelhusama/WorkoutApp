@@ -4,9 +4,10 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { DAY_SHORT, formatLong, fromISODate, today, type ISODate } from '@/domain/dates';
 import { SESSION_INFO } from '@/domain/schedule';
 import type { DayType } from '@/domain/schedule';
+import { PULLUP_MARK_LABEL, type PullupMark } from '@/domain/event';
 import type { PlannedDay } from '@/hooks/useWeek';
 import { colors, radius, space, font } from './theme';
-import { STATUS_STYLE } from './week';
+import { STATUS_STYLE, pullupColor } from './week';
 
 const TYPE_LABEL: Record<DayType, string> = { gym: 'Gim', A: 'A', B: 'B', C: 'C', movilidad: 'Mov', rest: '' };
 
@@ -17,7 +18,10 @@ export function MonthGrid({
   selected,
   onSelect,
   onLongPress,
+  pullups = {},
 }: {
+  /** Dominadas del plan de cada día, por fecha. */
+  pullups?: Record<string, PullupMark | null | undefined>;
   days: PlannedDay[];
   month: ISODate;
   selected: ISODate | null;
@@ -52,7 +56,7 @@ export function MonthGrid({
                 onLongPress={onLongPress ? () => onLongPress(d.date) : undefined}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isSel }}
-                accessibilityLabel={`${formatLong(d.date)}: ${SESSION_INFO[d.type].title}${d.type !== 'rest' ? `, ${s.label.toLowerCase()}` : ''}${d.trip ? ', de viaje' : ''}`}
+                accessibilityLabel={`${formatLong(d.date)}: ${SESSION_INFO[d.type].title}${d.type !== 'rest' ? `, ${s.label.toLowerCase()}` : ''}${d.trip ? ', de viaje' : ''}${d.workouts.length ? `. ${d.workouts.length === 1 ? 'Un entrenamiento' : `${d.workouts.length} entrenamientos`}` : ''}${pullups[d.date] ? `. Dominadas ${PULLUP_MARK_LABEL[pullups[d.date]!.state]}` : ''}`}
                 style={[
                   styles.cell,
                   { backgroundColor: d.type === 'rest' ? 'transparent' : s.bg, opacity: inMonth ? 1 : 0.3 },
@@ -69,7 +73,9 @@ export function MonthGrid({
                 ) : (
                   <Text style={[styles.type, { color: s.color }]}>{TYPE_LABEL[d.type]}</Text>
                 )}
+                {d.workouts.length > 1 && <Text style={styles.count}>×{d.workouts.length}</Text>}
                 {d.trip && <View style={styles.trip} />}
+                {pullups[d.date] && <View style={[styles.pull, { backgroundColor: pullupColor(pullups[d.date]!) }]} />}
               </Pressable>
             );
           })}
@@ -94,6 +100,8 @@ const styles = StyleSheet.create({
   },
   num: { fontSize: 14, ...font.w700, color: colors.text },
   type: { fontSize: 10, ...font.w800, minHeight: 14 },
+  count: { position: 'absolute', top: 2, left: 4, fontSize: 10, ...font.w800, color: colors.success },
+  pull: { position: 'absolute', top: 4, right: 4, width: 6, height: 6, borderRadius: 3 },
   trip: { position: 'absolute', bottom: 3, width: 14, height: 3, borderRadius: 2, backgroundColor: colors.info },
 });
 
@@ -106,7 +114,7 @@ export const MONTH_LEGEND = [
 
 export function Legend() {
   return (
-    <View style={{ flexDirection: 'row', gap: space.lg, justifyContent: 'center' }}>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: space.lg, rowGap: 6, justifyContent: 'center' }}>
       {MONTH_LEGEND.map((l) => (
         <View key={l.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: l.color }} />

@@ -5,6 +5,8 @@ import Svg, { Polygon } from 'react-native-svg';
 import { DAY_SHORT, formatLong, fromISODate, today, weekdayIndex } from '@/domain/dates';
 import { FEELING_LABEL } from '@/domain/progression';
 import { infoFor, type DayStatus, type DayType } from '@/domain/schedule';
+import { PULLUP_MARK_LABEL, type PullupMark } from '@/domain/event';
+import { typeInfo, workoutSummary } from '@/domain/workouts';
 import type { PlannedDay } from '@/hooks/useWeek';
 import { Pill, type IconName } from './components';
 import { colors, radius, space, type, font } from './theme';
@@ -21,7 +23,19 @@ export const STATUS_STYLE: Record<DayStatus, { label: string; color: string; bg:
 const TYPE_LETTER: Record<DayType, string> = { gym: 'G', A: 'A', B: 'B', C: 'C', movilidad: 'M', rest: '–' };
 
 /** Tira compacta de 7 días para la pantalla Hoy. */
-export function WeekStrip({ days, onPressDay }: { days: PlannedDay[]; onPressDay?: (d: PlannedDay) => void }) {
+/** Color del aviso de dominadas: verde hechas, amarillo tocan, naranja sin hacer. */
+export const pullupColor = (m: PullupMark) => (m.state === 'hecho' ? colors.success : m.state === 'toca' ? colors.accent : colors.warn);
+
+export function WeekStrip({
+  days,
+  onPressDay,
+  pullups = {},
+}: {
+  days: PlannedDay[];
+  onPressDay?: (d: PlannedDay) => void;
+  /** Dominadas del plan de cada día, por fecha. */
+  pullups?: Record<string, PullupMark | null | undefined>;
+}) {
   const todayDate = today();
   return (
     <View style={styles.strip}>
@@ -34,7 +48,7 @@ export function WeekStrip({ days, onPressDay }: { days: PlannedDay[]; onPressDay
             disabled={!onPressDay}
             onPress={() => onPressDay?.(d)}
             accessibilityRole={onPressDay ? 'button' : undefined}
-            accessibilityLabel={`${formatLong(d.date)}: ${infoFor(d.type, d.focus).title}, ${s.label.toLowerCase()}`}
+            accessibilityLabel={`${formatLong(d.date)}: ${infoFor(d.type, d.focus).title}, ${s.label.toLowerCase()}${pullups[d.date] ? `. Dominadas ${PULLUP_MARK_LABEL[pullups[d.date]!.state]}` : ''}`}
             hitSlop={{ top: 6, bottom: 6, left: 2, right: 2 }}
             style={styles.stripDay}>
             <Text style={[styles.stripLetter, isToday && { color: colors.accent }]}>
@@ -63,6 +77,8 @@ export function WeekStrip({ days, onPressDay }: { days: PlannedDay[]; onPressDay
               )}
             </View>
             <View style={[styles.stripTrip, d.trip && { backgroundColor: colors.info }]} />
+            {/* Punto de las dominadas del plan */}
+            <View style={[styles.stripPull, pullups[d.date] && { backgroundColor: pullupColor(pullups[d.date]!) }]} />
           </Pressable>
         );
       })}
@@ -71,7 +87,7 @@ export function WeekStrip({ days, onPressDay }: { days: PlannedDay[]; onPressDay
 }
 
 /** Fila de un día para la pantalla Semana. */
-export function DayRow({ day, onPress, onChange }: { day: PlannedDay; onPress?: () => void; onChange?: () => void }) {
+export function DayRow({ day, onPress, onChange, pullup }: { day: PlannedDay; onPress?: () => void; onChange?: () => void; pullup?: PullupMark | null }) {
   const info = infoFor(day.type, day.focus);
   const s = STATUS_STYLE[day.status];
   const isToday = day.date === today();
@@ -84,7 +100,7 @@ export function DayRow({ day, onPress, onChange }: { day: PlannedDay; onPress?: 
       disabled={!onPress}
       onPress={onPress}
       accessibilityRole={onPress ? 'button' : undefined}
-      accessibilityLabel={`${formatLong(day.date)}: ${info.title}${day.type !== 'rest' ? `, ${s.label.toLowerCase()}` : ''}${onPress ? '. Abrir registro' : ''}`}
+      accessibilityLabel={`${formatLong(day.date)}: ${info.title}${day.type !== 'rest' ? `, ${s.label.toLowerCase()}` : ''}${day.workouts.length ? `. Entrenado: ${day.workouts.map((w) => w.title).join(', ')}` : ''}${pullup && pullup.state !== 'hecho' ? `. Dominadas del plan ${PULLUP_MARK_LABEL[pullup.state]}` : ''}${onPress ? '. Abrir registro' : ''}`}
       style={({ pressed }) => [styles.row, isToday && styles.rowToday, pressed && { opacity: 0.7 }]}>
       <View style={styles.rowDate}>
         <Text style={[type.overline, isToday && { color: colors.accent }]}>{DAY_SHORT[weekdayIndex(day.date)]}</Text>
@@ -103,8 +119,20 @@ export function DayRow({ day, onPress, onChange }: { day: PlannedDay; onPress?: 
           {day.trip ? ' De viaje · ' : ''}
           {detail}
         </Text>
+        {/* Todo lo entrenado ese día, sea lo planificado o no */}
+        {day.workouts.map((w) => (
+          <Text key={w.id} style={[type.caption, { color: colors.success, marginTop: 4 }]}>
+            <Ionicons name={typeInfo(w.type).icon as IconName} size={12} color={colors.success} /> {w.title}
+            {workoutSummary(w) ? <Text style={{ color: colors.muted }}> · {workoutSummary(w)}</Text> : null}
+          </Text>
+        ))}
+        {pullup && pullup.state !== 'hecho' && (
+          <Text style={[type.caption, { color: pullupColor(pullup), marginTop: 4 }]}>
+            <Ionicons name="barbell-outline" size={12} color={pullupColor(pullup)} /> Dominadas del plan{pullup.easy ? ' (día suave)' : ''}: {PULLUP_MARK_LABEL[pullup.state]}
+          </Text>
+        )}
         {/* El estado va debajo: al lado no cabe en un móvil estrecho y partía el título. */}
-        {day.type !== 'rest' && (
+        {(day.type !== 'rest' || day.status === 'done') && (
           <View style={{ alignSelf: 'flex-start', marginTop: 6 }}>
             <Pill label={s.label} color={s.color} bg={s.bg} />
           </View>
@@ -127,6 +155,7 @@ const styles = StyleSheet.create({
   stripDot: { width: 38, height: 38, borderRadius: 9, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   stripType: { fontSize: 14, ...font.w800 },
   stripTrip: { width: 14, height: 3, borderRadius: 2 },
+  stripPull: { width: 6, height: 6, borderRadius: 3 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

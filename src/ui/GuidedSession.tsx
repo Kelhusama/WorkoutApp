@@ -35,13 +35,15 @@ interface Props {
   light?: boolean;
   /** Parejas de ejercicios que se alternan (superseries), por clave. */
   pairs?: readonly (readonly [string, string])[];
+  /** Se llama al pulsar «Empezar», para medir lo que dura la sesión. */
+  onStart?: () => void;
 }
 
 /**
  * Sesión paso a paso: una serie cada vez, con el dibujo del ejercicio, y el descanso que arranca solo.
  * En las superseries alterna los dos ejercicios. Los aguantes (barca, planchas) tienen su cuenta atrás.
  */
-export function GuidedSession({ slots, targetOf, values, onSets, intro, outro, onList, bottomInset = 0, light = false, pairs = [] }: Props) {
+export function GuidedSession({ slots, targetOf, values, onSets, intro, outro, onList, bottomInset = 0, light = false, pairs = [], onStart }: Props) {
   useKeepAwake();
   const [phase, setPhase] = useState<Phase>('inicio');
   // Paso por el que se va, dentro de todas las series de la sesión.
@@ -236,6 +238,7 @@ export function GuidedSession({ slots, targetOf, values, onSets, intro, outro, o
             icon="play"
             onPress={() => {
               if (steps.length === 0) return;
+              onStart?.();
               setIndex(0);
               setAmount(targetOf(slots[steps[0].slot].key).reps);
               setPhase('serie');

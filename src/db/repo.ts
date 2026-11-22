@@ -29,6 +29,8 @@ import { estimate1RM } from '@/domain/strength';
 import { CORE_KEYS, LEG_KEYS, hasNextStage, initialPrescription, stageNote, type Slot } from '@/domain/templates';
 import { getExerciseHistory, getExerciseReserves } from './stats';
 import { tripOn, type TravelGear, type Trip } from '@/domain/travel';
+import { trained, type Workout } from '@/domain/workouts';
+import { getWorkouts } from './workouts';
 
 export type LogKind = SessionKind | 'gym';
 
@@ -179,6 +181,8 @@ export interface PlannedDay {
   overridden: boolean;
   /** La sesión de casa de ese día es la enfocada en los objetivos. */
   focus: boolean;
+  /** Todo lo entrenado ese día, sea lo planificado o no. */
+  workouts: Workout[];
 }
 
 const HOME_KINDS: readonly LogKind[] = ['A', 'B', 'C'];
@@ -191,6 +195,7 @@ export async function loadDays(db: SQLiteDatabase, from: ISODate, to: ISODate) {
   const overrides = await getOverrides(db, addDays(firstMonday, -1), lastSunday);
   const logs = await getLogsBetween(db, firstMonday, lastSunday);
   const trips = await getTrips(db, addDays(firstMonday, -1), lastSunday);
+  const allWorkouts = await getWorkouts(db, firstMonday, lastSunday);
   // Un día de movilidad está hecho si ese día hubo flexibilidad o estiramientos.
   const mobility = new Set(
     (
@@ -233,7 +238,9 @@ export async function loadDays(db: SQLiteDatabase, from: ISODate, to: ISODate) {
       const type = kinds[i];
       const log = type === 'rest' || type === 'movilidad' ? undefined : logs.find((l) => l.date === d && l.kind === type);
       const trip = tripOn(trips, d);
-      const logged = log?.status ?? (type === 'movilidad' && mobility.has(d) ? 'done' : undefined);
+      const workouts = allWorkouts.filter((w) => w.date === d);
+      // El día está hecho si se ha entrenado algo, sea o no lo que tocaba. Si no, manda lo apuntado para lo planificado.
+      const logged = trained(workouts) ? 'done' : (log?.status ?? (type === 'movilidad' && mobility.has(d) ? 'done' : undefined));
       // Lo ya registrado conserva cómo se hizo; lo demás sigue la regla de la semana. De viaje no hay sesión enfocada.
       const focus = isHomeKind(type) && (log?.status === 'done' ? log.focus === 1 : focusWeek && !trip);
       days.push({
@@ -244,6 +251,7 @@ export async function loadDays(db: SQLiteDatabase, from: ISODate, to: ISODate) {
         status: dayStatus(type, d, todayDate, logged, !!trip),
         overridden: overrides.has(d),
         focus,
+        workouts,
       });
     });
   }

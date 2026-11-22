@@ -17,7 +17,7 @@ import { monthlyCheck } from '@/domain/physique';
 import { stretchedOn } from '@/db/stretch';
 import { addDays, formatLong, formatShort, today as getToday, weekStart, weekdayIndex } from '@/domain/dates';
 import { getTrialLogs } from '@/db/event';
-import { eventName, platesWarning, LIFTS, gripPlan, gripPlanText, doneThisWeek, doseText, isPullupDay, pullupDose, pullupsPausedBy, withoutTrialWork, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
+import { eventName, platesWarning, LIFTS, gripPlan, gripPlanText, doneThisWeek, doseText, isPullupDay, pullupDose, pullupMark, pullupsPausedBy, withoutTrialWork, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
 import { prescriptionShort } from '@/domain/format';
 import { needsDeload } from '@/domain/gymTools';
 import { WALK_LABEL } from '@/domain/march';
@@ -453,7 +453,11 @@ export default function TodayScreen() {
 
       <SectionTitle>Esta semana</SectionTitle>
       <Card style={{ gap: space.md }}>
-        <WeekStrip days={days} onPressDay={(d) => (d.type !== 'rest' && d.date <= todayDate ? openDay(d.type, d.date, d.focus) : router.push('/calendario'))} />
+        <Button label="Apuntar otro entrenamiento" variant="ghost" icon="add-circle-outline" onPress={() => router.push({ pathname: '/apuntar', params: { date: todayDate } })} />
+        <WeekStrip
+          pullups={Object.fromEntries(days.map((d) => [d.date, pullupMark(d.date, trialLogs, todayDate, trialActive, pullupsPausedBy(d.trip?.gear))]))}
+          days={days}
+          onPressDay={(d) => (d.type !== 'rest' && d.date <= todayDate ? openDay(d.type, d.date, d.focus) : router.push('/calendario'))} />
         {streak && (streak.weeks > 0 || streak.passUsed) && (
           <View style={styles.streak}>
             <Ionicons name="flame" size={16} color={colors.accent} />

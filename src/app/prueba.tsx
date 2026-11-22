@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -56,6 +56,9 @@ interface Draft {
 export default function TrialScreen() {
   const db = useSQLiteContext();
   const today = getToday();
+  // Día en el que se apunta: hoy, salvo que se venga del calendario a apuntar un día pasado.
+  const params = useLocalSearchParams<{ date?: string }>();
+  const logDate = params.date && params.date <= today ? params.date : today;
   const [logs, setLogs] = useState<SavedTrialLog[]>([]);
   const [body, setBody] = useState<number | null>(null);
   const [hangs, setHangs] = useState<{ date: string; seconds: number }[]>([]);
@@ -106,7 +109,7 @@ export default function TrialScreen() {
 
   const save = async () => {
     if (!draft) return;
-    await addTrialLog(db, { date: today, ...draft, grip: draft.lift === 'dominada' ? (gripFor(today) ?? TEST_GRIP) : null });
+    await addTrialLog(db, { date: logDate, ...draft, grip: draft.lift === 'dominada' ? (gripFor(logDate) ?? TEST_GRIP) : null });
     syncReminders(db);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setDraft(null);
@@ -129,6 +132,11 @@ export default function TrialScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: space.xxl }} keyboardShouldPersistTaps="handled">
+      {logDate !== today && (
+        <Card style={{ borderColor: colors.accent }}>
+          <Text style={type.body}>Lo que apuntes ahora se guarda en el {formatLong(logDate).toLowerCase()}. Baja hasta «Apuntar» en dominadas o peso muerto.</Text>
+        </Card>
+      )}
       <Card style={{ gap: space.sm }}>
         <Text style={type.caption}>{formatLong(eventConfig.date)}</Text>
         <Text style={type.hero}>

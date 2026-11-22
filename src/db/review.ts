@@ -51,7 +51,8 @@ export interface WeekReviewData extends WeekReview {
 export async function loadWeekReview(db: SQLiteDatabase, monday: ISODate, today: ISODate): Promise<WeekReviewData> {
   const sunday = addDays(monday, 6);
   const { days } = await loadDays(db, monday, sunday);
-  const done = days.filter((d) => d.status === 'done').length;
+  // Lo entrenado en un día de descanso no cuenta para «hechas de las planificadas»: se ve aparte, en el calendario.
+  const done = days.filter((d) => d.status === 'done' && d.type !== 'rest').length;
   const missed = days.filter((d) => d.status === 'missed').length;
   const hardSessions = days.filter((d) => d.status === 'done' && d.log?.feeling === 'dura').length;
 
