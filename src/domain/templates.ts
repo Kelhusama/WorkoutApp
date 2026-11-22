@@ -1,6 +1,9 @@
+import { lightSets } from './coach';
 import { EXERCISES, type Exercise } from './exercises';
 import type { Prescription, SlotRules } from './progression';
+import type { RoutineItem } from './routines';
 import type { SessionKind } from './schedule';
+import { EXERCISE_MUSCLES } from './volume';
 
 export interface Slot extends SlotRules {
   /** Identificador estable para guardar la progresión, p. ej. 'A.dominadas'. */
@@ -80,13 +83,14 @@ export const TEMPLATES: Record<SessionKind, Slot[]> = {
 };
 
 /**
- * Orden de importancia dentro de cada sesión, para las rutinas corta y media. Primero lo que empuja
- * los objetivos (dominadas, flexiones, mancuerna); luego abdomen, pierna y accesorios, que rotan por semanas.
+ * Orden de importancia dentro de cada sesión, para las rutinas corta y media. El objetivo que manda son
+ * las dominadas: primero ellas y lo que las ayuda (remo, curl, la barca que da su postura, colgarse para
+ * el agarre); después flexiones y hombro; al final pierna y accesorios, que rotan entre versiones.
  */
 export const PRIORITY: Record<SessionKind, readonly string[]> = {
   A: ['A.dominadas', 'A.negativas', 'A.remo', 'A.curl', 'A.hollow', 'A.gemelo', 'A.tibial'],
-  B: ['B.flexiones', 'B.inclinadas', 'B.pica', 'B.deadbug', 'B.copenhague', 'B.muneca', 'B.abduccion', 'B.muneca_inv'],
-  C: ['C.dominadas', 'C.press', 'C.martillo', 'C.rodillas', 'C.colgarse', 'C.pajaros', 'C.zancada', 'C.pm1'],
+  B: ['B.flexiones', 'B.inclinadas', 'B.deadbug', 'B.pica', 'B.copenhague', 'B.muneca', 'B.abduccion', 'B.muneca_inv'],
+  C: ['C.dominadas', 'C.press', 'C.martillo', 'C.colgarse', 'C.rodillas', 'C.pajaros', 'C.zancada', 'C.pm1'],
 };
 
 /** Claves del bloque de pierna de cada sesión: no necesita material, así que también se hace de viaje. */
@@ -172,4 +176,26 @@ export const FOCUS_KEYS_WITH_PULLUP_PLAN: readonly string[] = ['B.flexiones', 'B
 export function focusSlots(pullupPlan = false): Slot[] {
   const all = Object.values(TEMPLATES).flat();
   return (pullupPlan ? FOCUS_KEYS_WITH_PULLUP_PLAN : FOCUS_KEYS).map((k) => all.find((s) => s.key === k)!);
+}
+
+/**
+ * Lo que necesitan las rutinas de cada ejercicio de la sesión: cuánto se tarda, qué músculos trabaja
+ * y si puede alternarse con otro. `order` son las claves por importancia; lo que no esté, al final.
+ */
+export function routineItems(slots: readonly Slot[], targets: Record<string, Prescription>, order: readonly string[]): RoutineItem[] {
+  return slots.map((s, i) => {
+    const ex = exerciseFor(s);
+    const t = targets[s.key];
+    const base = { amount: t.reps, byTime: ex.measure === 'time', perSide: ex.perArm };
+    const rank = order.indexOf(s.key);
+    return {
+      key: s.key,
+      rank: rank < 0 ? order.length + i : rank,
+      full: { ...base, sets: t.sets, rest: restSeconds(s) },
+      light: { ...base, sets: lightSets(t.sets), rest: restSeconds(s, true) },
+      groups: Object.keys(EXERCISE_MUSCLES[s.exerciseId] ?? {}),
+      // Las dominadas y sus bajadas lentas, siempre solas y con el descanso entero.
+      solo: /^(dominada|negativa)/.test(s.exerciseId),
+    };
+  });
 }

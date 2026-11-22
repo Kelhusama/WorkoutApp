@@ -2,60 +2,81 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { lightSets } from './coach';
 import { weekNumber } from './dates';
 import { withoutTrialWork } from './event';
-import { ROUTINE_CAP, buildRoutines, rankKeys, type RoutineItem } from './routines';
+import { ROUTINE_CAP, buildRoutines, pairUp, rankKeys, versionCount } from './routines';
 import type { SessionKind } from './schedule';
-import { PRIORITY, TEMPLATES, exerciseFor, initialPrescription, restSeconds, type Slot } from './templates';
+import { PRIORITY, TEMPLATES, initialPrescription, routineItems, type Slot } from './templates';
 import { travelSlots } from './travel';
 
-function items(slots: Slot[], order: readonly string[]): RoutineItem[] {
-  return slots.map((s, i) => {
-    const ex = exerciseFor(s);
-    const p = initialPrescription(s);
-    const base = { amount: p.reps, byTime: ex.measure === 'time', perSide: ex.perArm };
-    const rank = order.indexOf(s.key);
-    return {
-      key: s.key,
-      rank: rank < 0 ? order.length + i : rank,
-      full: { ...base, sets: p.sets, rest: restSeconds(s) },
-      light: { ...base, sets: lightSets(p.sets), rest: restSeconds(s, true) },
-    };
-  });
-}
+const KINDS: SessionKind[] = ['A', 'B', 'C'];
 
-test('cada sesión de casa tiene rutina corta (≤10 min), media (≤20 min) y larga', () => {
-  for (const kind of ['A', 'B', 'C'] as SessionKind[]) {
+function routines(slots: Slot[], order: readonly string[]) {
+  const targets = Object.fromEntries(slots.map((s) => [s.key, initialPrescription(s)]));
+  const r = buildRoutines(routineItems(slots, targets, order));
+  return Object.fromEntries(r.map((x) => [x.size, x]));
+}
+const home = (kind: SessionKind, slots: Slot[], turn: number) =>
+  routines(slots, rankKeys(PRIORITY[kind].filter((k) => slots.some((s) => s.key === k)), turn));
+
+test('cada sesión de casa tiene rutina corta (unos 10 min), media (≤20 min) y larga', () => {
+  for (const kind of KINDS) {
     for (const slots of [TEMPLATES[kind], withoutTrialWork(TEMPLATES[kind], true, '2026-11-24')]) {
-      for (const week of [0, 1, 2, 3, 4]) {
-        const r = buildRoutines(items(slots, rankKeys(PRIORITY[kind], week)));
-        const by = Object.fromEntries(r.map((x) => [x.size, x]));
+      for (const turn of [0, 1, 2, 3, 4]) {
+        const by = home(kind, slots, turn);
         assert.ok(by.corta.minutes <= ROUTINE_CAP.corta + 2, `${kind} corta: ${by.corta.minutes} min`);
         assert.ok(by.media.minutes <= ROUTINE_CAP.media, `${kind} media: ${by.media.minutes} min`);
-        assert.ok(by.corta.keys.length >= 2 && by.media.keys.length >= by.corta.keys.length, kind);
+        assert.ok(by.corta.keys.length >= 2, kind);
         if (by.larga) assert.equal(by.larga.keys.length, slots.length);
       }
     }
   }
 });
 
-test('la rutina media conserva lo esencial y rota los accesorios cada semana', () => {
-  const media = (week: number) => buildRoutines(items(TEMPLATES.B, rankKeys(PRIORITY.B, week))).find((r) => r.size === 'media')!.keys;
-  for (const week of [0, 1, 2, 3]) for (const k of ['B.flexiones', 'B.inclinadas']) assert.ok(media(week).includes(k), `${k} semana ${week}`);
-  const seen = new Set([0, 1, 2, 3, 4].flatMap(media));
-  // A lo largo de cinco semanas entran más ejercicios de los que caben en una sola.
-  assert.ok(seen.size > media(0).length);
-  // El orden de la sesión no cambia.
+test('la media lleva bastantes más ejercicios que haciéndolos por separado, gracias a las superseries', () => {
+  for (const kind of KINDS) {
+    const slots = withoutTrialWork(TEMPLATES[kind], true, '2026-11-24');
+    const by = home(kind, slots, 0);
+    assert.ok(by.media.keys.length >= 4, `${kind}: ${by.media.keys.length} ejercicios en ${by.media.minutes} min`);
+    assert.ok(by.media.pairs.length >= 1, kind);
+    assert.deepEqual(by.corta.pairs, []);
+  }
+});
+
+test('las dominadas nunca van en superserie y lo que ayuda a las dominadas está siempre en la media', () => {
+  const items = routineItems(TEMPLATES.A, Object.fromEntries(TEMPLATES.A.map((s) => [s.key, initialPrescription(s)])), PRIORITY.A);
+  const paired = pairUp(items).flat();
+  assert.ok(!paired.includes('A.dominadas') && !paired.includes('A.negativas'));
+  // Con el plan de dominadas activo, el remo, el curl y la barca (postura de dominada) no rotan: están todas las semanas.
+  const withPlan = withoutTrialWork(TEMPLATES.A, true, '2026-11-24');
+  for (const turn of [0, 1, 2, 3]) {
+    const media = home('A', withPlan, turn).media.keys;
+    for (const k of ['A.remo', 'A.curl', 'A.hollow']) assert.ok(media.includes(k), `${k} en la versión ${turn}`);
+  }
+});
+
+test('en una superserie no coinciden dos ejercicios del mismo músculo', () => {
+  const g = (key: string, groups: string[], solo = false) => ({ key, groups, solo });
+  const pairs = pairUp([g('flex', ['pecho', 'triceps']), g('incl', ['pecho']), g('curl', ['biceps']), g('remo', ['espalda', 'biceps']), g('dom', ['espalda'], true)]);
+  assert.deepEqual(pairs, [['flex', 'curl'], ['incl', 'remo']]);
+});
+
+test('las versiones de la media cambian los accesorios, no lo principal ni el orden', () => {
+  const media = (turn: number) => home('B', TEMPLATES.B, turn).media.keys;
+  for (const turn of [0, 1, 2, 3]) for (const k of ['B.flexiones', 'B.inclinadas']) assert.ok(media(turn).includes(k), `${k} versión ${turn}`);
+  assert.notDeepEqual(media(0), media(2));
   const order = TEMPLATES.B.map((s) => s.key);
   assert.deepEqual(media(1), order.filter((k) => media(1).includes(k)));
+  assert.equal(versionCount(PRIORITY.B), PRIORITY.B.length - 3);
 });
 
 test('de viaje: corta y media caben en su tiempo, sin material y con mancuerna', () => {
   for (const mancuerna of [false, true]) {
     const slots = travelSlots('B', { mancuerna, gimnasio: false });
-    const r = buildRoutines(items(slots, slots.map((s) => s.key)));
-    assert.ok(r[0].minutes <= ROUTINE_CAP.corta + 2 && r[1].minutes <= ROUTINE_CAP.media);
+    const by = routines(slots, slots.map((s) => s.key));
+    assert.ok(by.corta.minutes <= ROUTINE_CAP.corta + 2 && by.media.minutes <= ROUTINE_CAP.media, `${by.corta.minutes} / ${by.media.minutes}`);
+    // Sin material, los seis ejercicios caben en la media.
+    if (!mancuerna) assert.equal(by.media.keys.length, slots.length);
   }
 });
 

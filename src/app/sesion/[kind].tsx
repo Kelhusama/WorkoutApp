@@ -20,8 +20,8 @@ import { ROUTINES, routineAfter, routineMinutes } from '@/domain/stretches';
 import { amountText, describeChange, prescriptionText } from '@/domain/format';
 import type { Feeling, Prescription } from '@/domain/progression';
 import { infoFor, type SessionKind } from '@/domain/schedule';
-import { ROUTINE_INFO, buildRoutines, rankKeys, type RoutineSize } from '@/domain/routines';
-import { PRIORITY, exerciseFor, restSeconds, stageNote, type Slot } from '@/domain/templates';
+import { ROUTINE_INFO, buildRoutines, rankKeys, versionCount, type RoutineSize } from '@/domain/routines';
+import { PRIORITY, exerciseFor, routineItems, stageNote, type Slot } from '@/domain/templates';
 import { sessionSlots } from '@/domain/travel';
 import { Button, Card, FeelingPicker, SectionTitle } from '@/ui/components';
 import { syncReminders } from '@/notifications/reminders';
@@ -52,6 +52,8 @@ export default function SessionScreen() {
   const light = size === 'corta';
   // Al editar una sesión guardada se enseñan los ejercicios que se hicieron, no una rutina.
   const [savedKeys, setSavedKeys] = useState<string[] | null>(null);
+  // Versión de la rutina media: cambia sola cada semana y se puede pedir otra.
+  const [turn, setTurn] = useState(0);
   const [advice, setAdvice] = useState<Readiness | null>(null);
   // Bloque de prueba del entrenador: cambia lo que se pide en dominadas o flexiones.
   const [variants, setVariants] = useState<Record<string, Variant>>({});
@@ -114,24 +116,12 @@ export default function SessionScreen() {
     })();
   }, [db, kind, date, params.focus]);
 
-  // De viaje y en la sesión enfocada manda el orden de la lista; en casa, las prioridades de la sesión, que rotan por semanas.
-  const order = travelling || focus ? slots.map((s) => s.key) : rankKeys(PRIORITY[kind], weekNumber(date));
-  const routines = targets
-    ? buildRoutines(
-        slots.map((s, i) => {
-          const ex = exerciseFor(s);
-          const t = targets[s.key];
-          const base = { amount: t.reps, byTime: ex.measure === 'time', perSide: ex.perArm };
-          const rank = order.indexOf(s.key);
-          return {
-            key: s.key,
-            rank: rank < 0 ? order.length + i : rank,
-            full: { ...base, sets: t.sets, rest: restSeconds(s) },
-            light: { ...base, sets: lightSets(t.sets), rest: restSeconds(s, true) },
-          };
-        }),
-      )
-    : [];
+  // De viaje y en la sesión enfocada manda el orden de la lista; en casa, las prioridades de la sesión.
+  // Lo principal es fijo y el resto rota: cada giro es una versión distinta de la rutina media.
+  const present = PRIORITY[kind].filter((k) => slots.some((s) => s.key === k));
+  const versions = travelling || focus ? 1 : versionCount(present);
+  const order = travelling || focus ? slots.map((s) => s.key) : rankKeys(present, weekNumber(date) + turn);
+  const routines = targets ? buildRoutines(routineItems(slots, targets, order)) : [];
   // Si todo cabe en 20 minutos no hay rutina larga: vale la media.
   const routine = routines.find((r) => r.size === size) ?? routines.find((r) => r.size === 'media');
   const activeSlots = savedKeys ? slots.filter((s) => savedKeys.includes(s.key)) : routine ? slots.filter((s) => routine.keys.includes(s.key)) : slots;
@@ -299,11 +289,26 @@ export default function SessionScreen() {
               </Text>
               <Text style={type.caption}>{ROUTINE_INFO[r.size].detail}</Text>
               <Text style={[type.caption, { color: colors.text }]}>{names.join(' · ')}</Text>
+              {on && r.size === 'media' && versions > 1 && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Ver otra versión de la rutina media"
+                  onPress={() => {
+                    setTurn((t) => (t + 1) % versions);
+                    setDirty(true);
+                  }}
+                  style={styles.version}>
+                  <Ionicons name="shuffle" size={16} color={colors.accent} />
+                  <Text style={[type.caption, { color: colors.accent }]}>
+                    Versión {(((weekNumber(date) + turn) % versions) + versions) % versions + 1} de {versions} · ver otra
+                  </Text>
+                </Pressable>
+              )}
             </View>
           </Pressable>
         );
       })}
-      <Text style={type.caption}>El tiempo cuenta las series y los descansos. Hagas la que hagas, queda apuntada y el entrenador la tiene en cuenta.</Text>
+      <Text style={type.caption}>El tiempo cuenta las series y los descansos. Hagas la que hagas, queda apuntada y el entrenador la tiene en cuenta. Lo que ayuda a las dominadas va siempre.</Text>
     </Card>
   );
 
@@ -347,6 +352,7 @@ export default function SessionScreen() {
           outro={outro}
           onList={() => setGuided(false)}
           light={light}
+          pairs={routine?.pairs ?? []}
           bottomInset={insets.bottom}
         />
       </View>
@@ -424,4 +430,5 @@ const styles = StyleSheet.create({
   changeRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   routine: { flexDirection: 'row', gap: space.md, padding: space.md, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, minHeight: 56 },
   routineOn: { borderColor: colors.accent, backgroundColor: colors.cardHigh },
+  version: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44 },
 });

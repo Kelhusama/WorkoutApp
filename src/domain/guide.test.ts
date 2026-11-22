@@ -2,20 +2,31 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { estimateMinutes, guideAfter, guideTotalSets } from './guide';
+import { PAIR_REST, estimateMinutes, guidePlan } from './guide';
 
-test('sesión guiada: recorre todas las series en orden y termina', () => {
-  const sets = [3, 2, 0, 2];
-  const seen: string[] = [];
-  let at: { slot: number; set: number } | null = { slot: 0, set: 0 };
-  while (at) {
-    seen.push(`${at.slot}.${at.set}`);
-    at = guideAfter(sets, at);
-  }
-  // El ejercicio sin series se salta.
-  assert.deepEqual(seen, ['0.0', '0.1', '0.2', '1.0', '1.1', '3.0', '3.1']);
-  assert.equal(guideTotalSets(sets), seen.length);
-  assert.equal(guideAfter([2], { slot: 0, set: 1 }), null);
+const order = (steps: { slot: number; set: number }[]) => steps.map((s) => `${s.slot}.${s.set}`);
+
+test('sesión guiada: un ejercicio entero y luego el siguiente; los que no tienen series se saltan', () => {
+  const steps = guidePlan([3, 2, 0, 2].map((sets) => ({ sets, rest: 90 })));
+  assert.deepEqual(order(steps), ['0.0', '0.1', '0.2', '1.0', '1.1', '3.0', '3.1']);
+  assert.ok(steps.every((s) => s.rest === 90 && s.partner === undefined));
+  assert.deepEqual(guidePlan([]), []);
+});
+
+test('superserie: se alternan los dos ejercicios, con descanso corto entre ellos', () => {
+  const items = [
+    { sets: 3, rest: 90 },
+    { sets: 2, rest: 120 },
+    { sets: 2, rest: 45 },
+  ];
+  const steps = guidePlan(items, [[0, 2]]);
+  // 0 y 2 se alternan; al 2 se le acaban las series y el 0 termina solo; luego va el 1.
+  assert.deepEqual(order(steps), ['0.0', '2.0', '0.1', '2.1', '0.2', '1.0', '1.1']);
+  assert.deepEqual(steps.slice(0, 5).map((s) => s.rest), [PAIR_REST.inner, PAIR_REST.outer, PAIR_REST.inner, PAIR_REST.outer, 90]);
+  assert.deepEqual(steps.slice(5).map((s) => s.rest), [120, 120]);
+  assert.equal(steps[0].partner, 2);
+  // Cada serie sale una sola vez.
+  assert.equal(new Set(order(steps)).size, 7);
 });
 
 test('duración estimada: series, descansos y colocarse', () => {
@@ -31,18 +42,12 @@ test('duración estimada: series, descansos y colocarse', () => {
   assert.equal(estimateMinutes([{ sets: 0, amount: 10, byTime: false, perSide: false, rest: 90 }]), 0);
 });
 
-test('la sesión de viaje ligera cabe en 20 minutos, con y sin mancuerna', async () => {
-  const { MAX_SESSION_MINUTES } = await import('./guide');
-  const { exerciseFor, initialPrescription, restSeconds } = await import('./templates');
-  const { travelSlots } = await import('./travel');
-  const { lightSets } = await import('./coach');
-  const minutes = (mancuerna: boolean) =>
-    estimateMinutes(
-      travelSlots('B', { mancuerna, gimnasio: false }).map((s) => {
-        const ex = exerciseFor(s);
-        const p = initialPrescription(s);
-        return { sets: lightSets(p.sets), amount: p.reps, byTime: ex.measure === 'time', perSide: ex.perArm, rest: restSeconds(s, true) };
-      }),
-    );
-  assert.ok(minutes(false) <= MAX_SESSION_MINUTES, `sin material: ${minutes(false)} min`);
+test('en superserie la misma sesión dura bastante menos', () => {
+  const items = [
+    { sets: 4, amount: 6, byTime: false, perSide: false, rest: 90 },
+    { sets: 4, amount: 10, byTime: false, perSide: false, rest: 90 },
+  ];
+  const apart = estimateMinutes(items);
+  const together = estimateMinutes(items, [[0, 1]]);
+  assert.ok(together <= apart - 4, `${together} frente a ${apart}`);
 });

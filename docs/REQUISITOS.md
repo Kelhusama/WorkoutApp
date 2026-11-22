@@ -326,6 +326,9 @@ El objetivo de 80 kg en press de banca queda **para más adelante**: todavía no
 
 - **Sesión guiada** en todas las sesiones de casa y de viaje: un ejercicio cada vez con su dibujo, descanso que arranca solo, cuenta atrás en los aguantes. La lista completa sigue disponible para corregir.
 - **Tres rutinas por sesión**, a elegir antes de empezar, cada una con su tiempo y sus ejercicios: **corta** (unos 10 min, menos series, no mueve el plan), **media** (20 min como mucho, lo esencial; el entrenador ajusta) y **larga** (todo, unos 40 min). Los dos ejercicios principales de cada sesión son fijos; el resto rota cada semana en la media.
+- **Superseries en la rutina media**: se alternan de dos en dos los ejercicios que no comparten músculos (20 s para cambiar y 40 s al cerrar la vuelta), y así caben 5 o 6 ejercicios en 20 minutos. Las dominadas nunca van en superserie: solas y con su descanso entero.
+- **Prioridad a las dominadas**: en cada sesión son fijos los tres ejercicios que más las ayudan (remo, curl y barca; o colgarse, según la sesión); el resto rota.
+- **Versiones**: la media cambia de accesorios sola cada semana, y con «ver otra» se pide otra versión.
 - **Tiempo estimado**: 3 s por repetición, el descanso recomendado tras cada serie y 20 s por ejercicio para colocarse.
 - **Dominadas**: los agarres los fija el plan, sin selector. La primera mitad de las series en prono (el de la prueba) y el resto en el agarre del día; los días de prono, todas en prono.
 
