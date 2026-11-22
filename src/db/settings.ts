@@ -80,3 +80,15 @@ export async function hasUserData(db: SQLiteDatabase): Promise<boolean> {
 export const getDriveLastBackup = (db: SQLiteDatabase) => get(db, 'drive_last_backup');
 
 export const setDriveLastBackup = (db: SQLiteDatabase, iso: string) => set(db, 'drive_last_backup', iso);
+
+/** Huella del contenido que este dispositivo subió o restauró por última vez. */
+export const getDriveFingerprint = (db: SQLiteDatabase) => get(db, 'drive_fingerprint');
+
+export const setDriveFingerprint = (db: SQLiteDatabase, value: string) => set(db, 'drive_fingerprint', value);
+
+/** ¿Se ha contestado ya a la invitación de guardar en la nube (con sí o con «ahora no»)? */
+export async function getCloudAsked(db: SQLiteDatabase): Promise<boolean> {
+  return (await get(db, 'cloud_asked')) === '1';
+}
+
+export const setCloudAsked = (db: SQLiteDatabase) => set(db, 'cloud_asked', '1');

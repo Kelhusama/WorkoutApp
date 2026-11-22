@@ -5,12 +5,13 @@ import { useEffect, useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 
 import { backupSummary, importBackup } from '@/db/backup';
-import { getDriveLastBackup, setDriveLastBackup } from '@/db/settings';
+import { exportBackup } from '@/db/backup';
+import { getDriveLastBackup, setDriveFingerprint, setDriveLastBackup } from '@/db/settings';
 import { formatShort, toISODate } from '@/domain/dates';
 import { currentAccount, googleStatus, signIn, signOut, type GoogleAccount } from '@/google/auth';
-import { localHasData } from '@/google/driveBackup';
+import { fingerprint, localHasData } from '@/google/driveBackup';
 import { errorText, needsSignIn } from '@/google/errors';
-import { backupNow, loadRemoteBackup, onDriveBackup, remoteBackupDate } from '@/google/sync';
+import { backupNow, loadRemoteBackup, onDriveBackup, remoteBackupDate, syncIfNeeded } from '@/google/sync';
 import { syncReminders } from '@/notifications/reminders';
 import { Button, Card } from './components';
 import { colors, space, type } from './theme';
@@ -141,6 +142,8 @@ export function DriveBackupCard({ onRestored }: { onRestored?: () => void }) {
                 await importBackup(db, found.backup);
                 // Los ajustes restaurados traen la fecha del móvil anterior: se apunta la de esta copia.
                 await setDriveLastBackup(db, found.modifiedTime);
+                await setDriveFingerprint(db, fingerprint(await exportBackup(db)));
+                syncIfNeeded(db, { checkRemote: true });
                 setLast(found.modifiedTime);
                 setRemote(null);
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

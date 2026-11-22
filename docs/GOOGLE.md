@@ -163,3 +163,17 @@ Ese mismo ID de cliente web es el que usará después la app de Android, así qu
 4. De vuelta en Perfil, **Guardar copia en Drive** y luego **Restaurar desde Drive**.
 
 **Sin verificar**: no se ha podido probar el inicio de sesión real porque aún no existe el ID de cliente. Los nombres de los menús de Google Cloud pueden haber cambiado.
+
+## Sincronización: el móvil manda y la nube es su copia (22/11/2026)
+
+Sustituye a la copia semanal. La app funciona entera sin conexión; Drive se pone al día solo.
+
+- **Cuándo sube**: cuando lo que hay en el móvil es distinto de lo último que subió. Se comprueba al abrir la app, al volver a ella, al mandarla a segundo plano y cada dos minutos mientras está abierta. Si no hay cambios, no usa la red.
+- **Sin conexión**: no falla ni avisa con error. Queda como «Cambios sin subir» y se reintenta en la siguiente ocasión.
+- **Dos dispositivos**: si en Drive hay una copia que no subió este dispositivo (móvil nuevo con datos, o alguien ha escrito después), no se pisa. El estado pasa a «conflicto» y el usuario elige en Perfil entre restaurar la de Drive o sustituirla.
+- **Una app vacía nunca sube**, para no borrar una copia buena al reinstalar.
+- **Cómo se sabe si hay cambios**: una huella del contenido (`fingerprint` en `src/google/driveBackup.ts`) que ignora la hora de la copia y los ajustes internos de la sincronización.
+- **Lo que se ve**: en Hoy, la primera vez, una tarjeta que invita a iniciar sesión con «Ahora no» a mano; después, una línea con el estado (`src/google/CloudStatus.tsx`): guardado hace X, cambios sin subir, otra copia en Drive o sesión caducada.
+- **Límite**: se sube la copia entera cada vez. Con el tamaño de estos datos es instantáneo; si algún día pesara mucho habría que subir solo los cambios.
+
+**Sin verificar**: nada de esto se ha probado contra Google de verdad todavía, solo con un Drive simulado en las pruebas automáticas. La subida al pasar a segundo plano puede no completarse en Android si el sistema corta la app enseguida; en ese caso se sube al volver a abrirla.

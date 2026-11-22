@@ -34,6 +34,7 @@ import { Button, Card, Pill, SectionTitle, Segmented, type IconName } from '@/ui
 import { GoalsSummary } from '@/ui/goals';
 import { openDay } from '@/ui/navigation';
 import { colors, space, type, font } from '@/ui/theme';
+import { CloudStatus } from '@/google/CloudStatus';
 import { Pintadera } from '@/ui/Pintadera';
 import { STATUS_STYLE, WeekStrip } from '@/ui/week';
 
@@ -187,6 +188,8 @@ export default function TodayScreen() {
           <Ionicons name="person-circle-outline" size={26} color={colors.text} />
         </Pressable>
       </View>
+
+      <CloudStatus />
 
       {trial.week ? (
         <Pressable
