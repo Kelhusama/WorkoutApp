@@ -25,9 +25,11 @@ interface Props {
   stageNote?: string;
   /** Enseña el dibujo abierto desde el principio (sesiones de viaje, con ejercicios menos habituales). */
   openFigure?: boolean;
+  /** Sesión ligera: descansos más cortos. */
+  light?: boolean;
 }
 
-export function ExerciseCard({ slot, target, values, onChange, reserve, onReserve, blockNote, stageNote, openFigure = false }: Props) {
+export function ExerciseCard({ slot, target, values, onChange, reserve, onReserve, blockNote, stageNote, openFigure = false, light = false }: Props) {
   const ex = exerciseFor(slot);
   const step = ex.measure === 'time' ? 5 : 1;
   const [showHow, setShowHow] = useState(openFigure);
@@ -70,7 +72,7 @@ export function ExerciseCard({ slot, target, values, onChange, reserve, onReserv
       {target.sets > 1 && (
         <View style={styles.tempo}>
           <Ionicons name="hourglass-outline" size={16} color={colors.muted} />
-          <Text style={[type.caption, { flex: 1 }]}>Descansa {restText(restSeconds(slot))} entre series. El temporizador está abajo.</Text>
+          <Text style={[type.caption, { flex: 1 }]}>Descansa {restText(restSeconds(slot, light))} entre series. El temporizador está abajo.</Text>
         </View>
       )}
 

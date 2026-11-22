@@ -20,12 +20,14 @@ import { ROUTINES, routineAfter, routineMinutes } from '@/domain/stretches';
 import { amountText, describeChange, prescriptionText } from '@/domain/format';
 import type { Feeling, Prescription } from '@/domain/progression';
 import { infoFor, type SessionKind } from '@/domain/schedule';
-import { LEG_KEYS, exerciseFor, stageNote, type Slot } from '@/domain/templates';
+import { MAX_SESSION_MINUTES, estimateMinutes } from '@/domain/guide';
+import { LEG_KEYS, exerciseFor, restSeconds, stageNote, type Slot } from '@/domain/templates';
 import { sessionSlots } from '@/domain/travel';
 import { Button, Card, FeelingPicker, SectionTitle, Segmented } from '@/ui/components';
 import { syncReminders } from '@/notifications/reminders';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { ExerciseCard } from '@/ui/ExerciseCard';
+import { GuidedSession } from '@/ui/GuidedSession';
 import { RestTimer } from '@/ui/RestTimer';
 import { colors, space, type } from '@/ui/theme';
 
@@ -58,6 +60,8 @@ export default function SessionScreen() {
   const [changes, setChanges] = useState<SlotChange[] | null>(null);
   const [records, setRecords] = useState<NewRecord[]>([]);
   const [dirty, setDirty] = useState(false);
+  // Paso a paso, con dibujo y descanso automático. Una sesión ya guardada se abre como lista, para corregirla.
+  const [guided, setGuided] = useState(false);
   useUnsavedGuard(dirty, 'las series que has apuntado');
 
   useEffect(() => {
@@ -95,6 +99,7 @@ export default function SessionScreen() {
       setLight(startLight);
       setSlots(slots);
       setTravelling(!!trip);
+      setGuided(log?.status !== 'done');
       setTargets(t);
       setValues(initial);
       setReserves(log?.status === 'done' ? await getSessionReserves(db, log.id) : {});
@@ -222,10 +227,15 @@ export default function SessionScreen() {
     );
   }
 
-  return (
-    <View style={{ flex: 1 }}>
-    <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: space.xl, gap: space.md }}>
-      <Stack.Screen options={{ title: `${info.title}` }} />
+  const minutes = estimateMinutes(
+    activeSlots.map((s) => {
+      const ex = exerciseFor(s);
+      const t = targetOf(s.key);
+      return { sets: t.sets, amount: t.reps, byTime: ex.measure === 'time', perSide: ex.perArm, rest: restSeconds(s, light) };
+    }),
+  );
+
+  const header = (
       <View>
         <Text style={type.overline}>{formatLong(date)}</Text>
         <Text style={type.caption}>
@@ -245,6 +255,9 @@ export default function SessionScreen() {
         )}
       </View>
 
+  );
+
+  const modeCard = (
       <Card style={{ gap: space.sm }}>
         <Text style={type.subtitle}>¿Cómo llegas hoy?</Text>
         <Segmented
@@ -265,13 +278,73 @@ export default function SessionScreen() {
             <Ionicons name="battery-half" size={12} color={colors.warn} /> {advice.reason}
           </Text>
         )}
+        <Text style={[type.caption, minutes > MAX_SESSION_MINUTES && { color: colors.warn }]}>
+          <Ionicons name="time-outline" size={12} color={minutes > MAX_SESSION_MINUTES ? colors.warn : colors.muted} /> Unos {minutes} minutos, con los descansos.
+          {minutes > MAX_SESSION_MINUTES && !light ? ` Pasa de ${MAX_SESSION_MINUTES}: si vas justo de tiempo, elige «Cansado» para la versión corta.` : ''}
+        </Text>
       </Card>
+  );
+
+  const outro = (
+    <>
+      <SectionTitle>¿Cómo ha ido?</SectionTitle>
+      <FeelingPicker
+        value={feeling}
+        onChange={(v) => {
+          setDirty(true);
+          setFeeling(v);
+        }}
+      />
+      <Text style={type.caption}>
+        {feeling ? '«Fácil» sube la próxima vez y «Dura» mantiene, salvo donde hayas contestado lo que te quedaba.' : 'Elige cómo ha ido para poder guardar.'}
+      </Text>
+      <View style={{ marginTop: space.md }}>
+        <Button label={saving ? 'Guardando…' : 'Guardar sesión'} icon="checkmark-circle" onPress={save} disabled={!feeling || saving} />
+      </View>
+    </>
+  );
+
+  if (guided) {
+    return (
+      <View style={{ flex: 1 }}>
+        <Stack.Screen options={{ title: `${info.title}` }} />
+        <GuidedSession
+          slots={activeSlots}
+          targetOf={targetOf}
+          values={values}
+          onSets={(key, v) => {
+            setDirty(true);
+            setValues((prev) => ({ ...prev, [key]: v }));
+          }}
+          intro={
+            <>
+              {header}
+              {modeCard}
+            </>
+          }
+          outro={outro}
+          onList={() => setGuided(false)}
+          light={light}
+          bottomInset={insets.bottom}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1 }}>
+    <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: space.xl, gap: space.md }}>
+      <Stack.Screen options={{ title: `${info.title}` }} />
+      {header}
+      {modeCard}
+      {!editing && <Button label="Hacerla guiada, paso a paso" variant="secondary" icon="play" onPress={() => setGuided(true)} />}
 
       {activeSlots.map((s) => (
         <ExerciseCard
           key={s.key}
           slot={s}
           openFigure={travelling}
+          light={light}
           target={targetOf(s.key)}
           stageNote={stageNote(s.key, stages[s.key] ?? 0) ?? undefined}
           blockNote={variants[s.key] && variants[s.key] !== 'base' ? `Bloque de prueba · ${VARIANT_INFO[variants[s.key]].label}. ${VARIANT_INFO[variants[s.key]].detail} Hasta tu próximo test.` : undefined}

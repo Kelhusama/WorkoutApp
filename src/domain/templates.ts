@@ -102,8 +102,10 @@ export function exerciseFor(s: Slot): Exercise {
 /**
  * Descanso recomendado entre series, en segundos. Coincide con los botones del temporizador.
  * Aguantes y abdomen, poco; dominadas, lo más largo; el resto, un minuto o minuto y medio.
+ * En sesión ligera se dejan repeticiones sin hacer, así que basta un minuto como mucho.
  */
-export function restSeconds(s: Slot): number {
+export function restSeconds(s: Slot, light = false): number {
+  if (light) return Math.min(60, restSeconds(s));
   const ex = exerciseFor(s);
   if (ex.measure === 'time' || ex.muscles.includes('Abdomen')) return 45;
   if (ex.equipment === 'barra') return 120;
