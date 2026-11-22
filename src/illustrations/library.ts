@@ -188,6 +188,30 @@ export const ILLUSTRATIONS: Record<string, Illustration> = {
     focus: ['shin'],
     caption: 'A una pierna, con una mano en la pared. Sube al máximo sobre la punta y baja en 3 segundos.',
   },
+  // ---------- Abdomen ----------
+  hollow: {
+    start: { hip: [96, 188], torso: -179, hand: [98, 184], elbowBend: 1, foot: [169, 188], kneeBend: -1 },
+    end: { hip: [96, 188], torso: -166, hand: [96, 168], elbowBend: 1, foot: [164, 166], kneeBend: -1 },
+    props: [FLOOR],
+    focus: ['abs'],
+    bothArms: true,
+    caption: 'Boca arriba, despega hombros y piernas con la zona lumbar pegada al suelo, y aguanta.',
+  },
+  dead_bug: {
+    start: { hip: [96, 188], torso: -179, hand: [50, 136], elbowBend: 1, foot: [134, 152], kneeBend: -1, farHand: [50, 136], farFoot: [134, 152] },
+    end: { hip: [96, 188], torso: -179, hand: [50, 136], elbowBend: 1, foot: [166, 178], kneeBend: -1, farHand: [8, 172], farFoot: [134, 152] },
+    props: [FLOOR],
+    focus: ['abs'],
+    caption: 'Estira una pierna y lleva atrás el brazo contrario, sin despegar la zona lumbar. Alterna.',
+  },
+  rodillas_colgado: {
+    start: pullUp.start,
+    end: { ...pullUp.start, foot: [138, 138] },
+    props: [FLOOR, BAR],
+    focus: ['abs', 'forearm'],
+    bothArms: true,
+    caption: 'Colgado, sube las rodillas al pecho enrollando la pelvis. Baja lento y sin balanceo.',
+  },
   plancha_copenhague: {
     start: { hip: [109, 174], torso: 176, hand: [84, 196], elbowBend: -1, foot: [176, 146], kneeBend: -1, farFoot: [168, 172] },
     end: { hip: [109, 160], torso: 168.5, hand: [84, 196], elbowBend: -1, foot: [176, 146], kneeBend: -1, farFoot: [172, 158] },

@@ -87,6 +87,7 @@ function body(sk: Skeleton, ill: Illustration, p: Palette): Shape[] {
   out.push(limb(sk.hip, sk.neck, 8.8, 10.8, p.torso, o));
   if (has('chest')) out.push(limb(add(along(sk.neck, sk.u, -7), [sk.n[0] * 4.5, sk.n[1] * 4.5]), add(along(sk.neck, sk.u, -21), [sk.n[0] * 4.5, sk.n[1] * 4.5]), 5.4, 4.4, p.accent, false));
   if (has('back')) out.push(limb(add(along(sk.neck, sk.u, -8), [sk.n[0] * -4.5, sk.n[1] * -4.5]), add(along(sk.neck, sk.u, -30), [sk.n[0] * -3.5, sk.n[1] * -3.5]), 5.2, 4, p.accent, false));
+  if (has('abs')) out.push(limb(add(along(sk.neck, sk.u, -27), [sk.n[0] * 4.5, sk.n[1] * 4.5]), add(along(sk.neck, sk.u, -45), [sk.n[0] * 4.5, sk.n[1] * 4.5]), 5, 4.4, p.accent, false));
   if (has('glute')) out.push({ k: 'circle', c: add(sk.hip, [sk.n[0] * -2, sk.n[1] * -2]), r: 8.4, fill: p.accent, outline: o });
   out.push(limb(sk.neck, sk.head, 4.6, 4.6, p.near, false));
   out.push({ k: 'circle', c: sk.head, r: 9.6, fill: p.near, outline: o });

@@ -118,7 +118,7 @@ test('racha flexible: la semana en curso, las de viaje y las vacías', () => {
 const base: WeekReview = {
   done: 5,
   missed: 0,
-  volume: { pecho: 12, biceps: 13, espalda: 12, hombro: 8, triceps: 6, antebrazo: 9, muslo: 4, cadera: 4, pantorrilla: 4 },
+  volume: { pecho: 12, biceps: 13, espalda: 12, hombro: 8, triceps: 6, antebrazo: 9, core: 4, muslo: 4, cadera: 4, pantorrilla: 4 },
   records: 1,
   stretchDays: 3,
   walkedKm: 0,

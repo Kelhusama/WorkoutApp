@@ -19,7 +19,7 @@ export type Prop =
   | { kind: 'wall'; x: number };
 
 /** Zonas que trabajan y se resaltan. */
-export type Focus = 'upperArm' | 'forearm' | 'chest' | 'back' | 'shoulder' | 'thigh' | 'shin' | 'glute';
+export type Focus = 'upperArm' | 'forearm' | 'chest' | 'back' | 'shoulder' | 'thigh' | 'shin' | 'glute' | 'abs';
 
 export interface Pose {
   hip: Pt;

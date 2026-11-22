@@ -87,7 +87,7 @@ test('meseta: tras tres semanas en el tope sin mejorar, el entrenador añade una
   const { db, slots } = await setup();
   const { addDays } = await import('../domain/dates');
   const upper = slots[2]; // remo
-  const leg = slots[slots.length - 1]; // gemelo
+  const leg = slots.find((s) => s.key === 'A.gemelo')!;
   let last: Awaited<ReturnType<typeof saveHomeSession>> = [];
   let grewAt = -1;
   const start = (await getPrescriptions(db, slots))[upper.key].sets;

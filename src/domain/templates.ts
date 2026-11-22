@@ -41,6 +41,11 @@ export const TEMPLATES: Record<SessionKind, Slot[]> = {
     slot('A.curl', 'curl_concentrado', 3, 8, 12, 4),
     slot('A.tibial', 'elevacion_tibial', 2, 15, 25, 3),
     slot('A.gemelo', 'elevacion_talones', 2, 10, 20, 3),
+    slot('A.hollow', 'hollow', 2, 15, 40, 3, {
+      allowsTempo: false,
+      step: 5,
+      note: 'La postura de la dominada estricta. Empieza con las rodillas dobladas si cuesta.',
+    }),
   ],
   B: [
     slot('B.flexiones', 'flexion_estricta', 4, 4, 8, 5),
@@ -54,6 +59,7 @@ export const TEMPLATES: Record<SessionKind, Slot[]> = {
       note: 'Empieza apoyando la rodilla; pasa al pie cuando aguantes 40 s.',
     }),
     slot('B.abduccion', 'abduccion_cadera', 2, 12, 20, 3),
+    slot('B.deadbug', 'dead_bug', 2, 6, 12, 3, { allowsTempo: false, note: 'Lento y con la zona lumbar pegada al suelo.' }),
   ],
   C: [
     slot('C.dominadas', 'dominada_neutra', 3, 2, 3, 4, {
@@ -66,6 +72,10 @@ export const TEMPLATES: Record<SessionKind, Slot[]> = {
     slot('C.colgarse', 'colgarse', 2, 30, 60, 3, { allowsTempo: false, step: 5 }),
     slot('C.zancada', 'zancada_estatica', 2, 8, 15, 3),
     slot('C.pm1', 'peso_muerto_una_pierna', 2, 8, 12, 3),
+    slot('C.rodillas', 'rodillas_colgado', 2, 5, 12, 3, {
+      allowsTempo: false,
+      note: 'Sin balanceo. Si el agarre va justo después de las dominadas, haz la barca en su lugar.',
+    }),
   ],
 };
 
@@ -75,6 +85,9 @@ export const LEG_KEYS: Record<SessionKind, string[]> = {
   B: ['B.copenhague', 'B.abduccion'],
   C: ['C.zancada', 'C.pm1'],
 };
+
+/** Abdomen de cada sesión. De viaje se hace el que no necesita barra. */
+export const CORE_KEYS: Record<SessionKind, string> = { A: 'A.hollow', B: 'B.deadbug', C: 'C.rodillas' };
 
 export function initialPrescription(s: Slot): Prescription {
   return { sets: s.initialSets, reps: s.repsMin, tempo: 0 };

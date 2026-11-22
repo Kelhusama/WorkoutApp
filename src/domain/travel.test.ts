@@ -36,7 +36,7 @@ test('cualquier combinación de material da sesiones válidas, con ejercicio y d
 test('sin material: remo con toalla, curl isométrico y flexiones', () => {
   assert.deepEqual(
     travelSlots('A', NO_GEAR).map((s) => s.exerciseId),
-    ['remo_toalla', 'agarre_toalla', 'curl_isometrico_toalla', 'elevacion_tibial', 'elevacion_talones'],
+    ['remo_toalla', 'agarre_toalla', 'curl_isometrico_toalla', 'elevacion_tibial', 'elevacion_talones', 'hollow'],
   );
   assert.equal(travelSlots('C', NO_GEAR)[1].exerciseId, 'flexion_pica');
 });
@@ -54,4 +54,12 @@ test('viaje activo en una fecha y resumen del material', () => {
   assert.equal(tripOn(trips, '2026-11-24'), undefined);
   assert.equal(gearSummary(NO_GEAR), 'Sin material');
   assert.equal(gearSummary({ mochila: true, mesa: false, gimnasio: true }), 'Con mochila, gimnasio de hotel');
+});
+
+test('de viaje se mantiene el abdomen sin material: nunca el que necesita barra', () => {
+  for (const kind of ['A', 'B', 'C'] as const) {
+    const ids = travelSlots(kind, NO_GEAR).map((s) => s.exerciseId);
+    assert.ok(ids.includes('hollow') || ids.includes('dead_bug'), kind);
+    assert.ok(!ids.includes('rodillas_colgado'), kind);
+  }
 });

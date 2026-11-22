@@ -239,3 +239,15 @@ test('el plan se ajusta a los discos que hay para el cinturón', async () => {
     setEventConfig({ plates: before });
   }
 });
+
+test('de viaje sin barra, el plan de dominadas no avisa esos días', async () => {
+  const { planTrialReminders, pullupsPausedBy } = await import('./event');
+  const now = new Date(2026, 10, 23, 8, 0);
+  const all = planTrialReminders([], ['09:00'], now, '2026-11-23', 5);
+  const paused = planTrialReminders([], ['09:00'], now, '2026-11-23', 5, new Set(['2026-11-24']));
+  assert.equal(paused.length, all.length - 1);
+  assert.ok(paused.every((r) => !r.id.includes('2026-11-24')));
+  assert.equal(pullupsPausedBy(null), false);
+  assert.equal(pullupsPausedBy({ gimnasio: true }), false);
+  assert.equal(pullupsPausedBy({ gimnasio: false }), true);
+});

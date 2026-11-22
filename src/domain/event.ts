@@ -401,7 +401,18 @@ const NUDGES = [
  * apuntado, uno por cada hora configurada (hasta tres). Al apuntar la sesión dejan de salir.
  * `times` en formato HH:MM.
  */
-export function planTrialReminders(logs: readonly TrialLog[], times: readonly string[], now: Date, today: ISODate, horizonDays = 14): TrialReminder[] {
+/**
+ * `paused`: días de viaje sin barra (ni gimnasio de hotel). Esos días el plan de dominadas no avisa:
+ * lo sustituye el remo de la sesión de viaje.
+ */
+export function planTrialReminders(
+  logs: readonly TrialLog[],
+  times: readonly string[],
+  now: Date,
+  today: ISODate,
+  horizonDays = 14,
+  paused: ReadonlySet<ISODate> = new Set(),
+): TrialReminder[] {
   const done = new Set(logs.filter((l) => l.lift === 'dominada').map((l) => l.date));
   const hours = times
     .map((t) => /^(\d{1,2}):(\d{2})$/.exec(t.trim()))
@@ -413,7 +424,7 @@ export function planTrialReminders(logs: readonly TrialLog[], times: readonly st
   const out: TrialReminder[] = [];
   for (let i = 0; i < horizonDays; i++) {
     const date = addDays(today, i);
-    if (!isPullupDay(date) || done.has(date)) continue;
+    if (!isPullupDay(date) || done.has(date) || paused.has(date)) continue;
     const week = todayPlan(date).week!;
     const dose = prescription('dominada', week, logs);
     hours.forEach((t, k) => {
@@ -449,6 +460,11 @@ export const ELBOW_CARE: readonly string[] = [
   'Cuélgate relajado 2 veces, 20–30 segundos, dejando que el cuerpo estire.',
   'Si el codo molesta por dentro, mañana descansa de dominadas.',
 ];
+
+/** De viaje solo hay barra si el hotel tiene gimnasio. Sin barra, las dominadas del plan se paran ese día. */
+export function pullupsPausedBy(gear: { gimnasio: boolean } | null | undefined): boolean {
+  return gear != null && !gear.gimnasio;
+}
 
 export function isElbowCareDay(date: ISODate): boolean {
   if (!isPullupDay(date)) return false;

@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { GROUP_LABEL, GROUP_ORDER, HYPERTROPHY_RANGE, LOWER_GROUPS, volumeVerdict, type MuscleGroup } from '@/domain/volume';
+import { GROUP_LABEL, GROUP_ORDER, HYPERTROPHY_RANGE, LOWER_GROUPS, SUPPORT_GROUPS, volumeVerdict, type MuscleGroup } from '@/domain/volume';
 import { Card } from './components';
 import { colors, space, type, font } from './theme';
 
@@ -15,9 +15,10 @@ export function VolumeBars({ volume }: { volume: Record<MuscleGroup, number> }) 
     <Card style={{ gap: space.md }}>
       {GROUP_ORDER.map((g) => {
         const v = volume[g];
-        const lower = LOWER_GROUPS.includes(g);
+        const support = SUPPORT_GROUPS.includes(g);
+        const lower = LOWER_GROUPS.includes(g) || support;
         const verdict = lower
-          ? { label: v > 0 ? 'Para la marcha' : 'Sin trabajar', tone: v > 0 ? ('good' as const) : ('low' as const) }
+          ? { label: v > 0 ? (support ? 'Trabajado' : 'Para la marcha') : 'Sin trabajar', tone: v > 0 ? ('good' as const) : ('low' as const) }
           : volumeVerdict(v);
         return (
           <View key={g} style={{ gap: 4 }}>

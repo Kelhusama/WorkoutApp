@@ -26,7 +26,7 @@ import {
   type WeekTemplate,
 } from '@/domain/schedule';
 import { estimate1RM } from '@/domain/strength';
-import { LEG_KEYS, hasNextStage, initialPrescription, stageNote, type Slot } from '@/domain/templates';
+import { CORE_KEYS, LEG_KEYS, hasNextStage, initialPrescription, stageNote, type Slot } from '@/domain/templates';
 import { getExerciseHistory, getExerciseReserves } from './stats';
 import { tripOn, type TravelGear, type Trip } from '@/domain/travel';
 
@@ -480,7 +480,7 @@ export async function saveHomeSession(
             .map((o) => o.value);
           if (isPlateau({ daysUnchanged, capacities })) {
             const atLimit = !completed || r.reserve === 0 || (r.reserve == null && feeling === 'dura');
-            result = plateauAction(target, slot, { upper: !LEG_KEYS[kind].includes(r.slotKey), atLimit });
+            result = plateauAction(target, slot, { upper: !LEG_KEYS[kind].includes(r.slotKey) && !Object.values(CORE_KEYS).includes(r.slotKey), atLimit });
           }
         }
       }

@@ -321,6 +321,12 @@ Dónde viven los datos, qué riesgos hay y cómo se cubren: [DATOS.md](DATOS.md)
 ## Aplazado: press de banca
 El objetivo de 80 kg en press de banca queda **para más adelante**: todavía no hay material para trabajarlo como hace falta, y en la prueba del 16 de enero lo hace otro compañero. La app sigue apuntando la banca del gimnasio y proponiendo la carga, pero no es prioridad ni se le dedica plan propio hasta que se decida el material.
 
+## Añadido el 22/11/2026
+
+- **Abdomen**: un ejercicio por sesión de casa (A: barca · B: bicho muerto · C «Mixta suave»: rodillas al pecho colgado). De viaje se hace el que no necesita barra. No gana series en una meseta: eso se reserva al tren superior.
+- **Dominadas del plan y viajes**: de viaje sin gimnasio de hotel no hay barra, así que ese día el plan no avisa ni pide dominadas; vuelven los avisos de la sesión de viaje (con remo).
+- **Tono**: «Sin hacer» en vez de «Fallado»; avisos con ánimo; aviso a las 21:00 para apuntar el gimnasio.
+
 ## Para seguir (por orden)
 0. **Entrenador adaptativo**: volumen semanal por músculo y progresión por peso si se compran mancuernas ajustables (de momento, no; y nunca banco). Hecho también el paso automático a versiones más duras. Hechas las capas 1 a 4, el aviso de test, la previsión con margen y el experimento de la red neuronal: reserva, nivel real, plan que cambia solo, sesión ligera y extra, mesetas, carga de banca y bloques de prueba entre tests.
 1. **Usabilidad que queda**: tipografía propia.

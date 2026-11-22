@@ -6,7 +6,7 @@ import { loadDays } from '@/db/repo';
 import { getTrialLogs } from '@/db/event';
 import { getReminderSettings, getTrialActive } from '@/db/settings';
 import { addDays, today } from '@/domain/dates';
-import { isPullupDay, planTrialReminders } from '@/domain/event';
+import { isPullupDay, planTrialReminders, pullupsPausedBy } from '@/domain/event';
 import { REMINDER_PREFIX, planLogReminders, planReminders } from '@/domain/reminders';
 
 const CHANNEL = 'recordatorios';
@@ -60,13 +60,15 @@ async function doSync(db: SQLiteDatabase) {
   const from = today();
   const now = new Date();
   const { days } = await loadDays(db, from, addDays(from, HORIZON_DAYS - 1));
+  // De viaje sin barra no hay dominadas del plan: esos días vuelven a avisar de la sesión de viaje.
+  const paused = new Set(days.filter((d) => pullupsPausedBy(d.trip?.gear)).map((d) => d.date));
   // Avisos de sesión en casa y, si el plan de la prueba está activo, los de dominadas (a las mismas horas).
   const reminders = [
     // Con el plan activo, los días de dominadas solo avisan de las dominadas: van primero.
-    ...(settings.enabled ? planReminders(trialActive ? days.filter((d) => !isPullupDay(d.date)) : days, settings, now) : []),
+    ...(settings.enabled ? planReminders(trialActive ? days.filter((d) => !isPullupDay(d.date) || paused.has(d.date)) : days, settings, now) : []),
     // Por la noche, si un día de gimnasio sigue sin apuntar.
     ...planLogReminders(days, settings, now),
-    ...(trialActive ? planTrialReminders(await getTrialLogs(db), settings.times, now, from, HORIZON_DAYS) : []),
+    ...(trialActive ? planTrialReminders(await getTrialLogs(db), settings.times, now, from, HORIZON_DAYS, paused) : []),
   ];
   for (const r of reminders) {
     await Notifications.scheduleNotificationAsync({

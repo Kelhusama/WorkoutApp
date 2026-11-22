@@ -17,7 +17,7 @@ import { monthlyCheck } from '@/domain/physique';
 import { stretchedOn } from '@/db/stretch';
 import { addDays, formatLong, formatShort, today as getToday, weekStart, weekdayIndex } from '@/domain/dates';
 import { getTrialLogs } from '@/db/event';
-import { eventName, platesWarning, GRIP_INFO, LIFTS, TEST_GRIP, gripFor, doneThisWeek, doseText, isPullupDay, withoutTrialWork, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
+import { eventName, platesWarning, GRIP_INFO, LIFTS, TEST_GRIP, gripFor, doneThisWeek, doseText, isPullupDay, pullupsPausedBy, withoutTrialWork, prescription as trialDose, todayPlan as trialToday, type TrialLog } from '@/domain/event';
 import { prescriptionShort } from '@/domain/format';
 import { needsDeload } from '@/domain/gymTools';
 import { WALK_LABEL } from '@/domain/march';
@@ -216,7 +216,12 @@ export default function TodayScreen() {
       )}
 
       {/* La prueba manda: sus dominadas van antes que la sesión del día */}
-      {trial.week && isPullupDay(todayDate) && !trialLogs.some((l) => l.lift === 'dominada' && l.date === todayDate) && (
+      {trial.week && isPullupDay(todayDate) && pullupsPausedBy(gear) && (
+        <Text style={type.caption}>
+          De viaje y sin barra: hoy no hay dominadas del plan. El remo de la sesión de viaje las sustituye, y al volver sigues donde lo dejaste.
+        </Text>
+      )}
+      {trial.week && isPullupDay(todayDate) && !pullupsPausedBy(gear) && !trialLogs.some((l) => l.lift === 'dominada' && l.date === todayDate) && (
         <PlanRow
           icon="play-circle"
           title="Lo primero de hoy: dominadas"

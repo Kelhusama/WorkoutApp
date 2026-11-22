@@ -1,6 +1,6 @@
 import type { ISODate } from './dates';
 import type { SessionKind } from './schedule';
-import { LEG_KEYS, TEMPLATES, slot, type Slot, focusSlots } from './templates';
+import { CORE_KEYS, LEG_KEYS, TEMPLATES, slot, type Slot, focusSlots } from './templates';
 
 /** Lo que tienes a mano durante un viaje. Sin nada marcado: solo tu cuerpo y una toalla. */
 export interface TravelGear {
@@ -34,7 +34,9 @@ const TIME = { allowsTempo: false, step: 5 } as const;
 export function travelSlots(kind: SessionKind, gear: TravelGear): Slot[] {
   const home = TEMPLATES[kind];
   const keep = (key: string) => home.find((s) => s.key === key)!;
-  const legs = LEG_KEYS[kind].map(keep);
+  // Pierna y abdomen no necesitan material. En la sesión C, que en casa usa la barra, se hace la barca.
+  const coreKey = kind === 'C' ? CORE_KEYS.A : CORE_KEYS[kind];
+  const legs = [...LEG_KEYS[kind].map(keep), Object.values(TEMPLATES).flat().find((s) => s.key === coreKey)!];
   const curl = gear.mochila
     ? slot(`V.${kind}.curl_mochila`, 'curl_mochila', 3, 8, 15, 4)
     : slot(`V.${kind}.curl_iso`, 'curl_isometrico_toalla', 3, 15, 30, 4, TIME);
