@@ -16,7 +16,6 @@ Estado a 22 de noviembre de 2026. Lista viva: lo que está flojo, por qué impor
 - **La fatiga de tirón depende de que se conteste** «¿cuántas más habrías podido hacer?» al acabar las dominadas. Sin esa respuesta solo ve cuántos días se han hecho.
 - **El gimnasio no cuenta para decidir cargas.** Se apunta qué se trabajó (tirón, empuje, pierna), pero el entrenador no lo usa para el volumen semanal ni para subir o bajar.
 - **Con rutinas de 20 minutos, el volumen de pecho y bíceps en casa queda por debajo de la zona de hipertrofia.** Es coherente con priorizar dominadas; el músculo tiene que venir del gimnasio.
-- **El viernes es día suave de dominadas, pero ese día también toca el intento máximo de colgarse.** No encaja del todo: habría que pasar el intento al jueves.
 - **El plan de dominadas da por hecho que la prueba cae en sábado.** Si se cambia la fecha, los días de la semana no se recolocan bien.
 - **La etiqueta «mejorando» tarda unos dos meses en cambiar** tras un parón. El estancamiento se detecta por otra vía (tres semanas sin mejorar), así que no afecta a las decisiones, solo al texto.
 - **El experimento de variantes sigue activo** durante el plan de dominadas. Convendría apagarlo hasta enero: ahora no tiene sentido que pruebe cosas.

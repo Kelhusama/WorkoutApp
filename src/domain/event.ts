@@ -589,7 +589,7 @@ export interface HangLog {
 }
 
 export interface HangDose {
-  /** Hoy toca intento al máximo (no hay marca todavía, o es el último día de dominadas de la semana). */
+  /** Hoy toca intento al máximo (no hay marca todavía, o es el último día fuerte de dominadas de la semana). */
   max: boolean;
   sets: number;
   /** Segundos por serie; 0 si es intento al máximo. */
@@ -611,7 +611,11 @@ export function hangBest(logs: readonly HangLog[], today: ISODate): number | nul
 export function hangDose(logs: readonly HangLog[], today: ISODate): HangDose {
   const best = hangBest(logs, today);
   const week = todayPlan(today).week;
-  const lastDay = isPullupDay(today) && !isPullupDay(addDays(today, 1)) && ![2, 3, 4].some((n) => addDays(today, n) <= (week?.to ?? today) && isPullupDay(addDays(today, n)));
+  // El intento al máximo va el último día fuerte de dominadas de la semana (el jueves, con cuatro días):
+  // el viernes es día suave y no es momento de buscar marcas.
+  let lastHard: ISODate | null = null;
+  if (week) for (let d = week.from; d <= week.to; d = addDays(d, 1)) if (isPullupDay(d) && !isEasyPullupDay(d)) lastHard = d;
+  const lastDay = lastHard === today;
   if (best === null) return { max: true, sets: 1, seconds: 0, text: 'Cuélgate una vez hasta que no puedas más y apunta los segundos: será tu marca de partida.' };
   if (lastDay && week?.phase !== 'descarga') {
     return { max: true, sets: 1, seconds: 0, text: `Un intento al máximo. Tu marca es ${best} s: a por un par de segundos más.` };
