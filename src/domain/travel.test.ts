@@ -26,10 +26,10 @@ test('la sesión de viaje es válida con y sin mancuerna, y nunca pide barra', (
   }
 });
 
-test('sin material: flexiones, abdomen y pierna; la misma base todos los días', () => {
+test('sin material: flexiones, fondos en silla, zancada y abdomen; la misma todos los días', () => {
   const ids = (k: SessionKind) => travelSlots(k, NO_GEAR).map((s) => s.exerciseId);
-  assert.deepEqual(ids('A'), ['flexion_estricta', 'flexion_inclinada', 'hollow', 'dead_bug', 'elevacion_tibial', 'elevacion_talones']);
-  for (const k of KINDS) assert.deepEqual(ids(k).slice(0, 4), ids('A').slice(0, 4));
+  assert.deepEqual(ids('A'), ['flexion_estricta', 'flexion_inclinada', 'fondos_silla', 'zancada_estatica', 'hollow', 'dead_bug']);
+  for (const k of KINDS) assert.deepEqual(ids(k), ids('A'));
 });
 
 test('con una mancuerna se añaden remo y curl, con la progresión de casa', () => {

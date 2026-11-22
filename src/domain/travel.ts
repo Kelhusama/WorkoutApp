@@ -1,6 +1,6 @@
 import type { ISODate } from './dates';
 import type { SessionKind } from './schedule';
-import { CORE_KEYS, LEG_KEYS, TEMPLATES, type Slot, focusSlots } from './templates';
+import { CORE_KEYS, TEMPLATES, slot, type Slot, focusSlots } from './templates';
 
 /** Lo que tienes a mano durante un viaje. Sin nada marcado: solo tu cuerpo. */
 export interface TravelGear {
@@ -27,20 +27,21 @@ const ALL = Object.values(TEMPLATES).flat();
 const home = (key: string): Slot => ALL.find((s) => s.key === key)!;
 
 /**
- * Sesión de viaje: una sola, siempre la misma y sin material. Flexiones y abdomen, que es lo que
- * se puede seguir mejorando sin nada, y dos ejercicios de pierna que rotan según el día.
- * Usa las mismas claves que en casa: la progresión sigue donde estaba.
+ * Sesión de viaje: una sola, siempre la misma y sin más material que una silla. Flexiones, tríceps,
+ * zancada y abdomen. Las flexiones y el abdomen usan las claves de casa: su progresión sigue donde
+ * estaba. Los fondos y la zancada llevan clave propia para que estén también en modo ligero.
  * Con una mancuerna se añaden el remo y el curl de casa.
  * Las dominadas no se sustituyen: sin barra se paran y se retoman a la vuelta.
  */
-export function travelSlots(kind: SessionKind, gear: TravelGear): Slot[] {
+export function travelSlots(_kind: SessionKind, gear: TravelGear): Slot[] {
   return [
     home('B.flexiones'),
     home('B.inclinadas'),
+    slot('V.fondos', 'fondos_silla', 2, 6, 12, 3, { note: 'Con una silla firme contra la pared. Si molesta el hombro, cámbialos por flexiones con las manos juntas.' }),
+    slot('V.zancada', 'zancada_estatica', 2, 8, 15, 3),
     ...(gear.mancuerna ? [home('A.remo'), home('A.curl')] : []),
     home(CORE_KEYS.A),
     home(CORE_KEYS.B),
-    ...LEG_KEYS[kind].map(home),
   ];
 }
 

@@ -56,6 +56,7 @@ export const EXERCISE_MUSCLES: Record<string, Share> = {
   elevaciones_yt: { hombro: 1, espalda: 0.5 },
   elevacion_tibial: { pantorrilla: 1 },
   elevacion_talones: { pantorrilla: 1 },
+  fondos_silla: { triceps: 1, pecho: 0.5 },
   hollow: { core: 1 },
   dead_bug: { core: 1 },
   rodillas_colgado: { core: 1, antebrazo: 0.5 },

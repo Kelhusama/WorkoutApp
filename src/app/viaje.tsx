@@ -126,19 +126,18 @@ export default function TripScreen() {
           value={gear.gimnasio}
           onChange={(v) => setGear({ ...gear, gimnasio: v })}
         />
-        <Text style={type.caption}>Sin nada marcado solo necesitas tu cuerpo. La sesión de viaje es corta y ligera: flexiones y abdomen. Las dominadas se retoman a la vuelta.</Text>
+        <Text style={type.caption}>Sin nada marcado solo necesitas tu cuerpo. La sesión de viaje es corta y ligera: flexiones, tríceps en silla, zancada y abdomen. Las dominadas se retoman a la vuelta.</Text>
       </Card>
 
       <SectionTitle>Así queda tu sesión de viaje</SectionTitle>
       <Card style={{ gap: space.md }}>
         <Text style={type.body}>
           {travelSlots('A', gear)
-            .filter((s) => !LEG_KEYS.A.includes(s.key))
             .map((s) => exerciseFor(s).name)
             .join(' · ')}
         </Text>
         <Text style={type.caption}>
-          Siempre la misma, unos 10–15 minutos. Empieza en modo ligero; si un día vas sobrado, pásala a normal y añade dos ejercicios de pierna.
+          Siempre la misma, unos 15 minutos, y solo hace falta una silla firme. Empieza en modo ligero, con menos series; si un día vas sobrado, pásala a normal.
         </Text>
       </Card>
 

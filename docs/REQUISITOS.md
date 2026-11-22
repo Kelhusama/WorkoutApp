@@ -121,7 +121,7 @@ El usuario tiene su rutina (halterofilia y ejercicios compuestos, sin trabajo ai
 
 - **Crear un viaje**: desde *Calendario → Viajes → Añadir viaje*, manteniendo pulsado un día en la vista de mes, o con **«Hoy estoy fuera»** en Hoy. Se eligen las fechas y el material.
 - **Material disponible** (22/11/2026): por defecto ninguno. Opciones: «hay una mancuerna» y «gimnasio en el hotel». Se quitaron la toalla, la mesa y la mochila: de viaje se busca algo liviano y sin preparar nada.
-- **Una sola sesión de viaje**, siempre la misma, de 10–15 minutos y en modo ligero: flexión estricta, flexión inclinada, barca y bicho muerto. Con mancuerna se añaden remo y curl. En modo normal se suman dos ejercicios de pierna, que rotan según el día. Usa la progresión de casa.
+- **Una sola sesión de viaje**, siempre la misma, de 10–15 minutos y en modo ligero: flexión estricta, flexión inclinada, fondos de tríceps en silla, zancada, barca y bicho muerto. Con mancuerna se añaden remo y curl. Solo hace falta una silla firme. Flexiones y abdomen usan la progresión de casa.
 - **Las dominadas no se sustituyen de viaje**: sin barra se paran y se retoman a la vuelta. Con gimnasio de hotel, el plan sigue.
 
 - Las alternativas llevan **su propia progresión**; las flexiones conservan la de casa.

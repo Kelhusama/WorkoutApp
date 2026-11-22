@@ -305,6 +305,21 @@ export const EXERCISES: Record<string, Exercise> = {
     cues: ["Una mano en la pared solo para el equilibrio","Sube al máximo sobre la punta","Pausa de 1 segundo arriba","Baja en 3 segundos; mejor aún con el talón fuera de un escalón"],
     mistakes: ["Rebotar abajo","Empujarte con la mano de la pared"],
   },
+  fondos_silla: {
+    id: 'fondos_silla',
+    name: 'Fondos de tríceps en silla',
+    measure: 'reps',
+    perArm: false,
+    equipment: 'ninguno',
+    muscles: ['Tríceps', 'Pecho'],
+    cues: [
+      'Manos en el borde de una silla firme, dedos hacia delante, y la silla contra la pared',
+      'Cadera pegada a la silla y piernas dobladas (más fácil) o estiradas (más duro)',
+      'Baja doblando los codos hacia atrás hasta unos 90°, no más',
+      'Sube empujando hasta estirar los brazos',
+    ],
+    mistakes: ['Bajar demasiado: carga el hombro', 'Abrir los codos hacia los lados', 'Alejar la cadera de la silla', 'Una silla que resbale o con ruedas'],
+  },
   // ---------- Abdomen ----------
   hollow: {
     id: 'hollow',

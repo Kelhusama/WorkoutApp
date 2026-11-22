@@ -188,6 +188,14 @@ export const ILLUSTRATIONS: Record<string, Illustration> = {
     focus: ['shin'],
     caption: 'A una pierna, con una mano en la pared. Sube al máximo sobre la punta y baja en 3 segundos.',
   },
+  fondos_silla: {
+    start: { hip: [104, 161], torso: -96, hand: [96, 163], elbowBend: -1, foot: [168, 196], kneeBend: -1 },
+    end: { hip: [104, 183], torso: -96, hand: [96, 163], elbowBend: -1, foot: [168, 196], kneeBend: -1 },
+    props: [FLOOR, SEAT],
+    focus: ['upperArm'],
+    bothArms: true,
+    caption: 'Manos en el borde de la silla. Baja doblando los codos hacia atrás hasta 90° y sube.',
+  },
   // ---------- Abdomen ----------
   hollow: {
     start: { hip: [96, 188], torso: -179, hand: [98, 184], elbowBend: 1, foot: [169, 188], kneeBend: -1 },
