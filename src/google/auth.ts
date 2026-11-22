@@ -62,6 +62,11 @@ function ready(): Lib['GoogleOneTapSignIn'] {
   return l.GoogleOneTapSignIn;
 }
 
+/** Solo hace falta en el navegador, donde iniciar sesión obliga a salir de la página. Aquí no hace nada. */
+export function beforeLeaving(_fn: () => Promise<void>): () => void {
+  return () => {};
+}
+
 export interface GoogleAccount {
   email: string;
 }

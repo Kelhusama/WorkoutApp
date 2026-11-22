@@ -70,10 +70,21 @@ function captureRedirect() {
 }
 captureRedirect();
 
+const leaving = new Set<() => Promise<void>>();
+
+/** Registra algo que hay que cerrar antes de salir hacia Google (la base de datos). */
+export function beforeLeaving(fn: () => Promise<void>): () => void {
+  leaving.add(fn);
+  return () => {
+    leaving.delete(fn);
+  };
+}
+
 export type GoogleStatus = 'unavailable' | 'unconfigured' | 'ready';
 
 export function googleStatus(): GoogleStatus {
   if (!hasWindow) return 'unavailable';
+  captureRedirect();
   return clientId() ? 'ready' : 'unconfigured';
 }
 
@@ -82,6 +93,7 @@ export interface GoogleAccount {
 }
 
 export function currentAccount(): GoogleAccount | null {
+  captureRedirect();
   const s = read();
   return s ? { email: s.email || 'Cuenta de Google' } : null;
 }
@@ -98,6 +110,11 @@ export async function signIn(): Promise<GoogleAccount | null> {
     scope: `${DRIVE_SCOPE} email`,
     prompt: 'select_account',
   });
+  // La página no debe quedarse viva en segundo plano al irse a Google: si se queda, mantiene
+  // bloqueado el archivo de la base de datos y al volver la app no puede abrirlo. Un oyente de
+  // «unload» hace que el navegador la descarte del todo, y antes se cierra lo que se haya registrado.
+  window.addEventListener('unload', () => {});
+  await Promise.all([...leaving].map((fn) => fn().catch(() => {})));
   window.location.assign(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
   return new Promise<GoogleAccount | null>(() => {});
 }
