@@ -45,7 +45,9 @@ async function schemaVersion(db: SQLiteDatabase): Promise<number> {
 
 export async function exportBackup(db: SQLiteDatabase): Promise<Backup> {
   const tables: Record<string, Row[]> = {};
-  for (const t of TABLES) tables[t] = (await db.getAllAsync<Row>(`SELECT * FROM ${t}`)).map((r) => ({ ...r }));
+  // Una base antigua puede no tener aún todas las tablas: las que falten van vacías.
+  const existing = new Set((await db.getAllAsync<{ name: string }>("SELECT name FROM sqlite_master WHERE type = 'table'")).map((r) => r.name));
+  for (const t of TABLES) tables[t] = existing.has(t) ? (await db.getAllAsync<Row>(`SELECT * FROM ${t}`)).map((r) => ({ ...r })) : [];
   return { app: 'forja', schema: await schemaVersion(db), exportedAt: new Date().toISOString(), tables };
 }
 

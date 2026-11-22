@@ -197,3 +197,20 @@ export function weeklyFocus(r: WeekReview): Focus {
   }
   return { title: 'Seguir igual', detail: 'Semana completa. Repite lo que estás haciendo: la constancia es lo que da resultados.' };
 }
+
+// ---------- Copia de seguridad fuera del móvil ----------
+
+/** Días que pueden pasar sin sacar una copia fuera del móvil antes de avisar. */
+export const BACKUP_EVERY_DAYS = 7;
+
+/**
+ * ¿Toca avisar de que hay que sacar una copia? Solo si hay algo que perder,
+ * y si nunca se ha hecho o la última tiene más de una semana.
+ */
+export function backupDue(lastExport: ISODate | null, today: ISODate, hasData: boolean): { due: boolean; detail: string } {
+  if (!hasData) return { due: false, detail: '' };
+  if (!lastExport) return { due: true, detail: 'Aún no tienes ninguna. Si pierdes el móvil o se desinstala la app, se pierde todo.' };
+  const days = daysBetween(lastExport, today);
+  if (days < BACKUP_EVERY_DAYS) return { due: false, detail: '' };
+  return { due: true, detail: `La última es de hace ${days} días. Lo apuntado desde entonces solo está en este móvil.` };
+}

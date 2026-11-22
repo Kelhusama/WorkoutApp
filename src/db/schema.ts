@@ -3,13 +3,61 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 export const DB_NAME = 'forja.db';
 const LATEST = 21;
 
-export async function migrate(db: SQLiteDatabase) {
+export interface MigrateOptions {
+  /**
+   * Se llama una vez, antes de tocar nada, cuando hay datos y la base está en una versión antigua.
+   * Sirve para guardar una copia de seguridad. Si falla, la migración sigue: no debe bloquear la app.
+   */
+  beforeUpgrade?: (fromVersion: number) => Promise<void>;
+}
+
+/** Añade una columna solo si aún no existe: repetir el paso no da error. */
+async function addColumn(db: SQLiteDatabase, table: string, column: string, definition: string) {
+  const cols = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${table})`);
+  if (!cols.some((c) => c.name === column)) await db.execAsync(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
+
+/**
+ * Lleva la base de datos a la última versión, paso a paso.
+ *
+ * Garantías:
+ * - **Cada paso es atómico**: va en su propia transacción junto con su número de versión. Si un paso
+ *   falla, se deshace entero y la base queda exactamente como estaba antes de ese paso.
+ * - **Se reanuda donde se quedó**: los pasos ya hechos no se repiten, y los que añaden columnas o tablas
+ *   comprueban antes si existen, así que repetirlos tampoco rompe nada.
+ * - **Nunca se borra un dato para migrar**: los pasos solo añaden tablas y columnas, o copian una tabla a otra.
+ * - **Una base más nueva que la app no se toca** (por ejemplo, si se instala una versión antigua).
+ */
+export async function migrate(db: SQLiteDatabase, options: MigrateOptions = {}) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   let version = row?.user_version ?? 0;
   if (version >= LATEST) return;
 
-  if (version === 0) {
+  if (version > 0 && options.beforeUpgrade) {
+    try {
+      await options.beforeUpgrade(version);
+    } catch (e) {
+      console.warn('No se pudo guardar la copia previa a la actualización', e);
+    }
+  }
+
+  /** Ejecuta el paso que lleva de `from` a `from + 1`, si es el que toca. */
+  const step = async (from: number, run: () => Promise<void>) => {
+    if (version !== from) return;
+    await db.execAsync('BEGIN');
+    try {
+      await run();
+      await db.execAsync(`PRAGMA user_version = ${from + 1}`);
+      await db.execAsync('COMMIT');
+    } catch (e) {
+      await db.execAsync('ROLLBACK');
+      throw new Error(`No se pudo actualizar la base de datos (paso ${from} → ${from + 1}). Tus datos no han cambiado. ${e instanceof Error ? e.message : String(e)}`);
+    }
+    version = from + 1;
+  };
+
+  await step(0, async () => {
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS week_config (
         week_start TEXT PRIMARY KEY NOT NULL,
@@ -52,10 +100,9 @@ export async function migrate(db: SQLiteDatabase) {
         value INTEGER NOT NULL
       );
     `);
-    version = 1;
-  }
+  });
 
-  if (version === 1) {
+  await step(1, async () => {
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS profile (
         id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -76,20 +123,18 @@ export async function migrate(db: SQLiteDatabase) {
         source TEXT NOT NULL DEFAULT 'manual'
       );
     `);
-    version = 2;
-  }
+  });
 
-  if (version === 2) {
+  await step(2, async () => {
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY NOT NULL,
         value TEXT NOT NULL
       );
     `);
-    version = 3;
-  }
+  });
 
-  if (version === 3) {
+  await step(3, async () => {
     // Cambios puntuales por día. Las semanas que tenían el gimnasio el miércoles se convierten en cambios.
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS day_override (
@@ -101,10 +146,9 @@ export async function migrate(db: SQLiteDatabase) {
       INSERT OR REPLACE INTO day_override (date, role)
         SELECT date(week_start, '+3 days'), 'casa' FROM week_config WHERE second_gym = 'X';
     `);
-    version = 4;
-  }
+  });
 
-  if (version === 4) {
+  await step(4, async () => {
     // Semana tipo con fecha de inicio: cambiarla no reescribe las semanas pasadas.
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS week_template (
@@ -112,26 +156,16 @@ export async function migrate(db: SQLiteDatabase) {
         roles TEXT NOT NULL
       );
     `);
-    version = 5;
-  }
+  });
 
-  if (version === 5) {
+  await step(5, async () => {
     // Valores que da la báscula Huawei Scale 3, copiados a mano desde Huawei Salud.
-    await db.execAsync(`
-      ALTER TABLE body_log ADD COLUMN fat_free_mass REAL;
-      ALTER TABLE body_log ADD COLUMN skeletal_muscle REAL;
-      ALTER TABLE body_log ADD COLUMN water REAL;
-      ALTER TABLE body_log ADD COLUMN protein REAL;
-      ALTER TABLE body_log ADD COLUMN bone_mass REAL;
-      ALTER TABLE body_log ADD COLUMN visceral_fat REAL;
-      ALTER TABLE body_log ADD COLUMN scale_bmr REAL;
-      ALTER TABLE body_log ADD COLUMN body_age REAL;
-      ALTER TABLE body_log ADD COLUMN body_score REAL;
-    `);
-    version = 6;
-  }
+    for (const c of ['fat_free_mass', 'skeletal_muscle', 'water', 'protein', 'bone_mass', 'visceral_fat', 'scale_bmr', 'body_age', 'body_score']) {
+      await addColumn(db, 'body_log', c, 'REAL');
+    }
+  });
 
-  if (version === 6) {
+  await step(6, async () => {
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS trip (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -142,10 +176,9 @@ export async function migrate(db: SQLiteDatabase) {
         gimnasio INTEGER NOT NULL DEFAULT 0
       );
     `);
-    version = 7;
-  }
+  });
 
-  if (version === 7) {
+  await step(7, async () => {
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS progress_photo (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -155,10 +188,9 @@ export async function migrate(db: SQLiteDatabase) {
         created_at TEXT NOT NULL
       );
     `);
-    version = 8;
-  }
+  });
 
-  if (version === 8) {
+  await step(8, async () => {
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS walk_log (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -173,10 +205,9 @@ export async function migrate(db: SQLiteDatabase) {
       );
       CREATE INDEX IF NOT EXISTS idx_walk_log_date ON walk_log (date);
     `);
-    version = 9;
-  }
+  });
 
-  if (version === 9) {
+  await step(9, async () => {
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS stretch_log (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -187,10 +218,9 @@ export async function migrate(db: SQLiteDatabase) {
       );
       CREATE INDEX IF NOT EXISTS idx_stretch_log_date ON stretch_log (date);
     `);
-    version = 10;
-  }
+  });
 
-  if (version === 10) {
+  await step(10, async () => {
     // Flexibilidad: sesiones del programa por niveles y resultados de los tests mensuales.
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS flex_session (
@@ -209,10 +239,9 @@ export async function migrate(db: SQLiteDatabase) {
       );
       CREATE INDEX IF NOT EXISTS idx_flex_test_date ON flex_test (date);
     `);
-    version = 11;
-  }
+  });
 
-  if (version === 11) {
+  await step(11, async () => {
     // Entrenador adaptativo: repeticiones que quedaban en la última serie de cada ejercicio.
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS effort_log (
@@ -224,28 +253,19 @@ export async function migrate(db: SQLiteDatabase) {
       );
       CREATE INDEX IF NOT EXISTS idx_effort_log_exercise ON effort_log (exercise_id);
     `);
-    version = 12;
-  }
+  });
 
-  if (version === 12) {
+  await step(12, async () => {
     // Sesión ligera: se apunta, pero el entrenador no mueve el plan con ella.
-    const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(session_log)');
-    if (!cols.some((c) => c.name === 'light')) {
-      await db.execAsync('ALTER TABLE session_log ADD COLUMN light INTEGER NOT NULL DEFAULT 0');
-    }
-    version = 13;
-  }
+    await addColumn(db, 'session_log', 'light', 'INTEGER NOT NULL DEFAULT 0');
+  });
 
-  if (version === 13) {
+  await step(13, async () => {
     // Banca: lo que quedaba en la mejor serie, para proponer la carga del próximo día.
-    const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(session_log)');
-    if (!cols.some((c) => c.name === 'bench_reserve')) {
-      await db.execAsync('ALTER TABLE session_log ADD COLUMN bench_reserve INTEGER');
-    }
-    version = 14;
-  }
+    await addColumn(db, 'session_log', 'bench_reserve', 'INTEGER');
+  });
 
-  if (version === 14) {
+  await step(14, async () => {
     // Entrenador, capa 4: bloques de prueba entre un test y el siguiente, cada uno con su variante.
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS coach_block (
@@ -258,10 +278,9 @@ export async function migrate(db: SQLiteDatabase) {
         end_value REAL
       );
     `);
-    version = 15;
-  }
+  });
 
-  if (version === 15) {
+  await step(15, async () => {
     // Versiones más duras de un ejercicio: en qué etapa va cada hueco y con cuál se hizo cada serie.
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS slot_stage (
@@ -269,14 +288,10 @@ export async function migrate(db: SQLiteDatabase) {
         stage INTEGER NOT NULL DEFAULT 0
       );
     `);
-    const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(set_log)');
-    if (!cols.some((c) => c.name === 'stage')) {
-      await db.execAsync('ALTER TABLE set_log ADD COLUMN stage INTEGER NOT NULL DEFAULT 0');
-    }
-    version = 16;
-  }
+    await addColumn(db, 'set_log', 'stage', 'INTEGER NOT NULL DEFAULT 0');
+  });
 
-  if (version === 16) {
+  await step(16, async () => {
     // Día de movilidad en la semana y sesión de casa enfocada.
     // La tabla de cambios por día solo admitía tres papeles: se rehace para admitir «movilidad».
     await db.execAsync(`
@@ -289,14 +304,10 @@ export async function migrate(db: SQLiteDatabase) {
       DROP TABLE day_override;
       ALTER TABLE day_override_new RENAME TO day_override;
     `);
-    const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(session_log)');
-    if (!cols.some((c) => c.name === 'focus')) {
-      await db.execAsync('ALTER TABLE session_log ADD COLUMN focus INTEGER NOT NULL DEFAULT 0');
-    }
-    version = 17;
-  }
+    await addColumn(db, 'session_log', 'focus', 'INTEGER NOT NULL DEFAULT 0');
+  });
 
-  if (version === 17) {
+  await step(17, async () => {
     // Prueba del 16 de enero: sesiones de dominadas con lastre y de peso muerto.
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS trial_log (
@@ -310,19 +321,14 @@ export async function migrate(db: SQLiteDatabase) {
       );
       CREATE INDEX IF NOT EXISTS idx_trial_log_date ON trial_log (date);
     `);
-    version = 18;
-  }
+  });
 
-  if (version === 18) {
+  await step(18, async () => {
     // Agarre con el que se hicieron las dominadas del plan.
-    const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(trial_log)');
-    if (!cols.some((c) => c.name === 'grip')) {
-      await db.execAsync('ALTER TABLE trial_log ADD COLUMN grip TEXT');
-    }
-    version = 19;
-  }
+    await addColumn(db, 'trial_log', 'grip', 'TEXT');
+  });
 
-  if (version === 19) {
+  await step(19, async () => {
     // Colgarse: mejor intento de cada día.
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS hang_log (
@@ -331,17 +337,11 @@ export async function migrate(db: SQLiteDatabase) {
         seconds INTEGER NOT NULL CHECK (seconds > 0)
       );
     `);
-    version = 20;
-  }
+  });
 
-  if (version === 20) {
+  await step(20, async () => {
     // Qué se trabajó en el gimnasio (tirón, empuje, pierna), para medir la carga real.
-    const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(session_log)');
-    if (!cols.some((c) => c.name === 'gym_work')) {
-      await db.execAsync('ALTER TABLE session_log ADD COLUMN gym_work TEXT');
-    }
-    version = 21;
-  }
+    await addColumn(db, 'session_log', 'gym_work', 'TEXT');
+  });
 
-  await db.execAsync(`PRAGMA user_version = ${LATEST}`);
 }

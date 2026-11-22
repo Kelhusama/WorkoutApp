@@ -57,3 +57,21 @@ export async function getMarchDate(db: SQLiteDatabase): Promise<string | null> {
 export async function saveMarchDate(db: SQLiteDatabase, date: string | null) {
   await set(db, 'march_date', date ?? '');
 }
+
+/** Fecha de la última copia sacada fuera del móvil (AAAA-MM-DD), o null. */
+export async function getLastExport(db: SQLiteDatabase): Promise<string | null> {
+  const v = await get(db, 'last_export');
+  return v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+}
+
+export async function saveLastExport(db: SQLiteDatabase, date: string) {
+  await set(db, 'last_export', date);
+}
+
+/** ¿Hay algo apuntado que se perdería sin copia? */
+export async function hasUserData(db: SQLiteDatabase): Promise<boolean> {
+  const r = await db.getFirstAsync<{ n: number }>(
+    'SELECT (SELECT COUNT(*) FROM session_log) + (SELECT COUNT(*) FROM body_log) + (SELECT COUNT(*) FROM trial_log) + (SELECT COUNT(*) FROM test_log) AS n',
+  );
+  return (r?.n ?? 0) > 0;
+}

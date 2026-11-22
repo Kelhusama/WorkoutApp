@@ -315,6 +315,12 @@ El usuario va al gimnasio 2–3 días (alguna semana, 4) y quiere que en casa pe
 - **Hecho después** (20/11/2026): marcar lo trabajado en el gimnasio, con aviso antes de las dominadas si hubo tirón.
 - **Pendiente**: tipografía propia (se deja para después de la primera prueba en el móvil, porque no se puede valorar sin verla), que la etiqueta «mejorando» reaccione antes a un parón, y que el entrenador cuente también lo que se hace dentro del gimnasio, no solo el número de sesiones.
 
+## Datos y copias de seguridad (22/11/2026)
+Dónde viven los datos, qué riesgos hay y cómo se cubren: [DATOS.md](DATOS.md). Hecho: migraciones atómicas y repetibles, copia automática diaria y antes de cada actualización, y aviso semanal para sacar una copia fuera del móvil. Pendiente, con el APK: copia automática en Google Drive.
+
+## Aplazado: press de banca
+El objetivo de 80 kg en press de banca queda **para más adelante**: todavía no hay material para trabajarlo como hace falta, y en la prueba del 16 de enero lo hace otro compañero. La app sigue apuntando la banca del gimnasio y proponiendo la carga, pero no es prioridad ni se le dedica plan propio hasta que se decida el material.
+
 ## Para seguir (por orden)
 0. **Entrenador adaptativo**: volumen semanal por músculo y progresión por peso si se compran mancuernas ajustables (de momento, no; y nunca banco). Hecho también el paso automático a versiones más duras. Hechas las capas 1 a 4, el aviso de test, la previsión con margen y el experimento de la red neuronal: reserva, nivel real, plan que cambia solo, sesión ligera y extra, mesetas, carga de banca y bloques de prueba entre tests.
 1. **Usabilidad que queda**: tipografía propia.

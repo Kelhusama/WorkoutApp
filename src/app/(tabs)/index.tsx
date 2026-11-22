@@ -10,7 +10,8 @@ import { deleteLog, getDoneSessions, getPrescriptions, markMissed } from '@/db/r
 import { getBlocks, getSlotVariants } from '@/db/coach';
 import { applyVariant, testsDue, type TestDue } from '@/domain/bandit';
 import { WEEK_LOAD_INFO, extraKind, readiness, type Readiness, type WeekLoad } from '@/domain/coach';
-import { getTrialActive, getWeekLoad, saveWeekLoad } from '@/db/settings';
+import { getLastExport, getTrialActive, getWeekLoad, hasUserData, saveWeekLoad } from '@/db/settings';
+import { backupDue } from '@/domain/insights';
 import { getPhotos, getRecentFeelings } from '@/db/stats';
 import { monthlyCheck } from '@/domain/physique';
 import { stretchedOn } from '@/db/stretch';
@@ -94,6 +95,8 @@ export default function TodayScreen() {
   // Sesiones apuntadas para la prueba del 16 de enero.
   const [trialLogs, setTrialLogs] = useState<TrialLog[]>([]);
   const [trialActive, setTrialActive] = useState(false);
+  // Copia fuera del móvil: se avisa si hay datos y lleva más de una semana sin sacarse.
+  const [backup, setBackup] = useState<{ due: boolean; detail: string } | null>(null);
   const [stretched, setStretched] = useState(true);
   const [showExercises, setShowExercises] = useState(false);
   // Sesión extra en día de descanso: cuál propone el entrenador y si conviene que sea ligera.
@@ -131,6 +134,7 @@ export default function TodayScreen() {
       getBlocks(db).then((b) => setTests(testsDue(b, todayDate)));
       getTrialLogs(db).then(setTrialLogs);
       getTrialActive(db).then(setTrialActive);
+      Promise.all([getLastExport(db), hasUserData(db)]).then(([last, has]) => setBackup(backupDue(last, todayDate, has)));
       (async () => {
         const load = await getWeekLoad(db, weekStart(todayDate));
         const done = await getDoneSessions(db, addDays(todayDate, -30));
@@ -217,6 +221,9 @@ export default function TodayScreen() {
           detail={`${doseText('dominada', trialDose('dominada', trial.week, trialLogs))}. Agarre ${GRIP_INFO[gripFor(todayDate) ?? TEST_GRIP].label.toLowerCase()}.`}
           onPress={() => router.push('/dominadas')}
         />
+      )}
+      {backup?.due && (
+        <PlanRow icon="cloud-upload" tint={colors.warn} title="Saca una copia fuera del móvil" detail={backup.detail} onPress={() => router.push('/perfil')} />
       )}
       {platesWarning(todayDate) && (
         <PlanRow icon="alert-circle" tint={colors.warn} title="Te hacen falta discos" detail="Para el cinturón, antes de que empiece el lastre. Toca para ver cuáles." onPress={() => router.push('/prueba')} />

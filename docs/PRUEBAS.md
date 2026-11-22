@@ -57,6 +57,8 @@ Para probar: `npx expo start` en la carpeta del proyecto y escanear el QR con Ex
 | [ ] | Prueba: cambiar fecha u objetivos | Entrenar → la prueba → Fecha y objetivos | Que al guardar cambien la cuenta atrás, el plan y el nombre en Hoy y Entrenar |
 | [ ] | Colgarse | Al final de la sesión guiada de dominadas | Que proponga qué hacer, se apunte y aparezca la marca en el apartado de la prueba |
 | [ ] | Gimnasio: qué has trabajado | Registro de gimnasio | Que se puedan marcar varias y, si marcas tirón, al día siguiente lo avise la sesión de dominadas |
+| [ ] | Copias automáticas | Perfil y avisos → Copia de seguridad | Al día siguiente de usarla, que diga de qué fecha es la última copia automática y que restaurarla funcione |
+| [ ] | Aviso de copia | Hoy | Que aparezca «Saca una copia fuera del móvil» y desaparezca tras exportarla a Drive |
 | [ ] | Aspecto general | Todas las pantallas | Textos cortados, botones difíciles de pulsar, el teclado tapando campos |
 
 ## Solo con la app instalada (APK)

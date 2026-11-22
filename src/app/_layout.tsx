@@ -9,13 +9,17 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { loadEventConfig } from '@/db/event';
 import { DB_NAME, migrate } from '@/db/schema';
+import { dailySnapshot, writeSnapshot } from '@/db/snapshots';
 import { ReminderSync } from '@/notifications/ReminderSync';
 import { colors, fonts, navTheme } from '@/ui/theme';
 
 /** Prepara la base de datos y carga la fecha y los objetivos de la prueba antes de pintar nada. */
 async function init(db: SQLiteDatabase) {
-  await migrate(db);
+  // Antes de cambiar la estructura de la base de datos se guarda una copia tal como estaba.
+  await migrate(db, { beforeUpgrade: (from) => writeSnapshot(db, `antes-v${from}`) });
   await loadEventConfig(db);
+  // Y una copia al día, sin esperar a que termine ni dejar que un fallo bloquee la app.
+  dailySnapshot(db).catch((e) => console.warn('No se pudo guardar la copia diaria', e));
 }
 
 export default function RootLayout() {

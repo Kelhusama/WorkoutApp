@@ -3,11 +3,13 @@ import { File, Paths } from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Text } from 'react-native';
 
 import { backupSummary, exportBackup, importBackup, parseBackup } from '@/db/backup';
-import { formatShort, today } from '@/domain/dates';
+import { getLastExport, saveLastExport } from '@/db/settings';
+import { listSnapshots, readSnapshot, type Snapshot } from '@/db/snapshots';
+import { formatLong, formatShort, today } from '@/domain/dates';
 import { syncReminders } from '@/notifications/reminders';
 import { Button, Card } from './components';
 import { colors, space, type } from './theme';
@@ -19,6 +21,17 @@ export function BackupCard({ onRestored }: { onRestored?: () => void }) {
   const db = useSQLiteContext();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [lastExport, setLastExport] = useState<string | null>(null);
+  const [auto, setAuto] = useState<Snapshot | null>(null);
+
+  useEffect(() => {
+    getLastExport(db).then(setLastExport);
+    try {
+      setAuto(listSnapshots()[0] ?? null);
+    } catch {
+      setAuto(null);
+    }
+  }, [db]);
 
   const doExport = async () => {
     try {
@@ -28,7 +41,10 @@ export function BackupCard({ onRestored }: { onRestored?: () => void }) {
       await file.write(JSON.stringify(await exportBackup(db)));
       if (!(await Sharing.isAvailableAsync())) throw new Error('Este dispositivo no permite compartir archivos.');
       await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Guardar copia de Forja del Canario' });
-      setNote('Copia creada. Guárdala en Drive o envíatela para tenerla fuera del móvil.');
+      // Se da por hecha al abrir el menú de compartir: no hay forma de saber si luego se guardó.
+      await saveLastExport(db, today());
+      setLastExport(today());
+      setNote('Copia creada. Comprueba que ha quedado guardada en Drive o donde la hayas enviado.');
     } catch (e) {
       Alert.alert('No se pudo crear la copia', message(e));
     } finally {
@@ -72,15 +88,48 @@ export function BackupCard({ onRestored }: { onRestored?: () => void }) {
     }
   };
 
+  const restoreAuto = () => {
+    if (!auto) return;
+    Alert.alert('¿Volver a la copia automática?', `Es del ${formatLong(auto.date).toLowerCase()}.\n\nSustituye TODOS los datos actuales de la app. No se puede deshacer.`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Restaurar',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await importBackup(db, await readSnapshot(auto));
+            syncReminders(db);
+            setNote('Copia automática restaurada.');
+            onRestored?.();
+          } catch (e) {
+            Alert.alert('No se pudo restaurar', `${message(e)}\n\nTus datos no han cambiado.`);
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <Card style={{ gap: space.md }}>
       <Text style={type.subtitle}>Copia de seguridad</Text>
       <Text style={type.caption}>
-        Guarda en un archivo tus sesiones, progresión, mediciones, viajes y ajustes. Úsala para cambiar de móvil o al pasar a la app
-        instalada. Las fotos de progreso no se incluyen.
+        Tus datos solo están en este móvil. «Exportar copia» los guarda en un archivo: al pulsarlo, elige Google Drive para tenerlos fuera.
+        Hazlo cada semana, y antes de cambiar de móvil o de pasar a la app instalada. Las fotos de progreso no se incluyen.
+      </Text>
+      <Text style={[type.caption, { color: lastExport ? colors.text : colors.warn }]}>
+        {lastExport ? `Última copia fuera del móvil: ${formatLong(lastExport).toLowerCase()}.` : 'Aún no has sacado ninguna copia fuera del móvil.'}
       </Text>
       <Button label="Exportar copia" icon="download-outline" variant="secondary" onPress={doExport} disabled={busy} />
       <Button label="Restaurar desde un archivo" icon="refresh-outline" variant="ghost" onPress={doImport} disabled={busy} />
+      {auto && (
+        <>
+          <Text style={type.caption}>
+            Además, la app guarda sola una copia al día dentro del móvil (las últimas 7) y otra antes de cada actualización. Sirven si algo se
+            estropea, no si pierdes el móvil. La más reciente es del {formatLong(auto.date).toLowerCase()}.
+          </Text>
+          <Button label="Volver a la última copia automática" icon="time-outline" variant="ghost" onPress={restoreAuto} disabled={busy} />
+        </>
+      )}
       {note && <Text style={[type.caption, { color: colors.success }]}>{note}</Text>}
     </Card>
   );

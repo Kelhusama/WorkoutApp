@@ -144,3 +144,11 @@ test('foco semanal: una sola cosa, por orden de importancia', () => {
   // Fallar sesiones pesa más que cualquier otro aviso
   assert.equal(weeklyFocus({ ...base, done: 2, missed: 3, weighedIn: false, stretchDays: 0 }).title, 'No fallar dos seguidas');
 });
+
+test('copia fuera del móvil: avisa si hay datos y nunca se hizo o tiene más de una semana', async () => {
+  const { backupDue } = await import('./insights');
+  assert.equal(backupDue(null, '2026-11-22', false).due, false);
+  assert.match(backupDue(null, '2026-11-22', true).detail, /Aún no tienes ninguna/);
+  assert.equal(backupDue('2026-11-18', '2026-11-22', true).due, false);
+  assert.match(backupDue('2026-11-10', '2026-11-22', true).detail, /hace 12 días/);
+});
