@@ -47,10 +47,16 @@ export function DriveBackupCard({ onRestored }: { onRestored?: () => void }) {
           .catch(() => {});
       }
     });
-    return onDriveBackup((savedAt) => {
+    // En el navegador el correo llega un instante después de volver de Google: se vuelve a leer.
+    const t = setTimeout(() => setAccount(currentAccount()), 2500);
+    const off = onDriveBackup((savedAt) => {
       setLast(savedAt);
       setRemote(null);
     });
+    return () => {
+      clearTimeout(t);
+      off();
+    };
   }, [db]);
 
   /** Muestra el error; si la sesión ya no vale, vuelve al estado «sin sesión». */
@@ -189,7 +195,7 @@ export function DriveBackupCard({ onRestored }: { onRestored?: () => void }) {
       {status === 'ready' && !account && (
         <>
           <Text style={type.caption}>
-            Guarda tus datos en una carpeta privada de tu Google Drive: una copia automática cada semana y otra cuando tú quieras. La
+            Guarda tus datos en una carpeta privada de tu Google Drive: se guardan solos al apuntar algo y también cuando tú quieras. La
             app no puede ver el resto de tu Drive.
           </Text>
           <Button label="Iniciar sesión con Google" icon="logo-google" onPress={doSignIn} disabled={busy} />
@@ -207,8 +213,8 @@ export function DriveBackupCard({ onRestored }: { onRestored?: () => void }) {
           <Text style={type.caption}>
             {shown ? `Última copia en Drive: ${formatDateTime(shown)}.` : 'Todavía no hay ninguna copia en Drive.'}
             {last
-              ? ' Se guarda sola una vez por semana al abrir la app.'
-              : ' La copia semanal automática empieza cuando guardes o restaures la primera desde este móvil.'}{' '}
+              ? ' Se guarda sola cada vez que apuntas algo; sin conexión, en cuanto vuelva.'
+              : ' El guardado automático empieza cuando guardes o restaures la primera desde este dispositivo.'}{' '}
             Las fotos de progreso no se incluyen.
           </Text>
           <Button label="Guardar copia en Drive" icon="cloud-upload-outline" onPress={doBackup} disabled={busy} />
